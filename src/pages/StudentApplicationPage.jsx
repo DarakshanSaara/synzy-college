@@ -120,41 +120,43 @@ const StudentApplicationPage = () => {
 
     const ensureStudentProfileExists = async () => {
         try {
+            debugger;
             console.log('🔍 Checking if student profile exists for:', currentUser.authId);
 
             // Check if student profile exists
             const profileResponse = await getUserProfile(currentUser.authId);
-            console.log('📋 Profile response:', profileResponse);
+            return profileResponse.data;
+            // console.log('📋 Profile response:', profileResponse);
 
-            if (profileResponse.data) {
-                console.log('✅ Student profile exists:', profileResponse.data);
-                return true;
-            }
+            // if (profileResponse.data) {
+            //     console.log('✅ Student profile exists:', profileResponse.data);
+            //     return true;
+            // }
 
-            if (profileResponse.status === 'Not Found') {
-                console.log('❌ Student profile not found, creating one...');
+            // if (profileResponse.status === 'Not Found') {
+            //     console.log('❌ Student profile not found, creating one...');
 
-                // Create a basic student profile with required fields
-                const profileData = {
-                    authId: currentUser.authId,
-                    email: currentUser.email,
-                    name: currentUser.name || 'Student User',
-                    contactNo: currentUser.contactNo || currentUser.phone || '0000000000',
-                    dateOfBirth: currentUser.dateOfBirth || new Date('2000-01-01').toISOString(),
-                    gender: currentUser.gender || 'other',
-                    state: currentUser.state || 'Unknown',
-                    city: currentUser.city || 'Unknown',
-                    userType: 'student'
-                };
+            //     // Create a basic student profile with required fields
+            //     const profileData = {
+            //         authId: currentUser.authId,
+            //         email: currentUser.email,
+            //         name: currentUser.name || 'Student User',
+            //         contactNo: currentUser.contactNo || currentUser.phone || '0000000000',
+            //         dateOfBirth: currentUser.dateOfBirth || new Date('2000-01-01').toISOString(),
+            //         gender: currentUser.gender || 'other',
+            //         state: currentUser.state || 'Unknown',
+            //         city: currentUser.city || 'Unknown',
+            //         userType: 'student'
+            //     };
 
-                console.log('📝 Creating profile with data:', profileData);
-                const createResponse = await createStudentProfile(profileData);
-                console.log('✅ Student profile created successfully:', createResponse);
-                return true;
-            }
+            //     console.log('📝 Creating profile with data:', profileData);
+            //     const createResponse = await createStudentProfile(profileData);
+            //     console.log('✅ Student profile created successfully:', createResponse);
+            //     return true;
+            // }
 
-            console.log('❓ Unexpected profile response structure');
-            return false;
+            // console.log('❓ Unexpected profile response structure');
+            // return false;
         } catch (error) {
             console.error('❌ Error ensuring student profile exists:', error);
             // If profile creation fails, we'll let the application submission handle the error
@@ -163,8 +165,8 @@ const StudentApplicationPage = () => {
     };
 
     const handleSubmit = async (e) => {
+       // debugger;
         e.preventDefault();
-
         // Validate only the most essential required fields
         const requiredFields = [
             'name', 'location', 'dob', 'gender', 'motherTongue', 'nationality',
@@ -194,115 +196,134 @@ const StudentApplicationPage = () => {
 
         console.log('Starting submission process...');
         setIsSubmitting(true);
+        
         try {
-            // Ensure student profile exists before submitting application
+            debugger
+            // Ensure student profile exists
             const profileExists = await ensureStudentProfileExists();
             if (!profileExists) {
                 toast.info('Please complete your profile before submitting an application');
-                // Optionally redirect to profile creation page
                 window.location.href = '/create-profile';
                 return;
             }
+            //debugger
+            const studentId = profileExists._id;
 
-            // Get the correct student ID - use student profile ID if available, otherwise auth ID
-            const studentId = currentUser.studentId || currentUser.authId || currentUser._id;
-            console.log('🔍 Using student ID for application:', studentId, 'from user:', currentUser);
-            
             const payload = {
                 ...formData,
                 siblings,
                 studId: studentId,
-                schoolId: schoolId,
+                schoolId,
                 schoolName: school.name,
-                schoolEmail: school.email,  // MAKE SURE THIS IS INCLUDED
+                schoolEmail: school.email,
             };
-            
-            console.log('📦 Application payload:', payload);
-            console.log('🏫 School info:', {
-                id: schoolId,
-                name: school.name,
-                email: school.email
-            });
-            
+
+            // ---------------------------------------------------
+            // 1️⃣ SUBMIT STUDENT APPLICATION (CREATE OR UPDATE)
+            // ---------------------------------------------------
             let result;
+
             if (isUpdate && existingApplication) {
-                // Scenario C: Update existing application
                 result = await updateExistingApplication(currentUser._id, payload);
                 toast.success("Application updated successfully!");
             } else {
-                // Scenario A: Create new application
                 result = await createApplication(payload);
                 toast.success("Application created successfully!");
             }
-            
-            // CRITICAL: Submit the application to the school
-            console.log('📤 Submitting application to school...');
-            const applicationId = result.data?._id || result.data?.id || result._id;
-            if (applicationId) {
-                try {
-                    const formSubmission = await submitFormToSchool(schoolId, studentId, applicationId);
-                    console.log('✅ Application submitted to school:', formSubmission);
-                    
-                    if (formSubmission.alreadySubmitted) {
-                        toast.info("Application already submitted to this school!");
-                    } else {
-                        toast.success("Application submitted to school successfully!");
-                    }
-                } catch (submitError) {
-                    console.error('❌ Failed to submit to school:', submitError);
-                    toast.error("Application created but failed to submit to school. Please try again.");
-                    return; // Don't proceed if school submission fails
-                }
-            } else {
-                console.error('❌ No application ID found for school submission');
-                toast.error("Application created but could not submit to school.");
+
+            const applicationId = result?.data?._id || result?.data?.id || result?._id;
+
+            if (!applicationId) {
+                toast.error("Application saved but missing application ID.");
                 return;
             }
 
-            // Generate PDF automatically after successful submission
-            console.log('📄 Generating PDF for student:', studentId);
+            // ---------------------------------------------------
+            // 2️⃣ GENERATE PDF AND THEN GET PDF ID
+            // ---------------------------------------------------
+            // console.log("📄 Generating PDF...");
+            //debugger;
+            let pdfResponse;
             try {
-                await generateStudentPdf(studentId);
-                console.log('✅ PDF generated successfully after submission');
+                pdfResponse = await generateStudentPdf(studentId, applicationId);
+                console.log("PDF response:", pdfResponse);
+
                 toast.success("PDF generated successfully!");
             } catch (pdfError) {
-                console.error('❌ Failed to generate PDF after submission:', pdfError);
-                toast.warning("Application submitted but PDF generation failed. You can generate it later from your dashboard.");
-                // Don't return here - application was saved successfully, PDF failure shouldn't block the flow
-            }
-            
-            // Emit event to notify school portal of new application
-            window.dispatchEvent(new CustomEvent('applicationAdded', {
-              detail: {
-                schoolId: schoolId,
-                schoolEmail: school.email,
-                applicationData: result.data
-              }
-            }));
-            
-            setSubmitted(true);
-            
-            // Navigate back to application flow page to show updated status
-            setTimeout(() => {
-                navigate(`/apply/${schoolId}`);
-            }, 2000); // Give user time to see success message
-        } catch (error) {
-            console.error("Submission Error:", error);
-            
-            // Handle specific error cases
-            if (error.response?.data?.message === 'Student not found') {
-                toast.error('Please complete your profile before submitting an application');
-                // Redirect to profile creation page
-                setTimeout(() => {
-                    window.location.href = '/create-profile';
-                }, 2000);
+                console.error("❌ PDF Generation Error:", pdfError);
+                toast.error("PDF generation failed. Cannot submit to school.");
                 return;
             }
-            
-            toast.error(`Submission failed: ${error.message || 'Please ensure all required fields are filled.'}`);
+
+            // Extract PDF ID (depends on your backend structure)
+            const pdfId =
+                pdfResponse?.data?.pdfId ||
+                pdfResponse?.pdfId ||
+                pdfResponse?.id ||
+                null;
+
+            // console.log("📄 PDF ID:", pdfId);
+
+            if (!pdfId) {
+                console.warn("⚠ PDF generated but no PDF ID returned.");
+            }
+
+            // ---------------------------------------------------
+            // 3️⃣ SUBMIT APPLICATION TO SCHOOL (AFTER PDF SUCCESS)
+            // ---------------------------------------------------
+            // console.log("📤 Submitting application to school...");
+
+            try {
+                const formSubmission = await submitFormToSchool(
+                    schoolId,
+                    studentId,
+                    pdfId,
+                    applicationId,
+                );
+
+                if (formSubmission.alreadySubmitted) {
+                    toast.info("Application already submitted to this school!");
+                } else {
+                    toast.success("Application submitted to school successfully!");
+                }
+            } catch (submitError) {
+                console.error("❌ School Submission Error:", submitError);
+                toast.error("Application saved and PDF created, but submission to school failed.");
+                return;
+            }
+
+            // Emit event for school portal updates
+            window.dispatchEvent(new CustomEvent("applicationAdded", {
+                detail: {
+                    schoolId,
+                    schoolEmail: school.email,
+                    applicationData: result.data,
+                    pdfId
+                }
+            }));
+
+            setSubmitted(true);
+
+            // Redirect
+            setTimeout(() => {
+                navigate(`/apply/${schoolId}`);
+            }, 2000);
+
+        } catch (error) {
+            console.error("Submission Error:", error);
+
+            if (error.response?.data?.message === "Student not found") {
+                toast.error("Please complete your profile before submitting an application");
+                setTimeout(() => (window.location.href = "/create-profile"), 2000);
+                return;
+            }
+
+            toast.error(`Submission failed: ${error.message || "Please fill all required fields."}`);
+
         } finally {
             setIsSubmitting(false);
         }
+
     };
 
     const showGuardianFields = ['Divorced', 'Single Mother', 'Single Father', 'Widowed', 'Other'].includes(formData.relationshipStatus);
@@ -328,33 +349,33 @@ const StudentApplicationPage = () => {
                 navigate('/schools');
                 return;
             }
-            
-            console.log('🏫 StudentApplicationPage: Valid schoolId provided:', schoolId);
+
+            // console.log('🏫 StudentApplicationPage: Valid schoolId provided:', schoolId);
 
             try {
                 setLoading(true);
-                console.log('🏫 StudentApplicationPage: Starting school fetch for schoolId:', schoolId);
-                console.log('🏫 StudentApplicationPage: Current loading state:', loading);
-                
+                // console.log('🏫 StudentApplicationPage: Starting school fetch for schoolId:', schoolId);
+                // console.log('🏫 StudentApplicationPage: Current loading state:', loading);
+
                 // Add timeout to prevent hanging
                 const response = await Promise.race([
                     getSchoolById(schoolId),
-                    new Promise((_, reject) => 
+                    new Promise((_, reject) =>
                         setTimeout(() => reject(new Error('School details request timeout')), 10000)
                     )
                 ]);
-                console.log('🏫 StudentApplicationPage: Raw API response:', response);
-                
+                // console.log('🏫 StudentApplicationPage: Raw API response:', response);
+
                 const schoolData = response?.data?.data || response?.data;
-                console.log('✅ StudentApplicationPage: School details fetched:', schoolData);
-                
+                // console.log('✅ StudentApplicationPage: School details fetched:', schoolData);
+
                 if (!schoolData) {
                     console.error('❌ StudentApplicationPage: No school data in response');
                     throw new Error('No school data received');
                 }
-                
+
                 setSchool(schoolData);
-                console.log('✅ StudentApplicationPage: School state set successfully');
+                // console.log('✅ StudentApplicationPage: School state set successfully');
             } catch (error) {
                 console.error('❌ StudentApplicationPage: Error fetching school details:', error);
                 console.error('❌ StudentApplicationPage: Error details:', error.response?.data || error.message);
@@ -386,7 +407,7 @@ const StudentApplicationPage = () => {
             if (response && response.data) {
                 setExistingApplication(response.data);
                 const appData = response.data;
-                
+
                 // Pre-populate form with existing data, ensuring all fields are properly mapped
                 setFormData(prevData => ({
                     ...prevData,
@@ -400,12 +421,12 @@ const StudentApplicationPage = () => {
                     motherTongue: appData.motherTongue || prevData.motherTongue,
                     standard: appData.standard || prevData.standard
                 }));
-                
+
                 // Handle siblings separately as it's an array
                 if (appData.siblings && Array.isArray(appData.siblings) && appData.siblings.length > 0) {
                     setSiblings(appData.siblings);
                 }
-                
+
                 console.log('✅ Existing application loaded successfully:', appData);
                 toast.info('Existing application loaded. You can update the information.');
             }
@@ -445,7 +466,7 @@ const StudentApplicationPage = () => {
     const handleGenerateAndOpenPdf = async () => {
         try {
             await generateStudentPdf(currentUser._id);
-        } catch (_) {}
+        } catch (_) { }
         // Use relative path so dev proxy/axios base routes to the correct backend
         window.open(`/api/users/pdf/view/${currentUser._id}`, '_blank');
     };
@@ -521,7 +542,7 @@ const StudentApplicationPage = () => {
                                 <BookOpen className="mr-2" />Academic Details
                             </h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <FormField label="Class/Grade Applying For" name="standard" type="select" options={['Nursery', 'LKG', 'UKG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']} value={formData.standard} onChange={handleInputChange} required />
+                                <FormField label="Class/Grade Applying For" name="standard" type="select" options={['KGs', 'Grade 1 - 5', 'Grade 6-10']} value={formData.standard} onChange={handleInputChange} required />
                                 <FormField label="Last School Name" name="lastSchoolName" value={formData.lastSchoolName} onChange={handleInputChange} />
                                 <FormField label="Class Completed" name="classCompleted" value={formData.classCompleted} onChange={handleInputChange} />
                                 <FormField label="Last Academic Year" name="lastAcademicYear" value={formData.lastAcademicYear} onChange={handleInputChange} />

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getStudentForms, trackForm } from '../api/applicationService';
-import { getFormsByStudent } from '../api/userService';
+import { getFormsByStudent, getUserProfile} from '../api/userService';
 import { 
   FileText, 
   Clock, 
@@ -166,6 +166,7 @@ const StudentApplicationTrackingPage = () => {
   const statusOptions = ['All', 'Pending', 'Reviewed', 'Interview', 'WrittenExam', 'Accepted', 'Rejected'];
 
   const fetchApplications = async (isRefresh = false) => {
+    
     try {
       if (isRefresh) {
         setRefreshing(true);
@@ -173,12 +174,11 @@ const StudentApplicationTrackingPage = () => {
         setLoading(true);
       }
       setError(null);
-
-      const studentId = currentUser.studentId || currentUser.authId || currentUser._id;
+      debugger//my code starts
       const status = selectedStatus === 'All' ? null : selectedStatus;
-      
-      console.log(`🔍 Fetching applications for student: ${studentId}, status: ${status}`);
-      const response = await getFormsByStudent(studentId);
+      const profileResponse = await getUserProfile(currentUser.authId);
+      const studId = profileResponse.data._id
+      const response = await getFormsByStudent(studId);
       
       console.log('✅ Applications fetched:', response.data?.length || 0, 'applications');
       setApplications(response.data || []);

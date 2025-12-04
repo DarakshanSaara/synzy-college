@@ -85,7 +85,7 @@ const StatusBadge = ({ status }) => {
 // Approval Status section removed per request
 
 
-const ViewStudentApplications = ({}) => {
+const ViewStudentApplications = ({ }) => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -109,59 +109,30 @@ const ViewStudentApplications = ({}) => {
         setLoading(true);
       }
       setError(null);
-
-      // First, use authId to find the school profile and get the correct schoolId
-      console.log(`🔍 [SCHOOL DETECTION] Starting school detection using authId: ${currentUser?._id}`);
-
       let schoolId = null;
       let schoolIdentifier = null;
-
       if (currentUser?._id) {
         try {
-          console.log(`🔑 [AUTH ID LOOKUP] Finding school profile for authId: ${currentUser._id}`);
-
           // Use authId to find the school in schools collection where authId matches
           const schoolProfileResponse = await getSchoolByAuthId(currentUser._id);
-          const schoolProfileData = schoolProfileResponse?.data;
+          const schoolProfileData = schoolProfileResponse?.data.data[0];
 
-          console.log(`🏫 [SCHOOL PROFILE] Found school by authId:`, {
-            profileData: schoolProfileData,
-            hasData: !!schoolProfileData,
-            profileKeys: schoolProfileData ? Object.keys(schoolProfileData) : []
-          });
-
-          if (schoolProfileData?.data?._id) {
-            schoolId = schoolProfileData.data._id;
-            schoolIdentifier = schoolId;
-            console.log(`✅ [SCHOOL ID FOUND] Extracted schoolId from schools collection: ${schoolId}`);
-          } else if (schoolProfileData?._id) {
+          if (schoolProfileData?._id) {
             schoolId = schoolProfileData._id;
             schoolIdentifier = schoolId;
-            console.log(`✅ [SCHOOL ID FOUND] Direct schoolId from schools collection: ${schoolId}`);
-          } else {
+          }else {
             console.warn(`⚠️ [NO SCHOOL PROFILE] No school found for authId: ${currentUser._id}`);
-            // Fallback to currentUser schoolId
-            schoolId = currentUser?.schoolId;
-            schoolIdentifier = schoolId || currentUser?._id || currentUser?.email;
-            console.log(`🔄 [FALLBACK] Using fallback identifier: ${schoolIdentifier}`);
           }
         } catch (profileError) {
-          console.warn(`⚠️ [PROFILE LOOKUP ERROR] Could not find school profile by authId:`, {
+          console.warn(`⚠️ Error occured while fetching school using auth id:`, {
             authId: currentUser?._id,
             error: profileError.message,
             status: profileError.response?.status,
             responseData: profileError.response?.data
           });
-
-          // Fallback to currentUser schoolId
-          schoolId = currentUser?.schoolId;
-          schoolIdentifier = schoolId || currentUser?._id || currentUser?.email;
-          console.log(`🔄 [FALLBACK AFTER ERROR] Using fallback identifier: ${schoolIdentifier}`);
         }
       } else {
         console.warn(`⚠️ [NO AUTH ID] No authId found in currentUser, using fallback`);
-        schoolId = currentUser?.schoolId;
-        schoolIdentifier = schoolId || currentUser?._id || currentUser?.email;
       }
 
       console.log(`🎯 [FINAL SCHOOL ID] Using schoolId: ${schoolId}, identifier: ${schoolIdentifier}`, {
@@ -174,7 +145,7 @@ const ViewStudentApplications = ({}) => {
       });
 
       // Fetch applications using the correct school identifier
-      console.log(`📡 [API CALL] Fetching forms with school identifier: ${schoolIdentifier}`);
+      debugger;
       const response = await fetchStudentApplications(schoolIdentifier);
       console.log(`✅ [API RESPONSE] Forms fetched successfully:`, {
         totalForms: response.data?.length || 0,
@@ -238,9 +209,9 @@ const ViewStudentApplications = ({}) => {
       const pendingApplications = (response.data || []).filter((a) => {
         const status = (a.status || '').toString().toLowerCase();
         const keepInViewStudent = status === 'pending' ||
-                                  status === 'rejected' ||
-                                  status === 'reviewed' ||
-                                  status === '';
+          status === 'rejected' ||
+          status === 'reviewed' ||
+          status === '';
 
         console.log(`📋 [STATUS FILTER] Application status check:`, {
           applicationId: a._id || a.id,
@@ -318,7 +289,7 @@ const ViewStudentApplications = ({}) => {
 
     // Listen for application events
     window.addEventListener('applicationAdded', handleNewApplication);
-    
+
     return () => {
       window.removeEventListener('applicationAdded', handleNewApplication);
     };
@@ -327,7 +298,7 @@ const ViewStudentApplications = ({}) => {
   const handleStatusChange = async (app, newStatus) => {
     // Try multiple possible form ID locations
     const formId = app?._id || app?.formId || app?.id || app?._raw?._id;
-    
+
     if (!formId) {
       console.warn('❌ No valid form id to update:', {
         applicationId: app?._id || app?.id,
@@ -408,7 +379,7 @@ const ViewStudentApplications = ({}) => {
       toast.error('Cannot schedule interview: Invalid application data');
       return;
     }
-    
+
     // Add formId to the application object for the modal
     const appWithFormId = { ...app, formId };
     setSelectedApplication(appWithFormId);
@@ -554,19 +525,19 @@ const ViewStudentApplications = ({}) => {
 
       // Set the application data for the modal using existing form data
       const interviewNote = app?.note ||
-                      app?.formDetails?.note ||
-                      app?.applicationData?.note ||
-                      app?._raw?.note ||
-                      app?.applicationData?.formData?.note ||
-                      app?.interviewNote ||  // Direct field from database
-                      app?._raw?.interviewNote ||
-                      app?.formDetails?.interviewNote ||
-                      app?.applicationData?.interviewNote ||
-                      app?._raw?.data?.note ||
-                      app?.formDetails?.data?.note ||
-                      app?.data?.note ||
-                      app?.formData?.note ||
-                      'No interview details available';
+        app?.formDetails?.note ||
+        app?.applicationData?.note ||
+        app?._raw?.note ||
+        app?.applicationData?.formData?.note ||
+        app?.interviewNote ||  // Direct field from database
+        app?._raw?.interviewNote ||
+        app?.formDetails?.interviewNote ||
+        app?.applicationData?.interviewNote ||
+        app?._raw?.data?.note ||
+        app?.formDetails?.data?.note ||
+        app?.data?.note ||
+        app?.formData?.note ||
+        'No interview details available';
 
       // Try to find interview notes in any text field that contains interview-related content
       let fallbackNote = 'No interview details available';
@@ -577,12 +548,12 @@ const ViewStudentApplications = ({}) => {
           if (typeof value === 'string' && value.length > 10) {
             // Look for fields that might contain interview details
             if (key.toLowerCase().includes('note') ||
-                key.toLowerCase().includes('detail') ||
-                key.toLowerCase().includes('interview') ||
-                value.toLowerCase().includes('interview') ||
-                value.toLowerCase().includes('date') ||
-                value.toLowerCase().includes('time') ||
-                value.toLowerCase().includes('venue')) {
+              key.toLowerCase().includes('detail') ||
+              key.toLowerCase().includes('interview') ||
+              value.toLowerCase().includes('interview') ||
+              value.toLowerCase().includes('date') ||
+              value.toLowerCase().includes('time') ||
+              value.toLowerCase().includes('venue')) {
               fallbackNote = value;
               console.log(`🎯 Found potential interview notes in field '${key}':`, value);
               break;
@@ -679,8 +650,8 @@ const ViewStudentApplications = ({}) => {
     return (
       <div className="p-8 text-center">
         <p className="text-red-600">Error: {error}</p>
-        <button 
-          onClick={() => window.location.reload()} 
+        <button
+          onClick={() => window.location.reload()}
           className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
           Retry
@@ -732,11 +703,10 @@ const ViewStudentApplications = ({}) => {
           <button
             key={status}
             onClick={() => handleStatusFilter(status)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              selectedStatus === status
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${selectedStatus === status
                 ? 'bg-blue-600 text-white'
                 : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-            }`}
+              }`}
           >
             {status}
           </button>
@@ -763,57 +733,57 @@ const ViewStudentApplications = ({}) => {
                 const isAccepted = statusLower === 'accepted';
                 const isRejected = statusLower === 'rejected';
                 return (
-              <tr key={app._id || app.id || app.formId || `app-${index}`} className="border-b last:border-b-0 hover:bg-gray-50">
-                <td className="p-4 align-top">{app.studentName}</td>
-                <td className="p-4 align-top">{app.class}</td>
-                <td className="p-4 align-top">{app.date}</td>
-                <td className="p-4 align-top">
-                  <button onClick={() => handleOpenDetails(app)} className="text-sm text-blue-600 hover:underline">
-                    View Details
-                  </button>
-                </td>
-                <td className="p-4 align-top">
-                  {/* Replaced inline badge with StatusBadge component for consistency */}
-                  <StatusBadge status={statusLower} />
-                </td>
-                <td className="p-4 flex flex-wrap gap-2 items-center">
-                  <button
-                    onClick={() => handleStatusChange(app, "Reviewed")}
-                    className="p-2 text-blue-600 bg-blue-100 rounded-full hover:bg-blue-200"
-                    title="Mark as Reviewed"
-                  >
-                    <Eye size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleScheduleInterview(app)}
-                    className="p-2 text-purple-600 bg-purple-100 rounded-full hover:bg-purple-200"
-                    title="Schedule Interview"
-                  >
-                    <Calendar size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleScheduleWrittenExam(app)}
-                    className="p-2 text-indigo-600 bg-indigo-100 rounded-full hover:bg-indigo-200"
-                    title="Schedule Written Exam"
-                  >
-                    <FileText size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleStatusChange(app, "Accepted")}
-                    className="p-2 text-green-600 bg-green-100 rounded-full hover:bg-green-200"
-                    title="Accept"
-                  >
-                    <Check size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleStatusChange(app, "Rejected")}
-                    className="p-2 text-red-600 bg-red-100 rounded-full hover:bg-red-200"
-                    title="Reject"
-                  >
-                    <X size={16} />
-                  </button>
-                </td>
-              </tr>
+                  <tr key={app._id || app.id || app.formId || `app-${index}`} className="border-b last:border-b-0 hover:bg-gray-50">
+                    <td className="p-4 align-top">{app.studentName}</td>
+                    <td className="p-4 align-top">{app.class}</td>
+                    <td className="p-4 align-top">{app.date}</td>
+                    <td className="p-4 align-top">
+                      <button onClick={() => handleOpenDetails(app)} className="text-sm text-blue-600 hover:underline">
+                        View Details
+                      </button>
+                    </td>
+                    <td className="p-4 align-top">
+                      {/* Replaced inline badge with StatusBadge component for consistency */}
+                      <StatusBadge status={statusLower} />
+                    </td>
+                    <td className="p-4 flex flex-wrap gap-2 items-center">
+                      <button
+                        onClick={() => handleStatusChange(app, "Reviewed")}
+                        className="p-2 text-blue-600 bg-blue-100 rounded-full hover:bg-blue-200"
+                        title="Mark as Reviewed"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleScheduleInterview(app)}
+                        className="p-2 text-purple-600 bg-purple-100 rounded-full hover:bg-purple-200"
+                        title="Schedule Interview"
+                      >
+                        <Calendar size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleScheduleWrittenExam(app)}
+                        className="p-2 text-indigo-600 bg-indigo-100 rounded-full hover:bg-indigo-200"
+                        title="Schedule Written Exam"
+                      >
+                        <FileText size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleStatusChange(app, "Accepted")}
+                        className="p-2 text-green-600 bg-green-100 rounded-full hover:bg-green-200"
+                        title="Accept"
+                      >
+                        <Check size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleStatusChange(app, "Rejected")}
+                        className="p-2 text-red-600 bg-red-100 rounded-full hover:bg-red-200"
+                        title="Reject"
+                      >
+                        <X size={16} />
+                      </button>
+                    </td>
+                  </tr>
                 );
               });
             })()}
@@ -943,7 +913,7 @@ const ViewStudentApplications = ({}) => {
     </div>
   );
 };
-const ViewShortlistedApplications = ({}) => {
+const ViewShortlistedApplications = ({ }) => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [detectedSchoolId, setDetectedSchoolId] = useState(null);
@@ -1040,23 +1010,127 @@ const ViewShortlistedApplications = ({}) => {
         // Show applications that have been processed: accepted, interview, written exam, or shortlisted
         const processedApplications = all.filter((a) => {
           const status = (a.status || '').toString().toLowerCase();
-          const isProcessed = status === 'accepted' || 
-                             status === 'interview' || 
-                             status === 'writtenexam' || 
-                             status === 'shortlisted';
-          
+          const isProcessed = status === 'accepted' ||
+            status === 'interview' ||
+            status === 'writtenexam' ||
+            status === 'shortlisted';
+
           console.log(`📋 Shortlist check:`, {
             id: a._id || a.id,
             status: a.status,
             normalizedStatus: status,
             isProcessed
           });
-          
+
           return isProcessed;
         });
-        
+
         console.log(`📊 Shortlisted: ${processedApplications.length} out of ${all.length} total`);
         setApplications(processedApplications);
+        const applications = [
+          {
+            id: 1,
+            name: "Rahul Kumar",
+            email: "rahul.kumar@example.com",
+            phone: "+91 9876543210",
+            position: "Software Engineer",
+            status: "Pending",
+            appliedDate: "2025-01-10",
+            experience: 2
+          },
+          {
+            id: 2,
+            name: "Aisha Khan",
+            email: "aisha.khan@example.com",
+            phone: "+91 9001234567",
+            position: "UI/UX Designer",
+            status: "Interview",
+            appliedDate: "2025-01-08",
+            experience: 3
+          },
+          {
+            id: 3,
+            name: "John Mathew",
+            email: "john.mathew@example.com",
+            phone: "+91 9812345678",
+            position: "Frontend Developer",
+            status: "WrittenExam",
+            appliedDate: "2025-01-09",
+            experience: 1
+          },
+          {
+            id: 4,
+            name: "Sneha Patel",
+            email: "sneha.patel@example.com",
+            phone: "+91 9123456780",
+            position: "Backend Developer",
+            status: "Accepted",
+            appliedDate: "2025-01-05",
+            experience: 4
+          },
+          {
+            id: 5,
+            name: "Vishal Singh",
+            email: "vishal.singh@example.com",
+            phone: "+91 9988776655",
+            position: "Data Analyst",
+            status: "Rejected",
+            appliedDate: "2025-01-07",
+            experience: 2
+          },
+          {
+            id: 6,
+            name: "Neha Sharma",
+            email: "neha.sharma@example.com",
+            phone: "+91 9876001122",
+            position: "HR Executive",
+            status: "Pending",
+            appliedDate: "2025-01-11",
+            experience: 1
+          },
+          {
+            id: 7,
+            name: "Arjun Reddy",
+            email: "arjun.reddy@example.com",
+            phone: "+91 9090909090",
+            position: "DevOps Engineer",
+            status: "Interview",
+            appliedDate: "2025-01-06",
+            experience: 5
+          },
+          {
+            id: 8,
+            name: "Priya Verma",
+            email: "priya.verma@example.com",
+            phone: "+91 9811122233",
+            position: "QA Tester",
+            status: "WrittenExam",
+            appliedDate: "2025-01-09",
+            experience: 2
+          },
+          {
+            id: 9,
+            name: "Vikram Yadav",
+            email: "vikram.yadav@example.com",
+            phone: "+91 9785654321",
+            position: "Project Manager",
+            status: "Accepted",
+            appliedDate: "2025-01-03",
+            experience: 6
+          },
+          {
+            id: 10,
+            name: "Sara Joseph",
+            email: "sara.joseph@example.com",
+            phone: "+91 9234567890",
+            position: "Content Writer",
+            status: "Rejected",
+            appliedDate: "2025-01-04",
+            experience: 1
+          }
+        ];
+
+        setApplications()
       } catch (error) {
         console.error("❌ [SHORTLISTED APPLICATIONS ERROR] Error fetching shortlisted applications:", {
           errorMessage: error.message,
@@ -1195,7 +1269,7 @@ const SchoolPortalPage = ({ currentUser, onLogout, onRegister }) => {
           if (!found && byAuth?.status === 200) {
             found = { ok: true };
           }
-        } catch (_) {}
+        } catch (_) { }
 
         // Only try fetching by schoolId; avoid calling with auth _id (not a school id)
         if (!found && currentUser?.schoolId) {
@@ -1206,7 +1280,7 @@ const SchoolPortalPage = ({ currentUser, onLogout, onRegister }) => {
             if (!found && byId?.status === 200) {
               found = { ok: true };
             }
-          } catch (_) {}
+          } catch (_) { }
         }
         setHasProfile(!!found);
       } catch (_) {
@@ -1233,14 +1307,14 @@ const SchoolPortalPage = ({ currentUser, onLogout, onRegister }) => {
           element={<ViewShortlistedApplications />}
         />
         {/* Approval Status route removed */}
-         <Route
-           path="applications"
-           element={
-             <ErrorBoundary>
-               <ViewStudentApplications />
-             </ErrorBoundary>
-           }
-         />
+        <Route
+          path="applications"
+          element={
+            <ErrorBoundary>
+              <ViewStudentApplications />
+            </ErrorBoundary>
+          }
+        />
         {currentUser?.userType === 'school' && (
           <Route
             path="register"
@@ -1253,7 +1327,7 @@ const SchoolPortalPage = ({ currentUser, onLogout, onRegister }) => {
           />
         )}
 
-        
+
         <Route
           index
           element={
