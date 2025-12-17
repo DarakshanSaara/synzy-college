@@ -501,33 +501,21 @@ const extractStudentId = (app, currentUser) => {
                               View School
                             </button>
                           )}
-                          {/* View PDF */}
-                          {(() => {
+   {/* View PDF */}
+{(() => {
   const studId = currentUser?._id;
   const applicationId = extractApplicationId(row);
 
   if (!studId || !applicationId) return null;
 
- const apiBaseURL = import.meta.env.VITE_API_BASE_URL;
-    
+  const pdfUrl = `https://backend-tc-sa-v2.onrender.com/api/users/pdf/view/${studId}/${applicationId}`;
 
-  const pdfUrl = import.meta.env.DEV
-    ? `/api/users/pdf/view/${studId}/${applicationId}`
-    : `${apiBaseURL}/users/pdf/view/${studId}/${applicationId}`;
-
-  const handleOpenPdf = async () => {
+  const handleOpenPdf = () => {
     try {
-      const blob = await fetchPdfBlob(pdfUrl);
-      const blobUrl = window.URL.createObjectURL(blob);
-
-      // OPEN IN NEW TAB (works everywhere)
-      window.open(blobUrl, '_blank', 'noopener,noreferrer');
-
-      // optional cleanup
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+      window.open(pdfUrl, "_blank", "noopener,noreferrer");
     } catch (err) {
       console.error(err);
-      toast.error('Unable to open PDF');
+      toast.error("Unable to open PDF");
     }
   };
 
@@ -540,6 +528,7 @@ const extractStudentId = (app, currentUser) => {
     </button>
   );
 })()}
+
 
 
                           {/* Download PDF */}
