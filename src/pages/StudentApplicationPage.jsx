@@ -5,9 +5,27 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { submitApplication, generateStudentPdf, getUserProfile, createStudentProfile } from '../api/userService';
-import { createApplication, checkApplicationExists, updateExistingApplication, submitFormToSchool } from '../api/applicationService';
+import { createApplication, checkApplicationExists, updateExistingApplication, submitFormToSchool,getApplicationById } from '../api/applicationService';
 import { getSchoolById } from '../api/adminService';
 import { FileText, User, Users, Home, BookOpen, PlusCircle, Trash2, Shield } from 'lucide-react';
+const initialFormState = {
+    name: '', location: '', dob: '', age: '', gender: '', motherTongue: '',
+    placeOfBirth: '', speciallyAbled: false, speciallyAbledType: '',
+    nationality: '', religion: '', caste: '', subcaste: '', aadharNo: '',
+    bloodGroup: '', allergicTo: '', interest: '',
+    standard: '', 
+    lastSchoolName: '', classCompleted: '', lastAcademicYear: '',
+    reasonForLeaving: '', board: '',
+    fatherName: '', fatherAge: '', fatherQualification: '', fatherProfession: '',
+    fatherAnnualIncome: '', fatherPhoneNo: '', fatherAadharNo: '', fatherEmail: '',
+    motherName: '', motherAge: '', motherQualification: '', motherProfession: '',
+    motherAnnualIncome: '', motherPhoneNo: '', motherAadharNo: '', motherEmail: '',
+    relationshipStatus: '',
+    guardianName: '', guardianContactNo: '', guardianRelationToStudent: '',
+    guardianQualification: '', guardianProfession: '', guardianEmail: '', guardianAadharNo: '',
+    presentAddress: '', permanentAddress: '',
+    homeLanguage: '', yearlyBudget: '',
+};
 
 const FormField = ({ label, name, type = 'text', value, onChange, required = false, options = null, checked }) => {
     if (type === 'select') {
@@ -76,24 +94,7 @@ const StudentApplicationPage = () => {
     const [submitted, setSubmitted] = useState(false);
     const [isUpdate, setIsUpdate] = useState(false);
     const [existingApplication, setExistingApplication] = useState(null);
-    const [formData, setFormData] = useState({
-        name: '', location: '', dob: '', age: '', gender: '', motherTongue: '',
-        placeOfBirth: '', speciallyAbled: false, speciallyAbledType: '',
-        nationality: '', religion: '', caste: '', subcaste: '', aadharNo: '',
-        bloodGroup: '', allergicTo: '', interest: '',
-        standard: '', // Required: Class/grade student wants to enroll in
-        lastSchoolName: '', classCompleted: '', lastAcademicYear: '',
-        reasonForLeaving: '', board: '',
-        fatherName: '', fatherAge: '', fatherQualification: '', fatherProfession: '',
-        fatherAnnualIncome: '', fatherPhoneNo: '', fatherAadharNo: '', fatherEmail: '',
-        motherName: '', motherAge: '', motherQualification: '', motherProfession: '',
-        motherAnnualIncome: '', motherPhoneNo: '', motherAadharNo: '', motherEmail: '',
-        relationshipStatus: '',
-        guardianName: '', guardianContactNo: '', guardianRelationToStudent: '',
-        guardianQualification: '', guardianProfession: '', guardianEmail: '', guardianAadharNo: '',
-        presentAddress: '', permanentAddress: '',
-        homeLanguage: '', yearlyBudget: '',
-    });
+    const [formData, setFormData] = useState(initialFormState);
     const [siblings, setSiblings] = useState([]);
 
     const handleInputChange = (e) => {
@@ -223,8 +224,8 @@ const StudentApplicationPage = () => {
             // ---------------------------------------------------
             let result;
 
-            if (isUpdate && existingApplication) {
-                result = await updateExistingApplication(currentUser._id, payload);
+            if (isUpdate && existingApplication?._id) {
+                result = await updateExistingApplication(existingApplication._id, payload);
                 toast.success("Application updated successfully!");
             } else {
                 result = await createApplication(payload);
@@ -391,15 +392,33 @@ const StudentApplicationPage = () => {
     }, [schoolId, navigate]);
 
     // Check for update mode and load existing application
-    useEffect(() => {
+useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
-        const updateMode = urlParams.get('update') === 'true';
-        setIsUpdate(updateMode);
+        const appId = urlParams.get('appId');
 
-        if (updateMode && currentUser?._id) {
-            loadExistingApplication();
+        if (appId) {
+            // EDIT MODE: Load specific application
+            setIsUpdate(true);
+            loadApplicationById(appId); // Make sure you added this function from the previous step
+        } else {
+            // NEW MODE: Reset everything for a fresh start
+            setIsUpdate(false);
+            setExistingApplication(null); 
+            setFormData(initialFormState); // <--- No error now!
+            setSiblings([]); 
         }
-    }, [currentUser]);
+    }, [window.location.search]); 
+  const loadSpecificApplication = async (appId) => {
+    try {
+      // Import this from api/applicationService.js
+      const appData = await getApplicationById(appId); 
+      setExistingApplication(appData);
+      setFormData(prev => ({ ...prev, ...appData }));
+      // ... handle siblings logic
+    } catch (error) {
+      toast.error('Failed to load application details');
+    }
+  };
 
     const loadExistingApplication = async () => {
         try {

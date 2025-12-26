@@ -37,6 +37,7 @@ const ApplicationFlowPage = () => {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [showUpdateForm, setShowUpdateForm] = useState(false);
+  const [applications, setApplications] = useState([]);
 
   // Fetch school details
   useEffect(() => {
@@ -51,7 +52,7 @@ const ApplicationFlowPage = () => {
       checkApplicationStatus();
     }
   }, [currentUser, schoolId, school, schoolLoading]);
-
+  
   const fetchSchoolDetails = async () => {
     try {
       setSchoolLoading(true);
@@ -70,30 +71,24 @@ const ApplicationFlowPage = () => {
 
   const checkApplicationStatus = async () => {
     setLoading(true);
-    setError('');
-    
     try {
-      // Use student profile ID if available, otherwise auth ID
       const studentId = currentUser.studentId || currentUser._id;
-      console.log('Checking application for user:', currentUser);
-      console.log('Using student ID:', studentId);
-      const existingApplication = await checkApplicationExists(studentId);
       
-      if (existingApplication) {
-        // Application exists - Scenario B: Returning applicant
-        setScenario('returning');
-        setApplication(existingApplication.data);
-        toast.info('Application found. You can submit directly to the school or update your information.');
+      // This now returns a LIST based on your backend team's message
+      const response = await checkApplicationExists(studentId);
+      
+      // Handle response safely (backend might return {data: []} or just [])
+      const appsList = Array.isArray(response) ? response : (response.data || []);
+
+      setApplications(appsList);
+
+      if (appsList.length > 0) {
+        setScenario('returning'); 
       } else {
-        // No application - Scenario A: First-time applicant
         setScenario('first-time');
-        setApplication(null);
-        toast.info('No application found. Please fill out the application form first.');
       }
     } catch (error) {
       console.error('Error checking application:', error);
-      setError('Failed to check application status. Please try again.');
-      toast.error('Failed to check application status.');
     } finally {
       setLoading(false);
     }
@@ -293,75 +288,48 @@ const ApplicationFlowPage = () => {
         )}
 
         {/* Scenario B: Returning applicant */}
-        {scenario === 'returning' && (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="text-center mb-6">
-              <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Returning Applicant</h2>
-              <p className="text-gray-600">
-                Your application already exists. You can submit directly or update your information.
-              </p>
-            </div>
-
-            {application && (
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-semibold text-gray-900 mb-2">Your Application Details:</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-600">Name:</span>
-                    <span className="ml-2 text-gray-900">{application.name}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Created:</span>
-                    <span className="ml-2 text-gray-900">
-                      {new Date(application.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Last Updated:</span>
-                    <span className="ml-2 text-gray-900">
-                      {new Date(application.updatedAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Application ID:</span>
-                    <span className="ml-2 font-mono text-gray-900">
-                      {application._id || application.id}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="flex justify-center space-x-4">
-              <button
-                onClick={() => setShowUpdateForm(true)}
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center"
-              >
-                <Edit3 className="h-4 w-4 mr-2" />
-                Update Information
-              </button>
-              <button
-                onClick={handleDirectSubmit}
-                disabled={loading}
-                className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4 mr-2" />
-                    Submit to School
-                  </>
-                )}
-              </button>
-            </div>
+        {/* Scenario B: Returning applicant (List View) */}
+{scenario === 'returning' && (
+  <div className="bg-white rounded-lg shadow-md p-6">
+    <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Applicant</h2>
+    
+    {/* List Existing Applications */}
+    <div className="space-y-4 mb-6">
+      {applications.map((app) => (
+        <div key={app._id} className="border p-4 rounded-lg flex justify-between items-center bg-gray-50">
+          <div>
+            <h3 className="font-bold text-lg">{app.name}</h3>
+            <p className="text-sm text-gray-600">Class: {app.standard}</p>
           </div>
-        )}
+          <div className="flex gap-2">
+            {/* Submit this specific child */}
+            <button
+              onClick={() => handleDirectSubmit(app._id)} // You need to update handleDirectSubmit to accept ID
+              className="px-3 py-1 bg-green-600 text-white rounded text-sm"
+            >
+              Submit
+            </button>
+            {/* Edit this specific child */}
+            <button
+              onClick={() => navigate(`/student-application/${schoolId}?appId=${app._id}`)}
+              className="px-3 py-1 border border-indigo-600 text-indigo-600 rounded text-sm"
+            >
+              Edit
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
 
+    {/* BUTTON TO ADD BROTHER/SISTER */}
+    <button
+      onClick={() => navigate(`/student-application/${schoolId}`)} // No ID means Create New
+      className="w-full py-3 border-2 border-dashed border-indigo-300 text-indigo-600 font-semibold rounded-lg hover:bg-indigo-50"
+    >
+      + Add Another Child (Sibling)
+    </button>
+  </div>
+)}
         {/* Update Form Modal */}
         {showUpdateForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
