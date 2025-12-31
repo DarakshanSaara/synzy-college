@@ -9,6 +9,10 @@ import apiClient from './axios';
 export const registerUser = (userData) => {
   return apiClient.post('/auth/register', userData);
 };
+export const googleLogin = (payload) => {
+  return apiClient.post('auth/google-web', payload);
+};
+
 
 /**
  * This function is for User login.

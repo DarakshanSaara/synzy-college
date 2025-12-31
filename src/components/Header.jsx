@@ -58,11 +58,11 @@ const Header = ({ isMobileMenuOpen, setMobileMenuOpen, compareCount, shortlistCo
                 <ProfileDropdown currentUser={currentUser} onLogout={onLogout} />
             </>
         ) : (
-            <>
-                <div className="flex items-center gap-2 border-r border-gray-300 pr-4">
+            <>{/*<div className="flex items-center gap-2 border-r border-gray-300 pr-4">
                   <User size={16} className="text-gray-500" />
                   <Link to="/login" className="text-gray-600 hover:text-blue-600 font-medium">User/Parent Login</Link>
-                </div>
+                </div>*/}
+               
                 <div className="flex items-center gap-2">
                   <School size={16} className="text-blue-600" />
                   <Link to="/signup-school" className="text-blue-600 hover:text-blue-700 font-medium">School Login</Link>

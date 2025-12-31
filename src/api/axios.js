@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Use dev proxy (Vite) in development; direct base URL in production builds
-const apiBaseURL = import.meta.env.DEV ? '' : import.meta.env.VITE_API_BASE_URL || 'https://backend-tc-sa-v2.onrender.com/api';
+const apiBaseURL = import.meta.env.VITE_API_BASE_URL || 'https://backend-tc-sa-v2.onrender.com/api';
 
 console.log('🔧 Axios Base URL:', apiBaseURL);
 
@@ -21,9 +21,15 @@ apiClient.interceptors.request.use(
     
     // In development, use proxy (no /api prefix needed)
     // In production, the base URL already includes /api
-    if (import.meta.env.DEV && !config.url.startsWith('/api/')) {
-      config.url = `/api${config.url.startsWith('/') ? '' : '/'}${config.url}`;
-    }
+   // Only prepend /api IF baseURL does NOT already contain /api
+if (
+  import.meta.env.DEV &&
+  !apiBaseURL.endsWith('/api') &&
+  !config.url.startsWith('/api/')
+) {
+  config.url = `/api${config.url.startsWith('/') ? '' : '/'}${config.url}`;
+}
+
     
     // CORS is handled by the proxy
     

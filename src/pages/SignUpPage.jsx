@@ -1,98 +1,132 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "react-toastify";
+import { GoogleLogin } from '@react-oauth/google';
+import { googleLogin } from '../api/authService';
+import { useAuth } from "../context/AuthContext";
+
+
+
 import { registerUser } from "../api/authService";
 
 const signUpSchema = z.object({
-  name: z.string().min(1, { message: "Name is required" }),
+  name: z.string().min(1, { message: "School name is required" }),
   email: z.string().email({ message: "Invalid email address" }),
   password: z
     .string()
     .min(6, { message: "Password must be at least 6 characters" }),
-  role: z.string(), 
 });
 
-const SignUpPage = ({ isSchoolSignUp = false }) => {
+const SignUpPage = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(signUpSchema),
-    defaultValues: {
-      role: isSchoolSignUp ? "school" : "parent",
-      name: "",
-      email: "",
-      password: "",
-    },
   });
 
-  const role = watch("role");
-
-  // Keep users on the correct signup screen based on role selection
-  useEffect(() => {
-    if (!isSchoolSignUp && role === "school") {
-      navigate("/signup-school");
-    }
-    if (isSchoolSignUp && role && role !== "school") {
-      navigate("/signup");
-    }
-  }, [role, isSchoolSignUp, navigate]);
-
+  // =====================
+  // EMAIL SIGNUP (SCHOOL)
+  // =====================
   const onSubmit = async (data) => {
-    setIsLoading(true);
-    try {
-      
-      const payload = {
-        name: data.name,
-        email: data.email,
-        password: data.password,
-        userType: data.role,
-        authProvider: "email",
-      };
+  setIsLoading(true);
+  try {
+    const payload = {
+      name: data.name,
+      email: data.email,
+      password: data.password,
+      userType: "school", 
+      authProvider: "email",
+    };
 
-      await registerUser(payload);
+    // 1. Capture the response from the server
+    const res = await registerUser(payload);
 
-      toast.success("Sign up successful! Please log in.");
-      navigate("/login");
-    } catch (error) {
-      console.error("Sign up failed:", error);
+    // 2. Check if the backend returned success and data
+    if (res.data.status === "success") {
+      const { token, user } = res.data.data;
+
+      // 3. ✅ CRITICAL: Update AuthContext state
+      // This tells the app "The user is now a logged-in School"
+      await login(user, token); 
+
+      toast.success("School account created successfully!");
       
-      // Handle specific error cases
-      if (error.response?.status === 409) {
-        const errorMessage = error.response?.data?.message || 
-          "An account with this email already exists but is not verified.";
-        
-        toast.error(errorMessage);
-        
-        // Show additional info for email verification
-        toast.info("Please check your email inbox for verification link, or try logging in if you've already verified.");
-        
-        // Show helpful message about what to do next
-        toast.info("If you can't find the verification email, try logging in - it may have been verified already.");
-        
-        // Optionally redirect to login page
-        setTimeout(() => {
-          navigate("/login");
-        }, 4000);
-      } else {
-        const errorMessage =
-          error.response?.data?.message ||
-          "An error occurred during registration. Please try again.";
-        toast.error(errorMessage);
-      }
-    } finally {
-      setIsLoading(false);
+      // 4. Navigate now that permissions are set in state
+      navigate("/school-portal/register", { replace: true });
     }
+  } catch (error) {
+    console.error("Signup error:", error);
+    toast.error(
+      error.response?.data?.message || "Registration failed. Please try again."
+    );
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+  // =====================
+  // GOOGLE SIGNUP (SCHOOL)
+  // =====================
+ // 1. Make sure you have this at the top of your SignUpPage component:
+// const { login } = useAuth();
+
+const handleGoogleSuccess = async (credentialResponse) => {
+  try {
+    const tokenId = credentialResponse.credential;
+
+    if (!tokenId) {
+      toast.error('Google token missing');
+      return;
+    }
+
+    const payload = {
+      tokenId,
+      authProvider: 'google',
+      userType: 'school',
+    };
+
+    const res = await googleLogin(payload);
+
+    // Verify backend response status
+    if (res.data.status === "success") {
+      // Destructure from res.data.data based on your JSON logs
+      const { token, auth } = res.data.data; 
+
+      if (token && auth) {
+        // ✅ CRITICAL CHANGE: Use login() from AuthContext
+        // This updates the 'currentUser' state in App.jsx immediately
+        await login(auth, token); 
+        
+        toast.success('Google signup successful!');
+        
+        // ✅ Navigate once state is updated
+        // Note: replace: true prevents users from hitting 'back' to go to signup
+        navigate('/school-portal/register', { replace: true });
+      } else {
+        throw new Error("Missing token or user data from server");
+      }
+    }
+  } catch (error) {
+    console.error('Google signup error:', error);
+    toast.error(
+      error.response?.data?.message || 'Google signup failed. Please try again.'
+    );
+  }
+};
+
+  const handleGoogleError = () => {
+    toast.error("Google sign-up was cancelled");
   };
 
   return (
@@ -100,87 +134,47 @@ const SignUpPage = ({ isSchoolSignUp = false }) => {
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-lg">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900">
-            Create an Account
+            School Registration
           </h2>
-          {isSchoolSignUp && (
-            <p className="mt-2 text-sm text-gray-600">for your School</p>
-          )}
+          <p className="mt-2 text-sm text-gray-600">
+            Create your school account
+          </p>
         </div>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {!isSchoolSignUp && (
-            <div>
-              <label className="text-sm font-medium text-gray-700">
-                I am a:
-              </label>
-              <div className="flex gap-4 mt-2">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    value="parent"
-                    {...register("role")}
-                    className="h-4 w-4 text-blue-600"
-                  />
-                  <span className="ml-2">Parent</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    value="student"
-                    {...register("role")}
-                    className="h-4 w-4 text-blue-600"
-                  />
-                  <span className="ml-2">Student</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    value="school"
-                    {...register("role")}
-                    className="h-4 w-4 text-blue-600"
-                  />
-                  <span className="ml-2">School</span>
-                </label>
-              </div>
-            </div>
-          )}
 
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* SCHOOL NAME */}
           <div>
-            
-            <label htmlFor="name" className="text-sm font-medium text-gray-700">
-              {role === "school" ? "School Name" : "Full Name"}
+            <label className="text-sm font-medium text-gray-700">
+              School Name
             </label>
             <input
-              id="name"
               type="text"
               {...register("name")}
-              className={`w-full px-3 py-2 mt-1 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+              className={`w-full px-3 py-2 mt-1 border rounded-md ${
                 errors.name ? "border-red-500" : "border-gray-300"
               }`}
-              placeholder={
-                role === "school" ? "Delhi Public School" : "Poonam Verma"
-              }
+              placeholder="Delhi Public School"
               disabled={isLoading}
             />
             {errors.name && (
-              <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>
+              <p className="mt-1 text-xs text-red-500">
+                {errors.name.message}
+              </p>
             )}
           </div>
 
+          {/* EMAIL */}
           <div>
-            <label
-              htmlFor="email"
-              className="text-sm font-medium text-gray-700"
-            >
-              Email address
+            <label className="text-sm font-medium text-gray-700">
+              Email Address
             </label>
             <input
-              id="email"
               type="email"
               {...register("email")}
-              className={`w-full px-3 py-2 mt-1 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+              className={`w-full px-3 py-2 mt-1 border rounded-md ${
                 errors.email ? "border-red-500" : "border-gray-300"
               }`}
-              placeholder="you@example.com"
+              placeholder="school@example.com"
               disabled={isLoading}
             />
             {errors.email && (
@@ -190,19 +184,16 @@ const SignUpPage = ({ isSchoolSignUp = false }) => {
             )}
           </div>
 
+          {/* PASSWORD */}
           <div>
-            <label
-              htmlFor="password"
-              className="text-sm font-medium text-gray-700"
-            >
+            <label className="text-sm font-medium text-gray-700">
               Password
             </label>
             <div className="relative">
               <input
-                id="password"
                 type={showPassword ? "text" : "password"}
                 {...register("password")}
-                className={`w-full px-3 py-2 mt-1 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                className={`w-full px-3 py-2 mt-1 border rounded-md ${
                   errors.password ? "border-red-500" : "border-gray-300"
                 }`}
                 placeholder="••••••••"
@@ -211,44 +202,47 @@ const SignUpPage = ({ isSchoolSignUp = false }) => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500"
+                className="absolute inset-y-0 right-0 px-3 text-gray-500"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
-            {errors.password && (
-              <p className="mt-1 text-xs text-red-500">
-                {errors.password.message}
-              </p>
-            )}
           </div>
 
+          {/* REGISTER */}
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
           >
-            {isLoading ? "Creating Account..." : "Sign Up"}
+            {isLoading ? "Creating Account..." : "Register School"}
           </button>
-
-          <p className="text-sm text-center text-gray-600">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="font-medium text-blue-600 hover:underline"
-            >
-              Sign In
-            </Link>
-          </p>
-          {isSchoolSignUp && (
-            <p className="text-sm text-center text-gray-600">
-              Not a school?{" "}
-              <Link to="/signup" className="font-medium text-blue-600 hover:underline">
-                Sign up as Parent/Student
-              </Link>
-            </p>
-          )}
         </form>
+
+        {/* DIVIDER */}
+        <div className="flex items-center gap-2">
+          <div className="flex-grow h-px bg-gray-300" />
+          <span className="text-xs text-gray-500">OR</span>
+          <div className="flex-grow h-px bg-gray-300" />
+        </div>
+
+        {/* GOOGLE SIGNUP */}
+        <div className="flex justify-center">
+  <GoogleLogin
+    onSuccess={handleGoogleSuccess}
+    onError={handleGoogleError}
+    width="300"
+  />
+</div>
+
+
+        {/* SIGN IN LINK */}
+        <p className="text-sm text-center text-gray-600">
+          Already have a school account?{" "}
+          <Link to="/login" className="text-blue-600 hover:underline">
+            Sign In
+          </Link>
+        </p>
       </div>
     </div>
   );

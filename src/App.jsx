@@ -33,6 +33,7 @@ import ApplicationSummaryPage from "./pages/ApplicationSummaryPage";
 import ApplicationConfirmationPage from "./pages/ApplicationConfirmationPage";
 import CompareSelectPage from "./pages/CompareSelectPage";
 import ApplicationFlowPage from "./pages/ApplicationFlowPage";
+import ForgotPassword from "./pages/ForgotPassword";
 import StudentApplicationTrackingPage from "./pages/StudentApplicationTrackingPage";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -285,7 +286,7 @@ useEffect(() => {
             path="/signup-school"
             element={<SignUpPage isSchoolSignUp={true} />}
           />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
           <Route
             path="/schools"
