@@ -45,6 +45,16 @@ export const AuthProvider = ({ children }) => {
       return updatedUser;
     });
   }, []);
+  const setAuthSession = useCallback((userData, token) => {
+  console.log('🔐 Setting auth session directly (signup / oauth)');
+
+  setUser(userData);
+  setToken(token);
+
+  localStorage.setItem('userData', JSON.stringify(userData));
+  localStorage.setItem('authToken', token);
+}, []);
+
 
   const login = async (credentials, userType = 'user') => {
     try {
@@ -269,9 +279,10 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     updateUserContext,
+    setAuthSession,
     isAuthenticated: !!token,
     loading
-  }), [user, token, loading, updateUserContext]);
+  }), [user, token, loading, updateUserContext,setAuthSession]);
 
   if (loading) {
     return (

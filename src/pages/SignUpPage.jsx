@@ -24,6 +24,7 @@ const signUpSchema = z.object({
 const SignUpPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+   const { setAuthSession } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -58,7 +59,9 @@ const SignUpPage = () => {
 
       // 3. ✅ CRITICAL: Update AuthContext state
       // This tells the app "The user is now a logged-in School"
-      await login(user, token); 
+    
+
+setAuthSession(user, token);
 
       toast.success("School account created successfully!");
       
@@ -106,7 +109,7 @@ const handleGoogleSuccess = async (credentialResponse) => {
       if (token && auth) {
         // ✅ CRITICAL CHANGE: Use login() from AuthContext
         // This updates the 'currentUser' state in App.jsx immediately
-        await login(auth, token); 
+        setAuthSession(auth, token); 
         
         toast.success('Google signup successful!');
         
