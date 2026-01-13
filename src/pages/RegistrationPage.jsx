@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
-import { PlusCircle, Trash2, Info, Building2, Users2, ShieldCheck, HeartHandshake, Heart, Globe2, Sparkles, Image, Award, DollarSign, Cpu, GraduationCap, CalendarDays, Upload, ToggleRight } from "lucide-react";
+import { PlusCircle, Trash2, Info, Building2, Users2, ShieldCheck, HeartHandshake, Heart, Globe2, Sparkles, Image, Award, DollarSign, Cpu, GraduationCap, CalendarDays, Upload, ToggleRight, Briefcase } from "lucide-react";
 import { toast } from "react-toastify";
 import apiClient from "../api/axios";
 import { 
@@ -348,6 +348,43 @@ const DynamicElearningField = ({ label, value, onChange }) => {
 };
 
 const RegistrationPage = () => {
+  const [courses, setCourses] = useState([
+  {
+    courseName: "",
+    duration: "",
+    fees: "",
+    examType: "",
+    category: "",
+    rankType: "",
+    maxRankOrPercentile: ""
+  }
+]);
+const addCourse = () => {
+  setCourses(prev => [
+    ...prev,
+    {
+      courseName: "",
+      duration: "",
+      fees: "",
+      examType: "",
+      category: "",
+      rankType: "",
+      maxRankOrPercentile: ""
+    }
+  ]);
+};
+
+const updateCourse = (index, field, value) => {
+  const updated = [...courses];
+  updated[index][field] = value;
+  setCourses(updated);
+};
+
+const removeCourse = (index) => {
+  setCourses(prev => prev.filter((_, i) => i !== index));
+};
+
+
   const navigate = useNavigate();
   const { user: currentUser, updateUserContext } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -446,6 +483,12 @@ const RegistrationPage = () => {
       studentsSupportedPercentage: "", // Matches backend field
       facilitiesAvailable: [] // Matches backend enum ['Ramps', 'Wheelchair access', 'Special educators', 'Learning support', 'Resource room', 'Assistive devices']
     },
+    year: "",
+  totalStudents: "",
+  placedStudents: "",
+  highestPackage: "",
+  averagePackage: "",
+  topRecruiters: [],
     
     // Academics Fields (matching backend Academics model)
     averageClass10Result: "",
@@ -980,20 +1023,35 @@ const handleUseCurrentLocation = () => {
 
       // Add Admission Timeline if any (matching backend AdmissionTimeline model)
       if (admissionSteps && admissionSteps.length > 0) {
-        const cleanTimelines = admissionSteps
-          .filter(timeline => timeline.admissionStartDate && timeline.admissionEndDate && timeline.status && timeline.admissionLevel)
-          .map(timeline => ({
-            admissionStartDate: new Date(timeline.admissionStartDate),
-            admissionEndDate: new Date(timeline.admissionEndDate),
-            status: timeline.status,
-            applicationFee: timeline.applicationFee ?? 0,
-            documentsRequired: (timeline.documentsRequired || []).filter(doc => doc.trim()),
-              eligibility: {
-              admissionLevel: timeline.admissionLevel,
-              ageCriteria: timeline.ageCriteria || '',
-              otherInfo: timeline.otherInfo || ''
-            }
-          }));
+  const cleanTimelines = admissionSteps
+    .filter(
+      timeline =>
+        timeline.admissionStartDate &&
+        timeline.admissionEndDate &&
+        timeline.status &&
+        timeline.courseId &&                       // ✅ REQUIRED
+        timeline.applicationFee !== undefined      // ✅ REQUIRED
+    )
+    .map(timeline => ({
+      admissionStartDate: new Date(timeline.admissionStartDate),
+      admissionEndDate: new Date(timeline.admissionEndDate),
+      status: timeline.status,
+      applicationFee: Number(timeline.applicationFee),
+      courseId: timeline.courseId,                 // ✅ REQUIRED
+
+      documentsRequired: (timeline.documentsRequired || [])
+        .map(doc => doc.trim())
+        .filter(Boolean),
+
+      eligibility: {
+        minQualification:
+          timeline.eligibility?.minQualification || undefined,
+        otherInfo:
+          timeline.eligibility?.otherInfo?.trim() || ''
+      }
+    }));
+
+
         
         if (cleanTimelines.length > 0) {
           const payloadTimeline = { schoolId, timelines: cleanTimelines };
@@ -1726,17 +1784,29 @@ const handleUseCurrentLocation = () => {
         })));
       }
       if (Array.isArray(timeline.timelines)) {
-        setAdmissionSteps(timeline.timelines.map(t => ({
-          admissionStartDate: t.admissionStartDate ? new Date(t.admissionStartDate).toISOString().split('T')[0] : '',
-          admissionEndDate: t.admissionEndDate ? new Date(t.admissionEndDate).toISOString().split('T')[0] : '',
-          status: t.status || '',
-          documentsRequired: Array.isArray(t.documentsRequired) ? t.documentsRequired : [],
-          admissionLevel: t.eligibility?.admissionLevel || '',
-          applicationFee: t.applicationFee ?? 0,
-          ageCriteria: t.eligibility?.ageCriteria || '',
-          otherInfo: t.eligibility?.otherInfo || ''
-        })));
+  setAdmissionSteps(
+    timeline.timelines.map(t => ({
+      admissionStartDate: t.admissionStartDate
+        ? new Date(t.admissionStartDate).toISOString().split('T')[0]
+        : '',
+      admissionEndDate: t.admissionEndDate
+        ? new Date(t.admissionEndDate).toISOString().split('T')[0]
+        : '',
+      status: t.status || '',
+      applicationFee: t.applicationFee ?? 0,
+      courseId: t.courseId || '',
+
+      documentsRequired: Array.isArray(t.documentsRequired)
+        ? t.documentsRequired
+        : [],
+
+      eligibility: {
+        minQualification: t.eligibility?.minQualification || '',
+        otherInfo: t.eligibility?.otherInfo || ''
       }
+    }))
+  );
+}
 
       console.log('✅ Successfully loaded existing school data');
       console.log('📋 School data loaded:', {
@@ -2258,8 +2328,8 @@ const handleUseCurrentLocation = () => {
              <div className="mb-6 bg-white border rounded-lg p-4">
                <div className="flex items-start gap-4">
                  <div>
-                   <div className="text-sm font-medium text-gray-800 mb-1">School Identity</div>
-                   <div className="text-xs text-gray-500">Upload your school logo (PNG, JPG, JPEG). Max 5MB.</div>
+                   <div className="text-sm font-medium text-gray-800 mb-1">College Identity</div>
+                   <div className="text-xs text-gray-500">Upload your College logo (PNG, JPG, JPEG). Max 5MB.</div>
                  </div>
                </div>
                <div className="mt-4 flex items-center gap-4">
@@ -2308,7 +2378,7 @@ const handleUseCurrentLocation = () => {
              </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
-                label="School Name"
+                label="College Name"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
@@ -2342,13 +2412,7 @@ const handleUseCurrentLocation = () => {
                 onChange={handleInputChange}
                 required
               />
-              <FormField
-                label="Teacher:Student Ratio (e.g., 1:20)"
-                name="TeacherToStudentRatio"
-                type="text"
-                value={formData.TeacherToStudentRatio}
-                onChange={handleInputChange}
-              />
+              
               <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <FormField
                   label="Latitude (GPS)"
@@ -2402,47 +2466,26 @@ const handleUseCurrentLocation = () => {
                 onChange={handleInputChange}
                 required
               />
-              <FormField
-                label="Board"
-                name="board"
-                type="select"
-               options={[
-  "CBSE",
-  "ICSE",
-  "CISCE",
-  "NIOS",
-  "SSC",
-  "IGCSE",
-  "IB",
-  "KVS",
-  "JNV",
-  "DBSE",
-  "MSBSHSE",
-  "UPMSP",
-  "KSEEB",
-  "WBBSE",
-  "GSEB",
-  "RBSE",
-  "BSEB",
-  "PSEB",
-  "BSE",
-  "SEBA",
-  "MPBSE",
-  "STATE",
-  "OTHER"
-]}
-
-                value={formData.board}
-                onChange={handleInputChange}
-                required
+              
+              <FormField 
+              label="Established Year" 
+              name="EstablishedYear" 
+              value={formData.establishedYear} onChange={handleInputChange} 
+              required 
               />
-              <FormField
-                label="Classes Upto"
-                name="upto"
-                value={formData.upto}
-                onChange={handleInputChange}
-                required
-              />
+              <FormField 
+              label="Ranking"
+               name="ranking" 
+               type="number"
+                value={formData.ranking}
+                 onChange={handleInputChange} 
+                 required />
+        <FormField
+         label="Acceptance Rate" 
+         name="acceptanceRate"
+          value={formData.acceptanceRate}
+           onChange={handleInputChange}
+            required />
               <FormField
                 label="Gender Type"
                 name="genderType"
@@ -2452,12 +2495,30 @@ const handleUseCurrentLocation = () => {
                 onChange={handleInputChange}
                 required
               />
+               <FormField
+          label="College Mode"
+          name="collegeMode"
+          type="select"
+          options={["convent", "private", "government"]}
+          value={formData.collegeMode}
+          onChange={handleInputChange}
+          required
+        />
+         <FormField
+          label="Stream"
+          name="stream"
+          type="select"
+          options={["Engineering", "Management", "Arts", "Science", "Law", "Medical", "Design", "Humanities"]}
+          value={formData.stream}
+          onChange={handleInputChange}
+          required
+        />
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  School Shifts <span className="text-red-500">*</span>
+                  College Shifts <span className="text-red-500">*</span>
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {["morning", "afternoon", "night school"].map((shift) => (
+                  {["morning", "afternoon", "night school","online"].map((shift) => (
                     <label key={shift} className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
@@ -2487,15 +2548,7 @@ const handleUseCurrentLocation = () => {
                   <p className="text-red-500 text-xs mt-1">Please select at least one shift</p>
                 )}
               </div>
-              <FormField
-                label="School Mode"
-                name="schoolMode"
-                type="select"
-                options={["convent", "private", "government"]}
-                value={formData.schoolMode}
-                onChange={handleInputChange}
-                required
-              />
+              
               <FormField
                 label="Fee Range"
                 name="feeRange"
@@ -2505,17 +2558,175 @@ const handleUseCurrentLocation = () => {
                 onChange={handleInputChange}
                 required
               />
+             <FormField
+                label="Teacher:Student Ratio (e.g., 1:20)"
+                name="TeacherToStudentRatio"
+                type="text"
+                value={formData.TeacherToStudentRatio}
+                onChange={handleInputChange}
+              />
+              <FormField
+  label="Transport Available"
+  name="transportAvailable"
+  type="select"
+  options={["yes","no"]}
+  value={formData.transportAvailable}
+  onChange={handleInputChange}
+/>
+<div className="md:col-span-2">
+  <label className="block text-sm font-medium text-gray-700 mb-2">
+    Language Medium <span className="text-red-500">*</span>
+  </label>
+
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    {["English", "Hindi", "Marathi", "Other"].map((lang) => (
+      <label key={lang} className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          value={lang}
+          checked={formData.languageMedium.includes(lang)}
+          onChange={(e) => {
+            const checked = e.target.checked;
+
+            setFormData((prev) => ({
+              ...prev,
+              languageMedium: checked
+                ? [...prev.languageMedium, lang]
+                : prev.languageMedium.filter((l) => l !== lang),
+            }));
+          }}
+          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+        />
+        <span className="text-sm text-gray-700">{lang}</span>
+      </label>
+    ))}
+  </div>
+
+  {/* Validation message */}
+  {formData.languageMedium.length === 0 && (
+    <p className="text-xs text-red-600 mt-1">
+      Please select at least one language medium
+    </p>
+  )}
+</div>
+
+<FormField
+  label="Specialist (comma separated)"
+  value={formData.specialist.join(",")}
+  onChange={(e) =>
+    setFormData(p => ({ ...p, specialist: e.target.value.split(",") }))
+  }
+/>
+
+<FormField
+  label="Tags (comma separated)"
+  value={formData.tags.join(",")}
+  onChange={(e) =>
+    setFormData(p => ({ ...p, tags: e.target.value.split(",") }))
+  }
+/>
+
               <div className="md:col-span-2">
-                <FormField
-                  label="Description"
-                  name="description"
-                  type="textarea"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  required
-                />
+               <FormField
+            label="College Information"
+            name="collegeInfo"
+            type="textarea"
+            value={formData.collegeInfo}
+            onChange={handleInputChange}
+            required
+          />
               </div>
             </div>
+            <div className="block mt-10" id="courses">
+  <div className="flex items-center gap-4 mb-6 p-5 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border shadow">
+    <h3 className="text-xl font-semibold text-indigo-700">📚 Courses Offered</h3>
+  </div>
+
+  {courses.map((course, index) => (
+    <div
+      key={index}
+      className="mb-6 bg-white border rounded-lg p-6 space-y-4"
+    >
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <FormField
+          label="Course Name"
+          value={course.courseName}
+          onChange={(e) => updateCourse(index, "courseName", e.target.value)}
+          required
+        />
+
+        <FormField
+          label="Duration (e.g. 4 Years)"
+          value={course.duration}
+          onChange={(e) => updateCourse(index, "duration", e.target.value)}
+          required
+        />
+
+        <FormField
+          label="Fees (₹)"
+          type="number"
+          value={course.fees}
+          onChange={(e) => updateCourse(index, "fees", e.target.value)}
+          required
+        />
+
+        <FormField
+          label="Exam Type"
+          value={course.examType}
+          onChange={(e) => updateCourse(index, "examType", e.target.value)}
+          required
+        />
+
+        <FormField
+          label="Category"
+          value={course.category}
+          onChange={(e) => updateCourse(index, "category", e.target.value)}
+          required
+        />
+
+        <FormField
+          label="Rank Type"
+          type="select"
+          options={["Rank", "Percentile", "Percentage"]}
+          value={course.rankType}
+          onChange={(e) => updateCourse(index, "rankType", e.target.value)}
+          required
+        />
+
+        <FormField
+          label={`Max ${course.rankType || "Rank / Percentile"}`}
+          type="number"
+          value={course.maxRankOrPercentile}
+          onChange={(e) =>
+            updateCourse(index, "maxRankOrPercentile", e.target.value)
+          }
+          required
+        />
+
+      </div>
+
+      {courses.length > 1 && (
+        <button
+          type="button"
+          onClick={() => removeCourse(index)}
+          className="text-sm text-red-600 hover:underline"
+        >
+          Remove Course
+        </button>
+      )}
+    </div>
+  ))}
+
+  <button
+    type="button"
+    onClick={addCourse}
+    className="px-4 py-2 bg-indigo-600 text-white rounded-md"
+  >
+    + Add Another Course
+  </button>
+</div>
+
 
             <div className="block" id="amenities">
               <div className="flex items-center gap-4 mb-8 p-6 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200/50 shadow-lg">
@@ -2977,16 +3188,22 @@ const handleUseCurrentLocation = () => {
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">Fee Transparency Indicator</label>
             <div className="flex items-center gap-4">
-              <select
-                name="feesTransparency"
-                value={formData.feesTransparency}
-                onChange={handleInputChange}
-                className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option value="full">🟢 Fully Transparent</option>
-                <option value="partial">🟡 Partial Transparency</option>
-                <option value="low">🔴 Low Transparency</option>
-              </select>
+             <select
+  name="feesTransparency"
+  value={formData.feesTransparency}
+  onChange={(e) =>
+    setFormData(prev => ({
+      ...prev,
+      feesTransparency: Number(e.target.value)
+    }))
+  }
+  className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+>
+  <option value={100}>🟢 Fully Transparent</option>
+  <option value={50}>🟡 Partial Transparency</option>
+  <option value={0}>🔴 Low Transparency</option>
+</select>
+
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-600">Status:</span>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -2994,8 +3211,8 @@ const handleUseCurrentLocation = () => {
                   formData.feesTransparency === 'partial' ? 'bg-yellow-100 text-yellow-800' :
                   'bg-red-100 text-red-800'
                 }`}>
-                  {formData.feesTransparency === 'full' ? 'Fully Transparent' :
-                   formData.feesTransparency === 'partial' ? 'Partial' : 'Low Transparency'}
+                  {formData.feesTransparency === 100? 'Fully Transparent' :
+                   formData.feesTransparency === 50 ? 'Partial' : 'Low Transparency'}
                 </span>
               </div>
             </div>
@@ -3021,7 +3238,11 @@ const handleUseCurrentLocation = () => {
               <table className="min-w-full bg-white border border-gray-200 rounded-lg">
                 <thead className="bg-gray-50 sticky top-0">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course Name</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+  Duration
+</th>
+
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">💰 Tuition</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🎭 Activity</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">🚌 Transport</th>
@@ -3035,18 +3256,32 @@ const handleUseCurrentLocation = () => {
                   {(formData.classFees || []).map((fee, index) => (
                     <tr key={index} className="">
                       <td className="px-4 py-3">
-                        <input
-                          type="text"
-                          value={fee.className || ''}
-                          onChange={(e) => {
-                            const newFees = [...(formData.classFees || [])];
-                            newFees[index] = { ...newFees[index], className: e.target.value };
-                            setFormData(prev => ({ ...prev, classFees: newFees }));
-                          }}
-                          placeholder="e.g., Nursery, LKG, UKG, 1st"
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        />
+                       <input
+  type="text"
+  value={fee.courseName || ''}
+  onChange={(e) => {
+    const newFees = [...(formData.classFees || [])];
+    newFees[index].courseName = e.target.value;
+    setFormData(prev => ({ ...prev, classFees: newFees }));
+  }}
+  className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+/>
+
                       </td>
+                      <td className="px-4 py-3">
+  <input
+    type="text"
+    value={fee.courseDuration || ''}
+    onChange={(e) => {
+      const newFees = [...(formData.classFees || [])];
+      newFees[index].courseDuration = e.target.value;
+      setFormData(prev => ({ ...prev, classFees: newFees }));
+    }}
+    placeholder="e.g. 1 Year"
+    className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+  />
+</td>
+
                       <td className="px-4 py-3">
                         <input
                           type="number"
@@ -3186,13 +3421,15 @@ const handleUseCurrentLocation = () => {
                         }}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500"
                       >
-                        <option value="">Select type</option>
-                        <option value="Merit">Merit</option>
-                        <option value="Need-based">Need-based</option>
-                        <option value="Sports">Sports</option>
-                        <option value="Sibling">Sibling</option>
-                        <option value="Staff">Staff</option>
-                        <option value="Other">Other</option>
+                       <option value="">Select type</option>
+<option value="Merit">Merit</option>
+<option value="Socio-economic">Socio-economic</option>
+<option value="Cultural">Cultural</option>
+<option value="Sports">Sports</option>
+<option value="Community">Community</option>
+<option value="Academic Excellence">Academic Excellence</option>
+<option value="Other">Other</option>
+
                       </select>
                     </div>
                     <div>
@@ -3233,15 +3470,15 @@ const handleUseCurrentLocation = () => {
     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm
                focus:ring-indigo-500 focus:border-indigo-500"
   >
-    <option value="">Select Document</option>
     <option value="Income Certificate">Income Certificate</option>
-    <option value="Caste Certificate">Caste Certificate</option>
-    <option value="Aadhar Card">Aadhar Card</option>
-    <option value="Previous Marksheet">Previous Marksheet</option>
-    <option value="Bonafide Certificate">Bonafide Certificate</option>
-    <option value="Sports Achievement Certificate">
-      Sports Achievement Certificate
-    </option>
+<option value="Caste Certificate">Caste Certificate</option>
+<option value="Aadhar Card">Aadhar Card</option>
+<option value="Previous Marksheet">Previous Marksheet</option>
+<option value="Bonafide Certificate">Bonafide Certificate</option>
+<option value="Sports Achievement Certificate">Sports Achievement Certificate</option>
+<option value="Domicile Certificate">Domicile Certificate</option>
+<option value="Other">Other</option>
+
   </select>
 </div>
 
@@ -3398,70 +3635,150 @@ const handleUseCurrentLocation = () => {
 
             <div className="block" id="academics">
               <div className="flex items-center gap-4 mb-8 p-6 bg-gradient-to-r from-slate-50 to-gray-50 rounded-2xl border border-slate-200/50 shadow-lg">
-                <div className="p-3 bg-gradient-to-r from-slate-500 to-gray-500 rounded-xl shadow-lg">
-                  <GraduationCap className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-600 to-gray-600 bg-clip-text text-transparent">
-                    🎓 Academics
-                  </h2>
-                  <p className="text-gray-600 mt-1">Academic performance and exam results</p>
-                </div>
+               
+               
               </div>
 
-          {/* Academics - Backend aligned inputs */}
-          <div className="mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                label="Average Class 10 Result (%)"
-                name="averageClass10Result"
-                type="number"
-                value={formData.averageClass10Result}
-                onChange={handleInputChange}
-              />
-              <FormField
-                label="Average Class 12 Result (%)"
-                name="averageClass12Result"
-                type="number"
-                value={formData.averageClass12Result}
-                onChange={handleInputChange}
-              />
-              <FormField
-                label="Average School Marks (%)"
-                name="averageSchoolMarks"
-                type="number"
-                value={formData.averageSchoolMarks}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
+          <div className="block" id="placements">
+  {/* Header */}
+  <div className="flex items-center gap-4 mb-8 p-6 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl border border-indigo-200/50 shadow-lg">
+    <div className="p-3 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl shadow-lg">
+      <Briefcase className="w-6 h-6 text-white" />
+    </div>
+    <div>
+      <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+        🎓 Placement Details
+      </h2>
+      <p className="text-gray-600 mt-1">Year-wise placement performance</p>
+    </div>
+  </div>
 
-            <div className="mt-6">
-              <FormField
-                label="Special Exams Training"
-                name="specialExamsTraining"
-                type="checkboxGroup"
-                options={[
-                  'NEET','IIT-JEE','Olympiads','UPSC','CLAT','SAT/ACT','NTSE','KVPY'
-                ]}
-                value={formData.specialExamsTraining}
-                onChange={handleCheckboxChange}
-              />
-            </div>
+  {/* Placement Form */}
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Year *</label>
+      <input
+        type="number"
+        value={formData.year}
+        onChange={(e) =>
+          setFormData(prev => ({ ...prev, year: e.target.value }))
+        }
+        className="w-full px-3 py-2 border rounded-md"
+        placeholder="2024"
+      />
+    </div>
 
-            <div className="mt-6">
-              <FormField
-                label="Extra Curricular Activities"
-                name="extraCurricularActivities"
-                type="checkboxGroup"
-                options={[
-                  'Sports','Music','Dance','Drama','Art','Debate','NCC','NSS','Coding','Robotics'
-                ]}
-                value={formData.extraCurricularActivities}
-                onChange={handleCheckboxChange}
-              />
-            </div>
-          </div>
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Total Students *</label>
+      <input
+        type="number"
+        value={formData.totalStudents}
+        onChange={(e) =>
+          setFormData(prev => ({ ...prev, totalStudents: e.target.value }))
+        }
+        className="w-full px-3 py-2 border rounded-md"
+      />
+    </div>
+
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Placed Students *</label>
+      <input
+        type="number"
+        value={formData.placedStudents}
+        onChange={(e) =>
+          setFormData(prev => ({ ...prev, placedStudents: e.target.value }))
+        }
+        className="w-full px-3 py-2 border rounded-md"
+      />
+    </div>
+
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Highest Package (LPA) *</label>
+      <input
+        type="number"
+        value={formData.highestPackage}
+        onChange={(e) =>
+          setFormData(prev => ({ ...prev, highestPackage: e.target.value }))
+        }
+        className="w-full px-3 py-2 border rounded-md"
+      />
+    </div>
+
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Average Package (LPA) *</label>
+      <input
+        type="number"
+        value={formData.averagePackage}
+        onChange={(e) =>
+          setFormData(prev => ({ ...prev, averagePackage: e.target.value }))
+        }
+        className="w-full px-3 py-2 border rounded-md"
+      />
+    </div>
+
+    {/* Placement Percentage */}
+    <div className="flex items-center bg-gray-50 border rounded-md px-4">
+      <span className="text-gray-600 text-sm">Placement %:</span>
+      <span className="ml-2 font-semibold text-indigo-600">
+        {formData.totalStudents && formData.placedStudents
+          ? Math.round(
+              (formData.placedStudents / formData.totalStudents) * 100
+            ) + "%"
+          : "0%"}
+      </span>
+    </div>
+  </div>
+
+  {/* Top Recruiters */}
+  <div className="mb-6">
+    <div className="flex items-center justify-between mb-3">
+      <h3 className="text-lg font-medium text-gray-700">Top Recruiters</h3>
+      <button
+        type="button"
+        onClick={() =>
+          setFormData(prev => ({
+            ...prev,
+            topRecruiters: [...prev.topRecruiters, ""]
+          }))
+        }
+        className="flex items-center text-sm text-indigo-600"
+      >
+        <PlusCircle size={16} className="mr-1" /> Add Recruiter
+      </button>
+    </div>
+
+    <div className="space-y-3">
+      {(formData.topRecruiters || []).map((rec, index) => (
+        <div key={index} className="flex gap-2">
+          <input
+            type="text"
+            value={rec}
+            onChange={(e) => {
+              const updated = [...formData.topRecruiters];
+              updated[index] = e.target.value;
+              setFormData(prev => ({ ...prev, topRecruiters: updated }));
+            }}
+            placeholder="e.g. Google, Amazon"
+            className="flex-1 px-3 py-2 border rounded-md"
+          />
+          <button
+            type="button"
+            onClick={() =>
+              setFormData(prev => ({
+                ...prev,
+                topRecruiters: prev.topRecruiters.filter((_, i) => i !== index)
+              }))
+            }
+            className="text-red-500"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+
 
           {/* Board Results and Exam Qualifiers removed - not in backend schema */}
             </div>
@@ -3779,213 +4096,225 @@ const handleUseCurrentLocation = () => {
 
               <div className="space-y-6">
                 {admissionSteps.map((timeline, index) => (
-                  <div key={index} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-gray-800">Timeline Entry {index + 1}</h3>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const next = admissionSteps.filter((_, i) => i !== index);
-                          setAdmissionSteps(next);
-                        }}
-                        className="text-red-500 hover:text-red-700 p-1"
-                        aria-label={`Remove timeline ${index + 1}`}
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
+  <div key={index} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Admission Start Date */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Admission Start Date <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="date"
-                          value={timeline.admissionStartDate || ''}
-                      onChange={(e) => {
-                        const next = admissionSteps.slice();
-                            next[index] = { ...next[index], admissionStartDate: e.target.value };
-                        setAdmissionSteps(next);
-                      }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                          min={new Date().toISOString().split('T')[0]}
-                        />
-                      </div>
+    {/* Header */}
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="text-lg font-semibold text-gray-800">Timeline Entry {index + 1}</h3>
+      <button
+        type="button"
+        onClick={() => {
+          const next = admissionSteps.filter((_, i) => i !== index);
+          setAdmissionSteps(next);
+        }}
+        className="text-red-500 hover:text-red-700 p-1"
+        aria-label={`Remove timeline ${index + 1}`}
+      >
+        <Trash2 size={18} />
+      </button>
+    </div>
 
-                      {/* Admission End Date */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Admission End Date <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="date"
-                          value={timeline.admissionEndDate || ''}
-                      onChange={(e) => {
-                        const next = admissionSteps.slice();
-                            next[index] = { ...next[index], admissionEndDate: e.target.value };
-                        setAdmissionSteps(next);
-                      }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                          min={timeline.admissionStartDate || new Date().toISOString().split('T')[0]}
-                        />
-                      </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                      {/* Status */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Status <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                          value={timeline.status || ''}
-                        onChange={(e) => {
-                          const next = admissionSteps.slice();
-                            next[index] = { ...next[index], status: e.target.value };
-                          setAdmissionSteps(next);
-                        }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        >
-                          <option value="">Select Status</option>
-                          <option value="Ongoing">Ongoing</option>
-                          <option value="Ended">Ended</option>
-                          <option value="Starting Soon">Starting Soon</option>
-                        </select>
-                      </div>
+      {/* Admission Start Date */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Admission Start Date <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="date"
+          value={timeline.admissionStartDate || ''}
+          onChange={(e) => {
+            const next = [...admissionSteps];
+            next[index].admissionStartDate = e.target.value;
+            setAdmissionSteps(next);
+          }}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+          min={new Date().toISOString().split('T')[0]}
+        />
+      </div>
 
-                      {/* Admission Level */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Admission Level <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                          value={timeline.admissionLevel || ''}
-                          onChange={(e) => {
-                            const next = admissionSteps.slice();
-                            next[index] = { ...next[index], admissionLevel: e.target.value };
-                            setAdmissionSteps(next);
-                          }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        >
-                          <option value="">Select Level</option>
-                          <option value="KGs">KGs</option>
-                          <option value="Grade 1 - 5">Grade 1 - 5</option>
-                          <option value="Grade 6-10">Grade 6-10</option>
-                        </select>
-                      </div>
-                      <div>
-  <label className="block text-sm font-medium text-gray-700 mb-2">
-    Application Fee (Optional)
-  </label>
-  <input
-    type="number"
-    min="0"
-    placeholder="e.g., 500"
-    value={timeline.applicationFee ?? ''}
-    onChange={(e) => {
-      const next = admissionSteps.slice();
-      const value = e.target.value;
+      {/* Admission End Date */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Admission End Date <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="date"
+          value={timeline.admissionEndDate || ''}
+          onChange={(e) => {
+            const next = [...admissionSteps];
+            next[index].admissionEndDate = e.target.value;
+            setAdmissionSteps(next);
+          }}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+          min={timeline.admissionStartDate || new Date().toISOString().split('T')[0]}
+        />
+      </div>
 
-      next[index] = { 
-        ...next[index], 
-        applicationFee: value === '' ? 0 : Number(value) 
-      };
+      {/* Status */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Status <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={timeline.status || ''}
+          onChange={(e) => {
+            const next = [...admissionSteps];
+            next[index].status = e.target.value;
+            setAdmissionSteps(next);
+          }}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+        >
+          <option value="">Select Status</option>
+          <option value="Ongoing">Ongoing</option>
+          <option value="Ended">Ended</option>
+          <option value="Starting Soon">Starting Soon</option>
+        </select>
+      </div>
 
-      setAdmissionSteps(next);
-    }}
-    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-  />
-</div>
+      {/* Course Selection */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Course <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={timeline.courseId || ''}
+          onChange={(e) => {
+            const next = [...admissionSteps];
+            next[index].courseId = e.target.value;
+            setAdmissionSteps(next);
+          }}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+        >
+          <option value="">Select Course</option>
+          {/* Map your courses here */}
+        </select>
+      </div>
 
-                      {/* Age Criteria */}
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Age Criteria
-                        </label>
-                        <input
-                        type="text"
-                          placeholder="e.g., Child must be 3 years old by June 1, 2026"
-                          value={timeline.ageCriteria || ''}
-                        onChange={(e) => {
-                          const next = admissionSteps.slice();
-                            next[index] = { ...next[index], ageCriteria: e.target.value };
-                          setAdmissionSteps(next);
-                        }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        />
-                      </div>
+      {/* Application Fee */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Application Fee *
+        </label>
+        <input
+          type="number"
+          min="0"
+          value={timeline.applicationFee ?? 0}
+          onChange={(e) => {
+            const next = [...admissionSteps];
+            next[index].applicationFee = Number(e.target.value) || 0;
+            setAdmissionSteps(next);
+          }}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+        />
+      </div>
 
-                      {/* Other Info */}
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Other Eligibility Information
-                        </label>
-                        <textarea
-                          placeholder="Any other eligibility information..."
-                          value={timeline.otherInfo || ''}
-                          onChange={(e) => {
-                            const next = admissionSteps.slice();
-                            next[index] = { ...next[index], otherInfo: e.target.value };
-                            setAdmissionSteps(next);
-                          }}
-                          rows={3}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        />
-                      </div>
+      {/* Minimum Qualification */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Minimum Qualification
+        </label>
+        <select
+          value={timeline.eligibility?.minQualification || ''}
+          onChange={(e) => {
+            const next = [...admissionSteps];
+            next[index].eligibility = {
+              ...next[index].eligibility,
+              minQualification: e.target.value
+            };
+            setAdmissionSteps(next);
+          }}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+        >
+          <option value="">Select Qualification</option>
+          <option value="SSC Passed">SSC Passed</option>
+          <option value="HSC Passed">HSC Passed</option>
+          <option value="Dipoma Passed">Diploma Passed</option>
+          <option value="Under-Graduate">Under-Graduate</option>
+          <option value="Post-Graduate">Post-Graduate</option>
+          <option value="Bachelors">Bachelors</option>
+          <option value="Masters">Masters</option>
+          <option value="Phd">PhD</option>
+        </select>
+      </div>
 
-                      {/* Documents Required */}
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Documents Required
-                        </label>
-                        <div className="space-y-2">
-                          {(timeline.documentsRequired || []).map((doc, docIndex) => (
-                            <div key={docIndex} className="flex items-center gap-2">
-                        <input
-                                type="text"
-                                value={doc}
-                          onChange={(e) => {
-                            const next = admissionSteps.slice();
-                                  const nextDocs = [...(next[index].documentsRequired || [])];
-                                  nextDocs[docIndex] = e.target.value;
-                                  next[index] = { ...next[index], documentsRequired: nextDocs };
-                            setAdmissionSteps(next);
-                          }}
-                                placeholder="Document name"
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const next = admissionSteps.slice();
-                                  const nextDocs = [...(next[index].documentsRequired || [])];
-                                  nextDocs.splice(docIndex, 1);
-                                  next[index] = { ...next[index], documentsRequired: nextDocs };
-                                  setAdmissionSteps(next);
-                                }}
-                                className="text-red-500 p-1"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                      </div>
-                          ))}
-                      <button
-                        type="button"
-                        onClick={() => {
-                              const next = admissionSteps.slice();
-                              const nextDocs = [...(next[index].documentsRequired || []), ''];
-                              next[index] = { ...next[index], documentsRequired: nextDocs };
-                          setAdmissionSteps(next);
-                        }}
-                className="flex items-center text-sm text-indigo-600"
-                      >
-                            <PlusCircle size={16} className="mr-1" /> Add Document
-                      </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+      {/* Other Eligibility Info */}
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Other Eligibility Information
+        </label>
+        <textarea
+          placeholder="Any other eligibility information..."
+          value={timeline.eligibility?.otherInfo || ''}
+          onChange={(e) => {
+            const next = [...admissionSteps];
+            next[index].eligibility = {
+              ...next[index].eligibility,
+              otherInfo: e.target.value
+            };
+            setAdmissionSteps(next);
+          }}
+          rows={3}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+        />
+      </div>
+
+      {/* Documents Required */}
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Documents Required
+        </label>
+        <div className="space-y-2">
+          {(timeline.documentsRequired || []).map((doc, docIndex) => (
+            <div key={docIndex} className="flex items-center gap-2">
+              <input
+                type="text"
+                value={doc}
+                onChange={(e) => {
+                  const next = [...admissionSteps];
+                  const nextDocs = [...(next[index].documentsRequired || [])];
+                  nextDocs[docIndex] = e.target.value;
+                  next[index].documentsRequired = nextDocs;
+                  setAdmissionSteps(next);
+                }}
+                placeholder="Document name"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const next = [...admissionSteps];
+                  const nextDocs = [...(next[index].documentsRequired || [])];
+                  nextDocs.splice(docIndex, 1);
+                  next[index].documentsRequired = nextDocs;
+                  setAdmissionSteps(next);
+                }}
+                className="text-red-500 p-1"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => {
+              const next = [...admissionSteps];
+              const nextDocs = [...(next[index].documentsRequired || []), ''];
+              next[index].documentsRequired = nextDocs;
+              setAdmissionSteps(next);
+            }}
+            className="flex items-center text-sm text-indigo-600"
+          >
+            <PlusCircle size={16} className="mr-1" /> Add Document
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+))}
+
 
                 <button
                   type="button"
@@ -3993,11 +4322,15 @@ const handleUseCurrentLocation = () => {
                     admissionStartDate: '',
                     admissionEndDate: '',
                     status: '',
-                    admissionLevel: '',
-                    ageCriteria: '',
+                   
+                   courseId: '',
                     otherInfo: '',
                     documentsRequired: [],
-                    applicationFee: 0
+                    applicationFee: 0,
+                    eligibility: {
+                      minQualification: '',
+                      otherInfo: ''
+                    }
                   }])}
                   className="mt-4 flex items-center text-sm text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-4 py-2 rounded-lg border border-indigo-200"
                 >
