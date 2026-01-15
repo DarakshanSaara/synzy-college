@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
@@ -356,23 +356,44 @@ const RegistrationPage = () => {
     examType: "",
     category: "",
     rankType: "",
-    maxRankOrPercentile: ""
+    maxRankOrPercentile: "",
+    placements: [
+      {
+        year: "",
+        totalStudents: "",
+        placedStudents: "",
+        highestPackage: "",
+        averagePackage: "",
+        topRecruiters: []
+      }
+    ]
   }
 ]);
+
 const addCourse = () => {
-  setCourses(prev => [
-    ...prev,
-    {
-      courseName: "",
-      duration: "",
-      fees: "",
-      examType: "",
-      category: "",
-      rankType: "",
-      maxRankOrPercentile: ""
-    }
-  ]);
-};
+    setCourses(prev => [
+      ...prev,
+      {
+        courseName: "",
+        duration: "",
+        fees: "",
+        examType: "",
+        category: "",
+        rankType: "",
+        maxRankOrPercentile: "",
+        placements: [
+          {
+            year: "",
+            totalStudents: "",
+            placedStudents: "",
+            highestPackage: "",
+            averagePackage: "",
+            topRecruiters: [""]
+          }
+        ]
+      }
+    ]);
+  };
 
 const updateCourse = (index, field, value) => {
   const updated = [...courses];
@@ -380,10 +401,36 @@ const updateCourse = (index, field, value) => {
   setCourses(updated);
 };
 
+
 const removeCourse = (index) => {
   setCourses(prev => prev.filter((_, i) => i !== index));
 };
-
+const updatePlacement = (cIndex, pIndex, field, value) => {
+  const updated = [...courses];
+  updated[cIndex].placements[pIndex][field] = value;
+  setCourses(updated);
+};
+const addPlacement = (courseIndex) => {
+  const updated = [...courses];
+  updated[courseIndex].placements.push({
+    year: "",
+    totalStudents: "",
+    placedStudents: "",
+    highestPackage: "",
+    averagePackage: "",
+    topRecruiters: []
+  });
+  setCourses(updated);
+};
+ const removePlacement = (cIndex, pIndex) => {
+    const updated = [...courses];
+    updated[cIndex].placements = updated[cIndex].placements.filter(
+      (_, i) => i !== pIndex
+    );
+    setCourses(updated);
+  };
+const photoInputRef = useRef(null);
+const videoInputRef = useRef(null);
 
   const navigate = useNavigate();
   const { user: currentUser, updateUserContext } = useAuth();
@@ -483,12 +530,7 @@ const removeCourse = (index) => {
       studentsSupportedPercentage: "", // Matches backend field
       facilitiesAvailable: [] // Matches backend enum ['Ramps', 'Wheelchair access', 'Special educators', 'Learning support', 'Resource room', 'Assistive devices']
     },
-    year: "",
-  totalStudents: "",
-  placedStudents: "",
-  highestPackage: "",
-  averagePackage: "",
-  topRecruiters: [],
+    
     
     // Academics Fields (matching backend Academics model)
     averageClass10Result: "",
@@ -2642,89 +2684,179 @@ const handleUseCurrentLocation = () => {
     <h3 className="text-xl font-semibold text-indigo-700">📚 Courses Offered</h3>
   </div>
 
-  {courses.map((course, index) => (
-    <div
-      key={index}
-      className="mb-6 bg-white border rounded-lg p-6 space-y-4"
-    >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-        <FormField
-          label="Course Name"
-          value={course.courseName}
-          onChange={(e) => updateCourse(index, "courseName", e.target.value)}
-          required
-        />
-
-        <FormField
-          label="Duration (e.g. 4 Years)"
-          value={course.duration}
-          onChange={(e) => updateCourse(index, "duration", e.target.value)}
-          required
-        />
-
-        <FormField
-          label="Fees (₹)"
-          type="number"
-          value={course.fees}
-          onChange={(e) => updateCourse(index, "fees", e.target.value)}
-          required
-        />
-
-        <FormField
-          label="Exam Type"
-          value={course.examType}
-          onChange={(e) => updateCourse(index, "examType", e.target.value)}
-          required
-        />
-
-        <FormField
-          label="Category"
-          value={course.category}
-          onChange={(e) => updateCourse(index, "category", e.target.value)}
-          required
-        />
-
-        <FormField
-          label="Rank Type"
-          type="select"
-          options={["Rank", "Percentile", "Percentage"]}
-          value={course.rankType}
-          onChange={(e) => updateCourse(index, "rankType", e.target.value)}
-          required
-        />
-
-        <FormField
-          label={`Max ${course.rankType || "Rank / Percentile"}`}
-          type="number"
-          value={course.maxRankOrPercentile}
-          onChange={(e) =>
-            updateCourse(index, "maxRankOrPercentile", e.target.value)
-          }
-          required
-        />
-
-      </div>
-
-      {courses.length > 1 && (
-        <button
-          type="button"
-          onClick={() => removeCourse(index)}
-          className="text-sm text-red-600 hover:underline"
+ {courses.map((course, cIndex) => (
+        <div
+          key={cIndex}
+          className="mb-10 bg-white border rounded-xl p-6 shadow"
         >
-          Remove Course
-        </button>
-      )}
-    </div>
-  ))}
+          {/* COURSE HEADER */}
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-indigo-600">
+              Course {cIndex + 1}
+            </h3>
 
-  <button
-    type="button"
-    onClick={addCourse}
-    className="px-4 py-2 bg-indigo-600 text-white rounded-md"
-  >
-    + Add Another Course
-  </button>
+            {courses.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeCourse(cIndex)}
+                className="text-sm text-red-600"
+              >
+                Remove Course
+              </button>
+            )}
+          </div>
+
+          {/* COURSE FIELDS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField label="Course Name" value={course.courseName}
+              onChange={(e) => updateCourse(cIndex, "courseName", e.target.value)} required />
+
+            <FormField label="Duration" value={course.duration}
+              onChange={(e) => updateCourse(cIndex, "duration", e.target.value)} required />
+
+            <FormField label="Fees (₹)" type="number" value={course.fees}
+              onChange={(e) => updateCourse(cIndex, "fees", e.target.value)} required />
+
+            <FormField label="Exam Type" value={course.examType}
+              onChange={(e) => updateCourse(cIndex, "examType", e.target.value)} required />
+
+            <FormField label="Category" value={course.category}
+              onChange={(e) => updateCourse(cIndex, "category", e.target.value)} required />
+
+            <FormField
+              label="Rank Type"
+              type="select"
+              options={["Rank", "Percentile", "Percentage"]}
+              value={course.rankType}
+              onChange={(e) => updateCourse(cIndex, "rankType", e.target.value)}
+              required
+            />
+
+            <FormField
+              label={`Max ${course.rankType || "Rank / Percentile"}`}
+              type="number"
+              value={course.maxRankOrPercentile}
+              onChange={(e) =>
+                updateCourse(cIndex, "maxRankOrPercentile", e.target.value)
+              }
+              required
+            />
+          </div>
+
+          {/* PLACEMENTS */}
+          <div className="mt-10">
+            <div className="flex items-center gap-4 mb-6 p-5 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border shadow">
+              <h3 className="text-xl font-semibold text-indigo-700">
+                🎓 Placement Details
+              </h3>
+            </div>
+
+            {course.placements.map((place, pIndex) => (
+              <div
+                key={pIndex}
+                className="mb-8 bg-white border rounded-xl p-6 shadow"
+              >
+                {/* PLACEMENT HEADER */}
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold text-indigo-600">
+                    Placement Year {pIndex + 1}
+                  </h3>
+
+                  {course.placements.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removePlacement(cIndex, pIndex)}
+                      className="text-sm text-red-600"
+                    >
+                      Remove Placement Year
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <input className="border px-3 py-2 rounded" type="number"
+                    placeholder="Year" value={place.year}
+                    onChange={(e) => updatePlacement(cIndex, pIndex, "year", e.target.value)} />
+
+                  <input className="border px-3 py-2 rounded" type="number"
+                    placeholder="Total Students" value={place.totalStudents}
+                    onChange={(e) => updatePlacement(cIndex, pIndex, "totalStudents", e.target.value)} />
+
+                  <input className="border px-3 py-2 rounded" type="number"
+                    placeholder="Placed Students" value={place.placedStudents}
+                    onChange={(e) => updatePlacement(cIndex, pIndex, "placedStudents", e.target.value)} />
+
+                  <input className="border px-3 py-2 rounded" type="number"
+                    placeholder="Highest Package (LPA)" value={place.highestPackage}
+                    onChange={(e) => updatePlacement(cIndex, pIndex, "highestPackage", e.target.value)} />
+
+                  <input className="border px-3 py-2 rounded" type="number"
+                    placeholder="Average Package (LPA)" value={place.averagePackage}
+                    onChange={(e) => updatePlacement(cIndex, pIndex, "averagePackage", e.target.value)} />
+                </div>
+
+                <p className="mt-3 text-sm font-medium text-indigo-600">
+                  Placement % :{" "}
+                  {place.totalStudents && place.placedStudents
+                    ? Math.round((place.placedStudents / place.totalStudents) * 100) + "%"
+                    : "0%"}
+                </p>
+
+                {/* RECRUITERS */}
+                <div className="mt-4">
+                  <h6 className="text-sm font-medium mb-2">Top Recruiters</h6>
+
+                  {place.topRecruiters.map((rec, rIndex) => (
+                    <input
+                      key={rIndex}
+                      value={rec}
+                      onChange={(e) => {
+                        const updated = [...place.topRecruiters];
+                        updated[rIndex] = e.target.value;
+                        updatePlacement(cIndex, pIndex, "topRecruiters", updated);
+                      }}
+                      className="border px-3 py-2 rounded mb-2 w-full"
+                      placeholder="Recruiter Name"
+                    />
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updatePlacement(cIndex, pIndex, "topRecruiters", [
+                        ...place.topRecruiters,
+                        ""
+                      ])
+                    }
+                    className="text-sm text-indigo-600"
+                  >
+                    + Add Recruiter
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            <button
+              type="button"
+              onClick={() => addPlacement(cIndex)}
+              className="text-sm text-indigo-700"
+            >
+              + Add Placement Year
+            </button>
+          </div>
+        </div>
+      ))}
+
+      <button
+        type="button"
+        onClick={addCourse}
+        className="px-4 py-2 bg-indigo-600 text-white rounded-md"
+      >
+        + Add Another Course
+      </button>
+   
+    
+  
 </div>
 
 
@@ -3639,145 +3771,7 @@ const handleUseCurrentLocation = () => {
                
               </div>
 
-          <div className="block" id="placements">
-  {/* Header */}
-  <div className="flex items-center gap-4 mb-8 p-6 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl border border-indigo-200/50 shadow-lg">
-    <div className="p-3 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl shadow-lg">
-      <Briefcase className="w-6 h-6 text-white" />
-    </div>
-    <div>
-      <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
-        🎓 Placement Details
-      </h2>
-      <p className="text-gray-600 mt-1">Year-wise placement performance</p>
-    </div>
-  </div>
-
-  {/* Placement Form */}
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Year *</label>
-      <input
-        type="number"
-        value={formData.year}
-        onChange={(e) =>
-          setFormData(prev => ({ ...prev, year: e.target.value }))
-        }
-        className="w-full px-3 py-2 border rounded-md"
-        placeholder="2024"
-      />
-    </div>
-
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Total Students *</label>
-      <input
-        type="number"
-        value={formData.totalStudents}
-        onChange={(e) =>
-          setFormData(prev => ({ ...prev, totalStudents: e.target.value }))
-        }
-        className="w-full px-3 py-2 border rounded-md"
-      />
-    </div>
-
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Placed Students *</label>
-      <input
-        type="number"
-        value={formData.placedStudents}
-        onChange={(e) =>
-          setFormData(prev => ({ ...prev, placedStudents: e.target.value }))
-        }
-        className="w-full px-3 py-2 border rounded-md"
-      />
-    </div>
-
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Highest Package (LPA) *</label>
-      <input
-        type="number"
-        value={formData.highestPackage}
-        onChange={(e) =>
-          setFormData(prev => ({ ...prev, highestPackage: e.target.value }))
-        }
-        className="w-full px-3 py-2 border rounded-md"
-      />
-    </div>
-
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Average Package (LPA) *</label>
-      <input
-        type="number"
-        value={formData.averagePackage}
-        onChange={(e) =>
-          setFormData(prev => ({ ...prev, averagePackage: e.target.value }))
-        }
-        className="w-full px-3 py-2 border rounded-md"
-      />
-    </div>
-
-    {/* Placement Percentage */}
-    <div className="flex items-center bg-gray-50 border rounded-md px-4">
-      <span className="text-gray-600 text-sm">Placement %:</span>
-      <span className="ml-2 font-semibold text-indigo-600">
-        {formData.totalStudents && formData.placedStudents
-          ? Math.round(
-              (formData.placedStudents / formData.totalStudents) * 100
-            ) + "%"
-          : "0%"}
-      </span>
-    </div>
-  </div>
-
-  {/* Top Recruiters */}
-  <div className="mb-6">
-    <div className="flex items-center justify-between mb-3">
-      <h3 className="text-lg font-medium text-gray-700">Top Recruiters</h3>
-      <button
-        type="button"
-        onClick={() =>
-          setFormData(prev => ({
-            ...prev,
-            topRecruiters: [...prev.topRecruiters, ""]
-          }))
-        }
-        className="flex items-center text-sm text-indigo-600"
-      >
-        <PlusCircle size={16} className="mr-1" /> Add Recruiter
-      </button>
-    </div>
-
-    <div className="space-y-3">
-      {(formData.topRecruiters || []).map((rec, index) => (
-        <div key={index} className="flex gap-2">
-          <input
-            type="text"
-            value={rec}
-            onChange={(e) => {
-              const updated = [...formData.topRecruiters];
-              updated[index] = e.target.value;
-              setFormData(prev => ({ ...prev, topRecruiters: updated }));
-            }}
-            placeholder="e.g. Google, Amazon"
-            className="flex-1 px-3 py-2 border rounded-md"
-          />
-          <button
-            type="button"
-            onClick={() =>
-              setFormData(prev => ({
-                ...prev,
-                topRecruiters: prev.topRecruiters.filter((_, i) => i !== index)
-              }))
-            }
-            className="text-red-500"
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
-      ))}
-    </div>
-  </div>
-</div>
+          
 
 
           {/* Board Results and Exam Qualifiers removed - not in backend schema */}
@@ -4340,34 +4334,86 @@ const handleUseCurrentLocation = () => {
             </div>
 
             <div className="block" id="media">
-              <div className="flex items-center gap-4 mb-8 p-6 bg-gradient-to-r from-violet-50 to-purple-50 rounded-2xl border border-violet-200/50 shadow-lg">
-                <div className="p-3 bg-gradient-to-r from-violet-500 to-purple-500 rounded-xl shadow-lg">
-                  <Image className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-                    📸 Media
-                  </h2>
-                  <p className="text-gray-600 mt-1">Photos and videos showcasing your school</p>
-                </div>
-              </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Upload Photos (4–5 recommended, max 5)</label>
-              <input type="file" accept="image/*" multiple onChange={handlePhotoChange} className="mt-2" />
-              {selectedPhotos?.length > 0 && (
-                <div className="mt-2 text-sm text-gray-600">{selectedPhotos.length} selected</div>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Upload Video (max 20MB)</label>
-              <input type="file" accept="video/*" onChange={handleVideoChange} className="mt-2" />
-              {selectedVideo && (
-                <div className="mt-2 text-sm text-gray-600">{selectedVideo.name}</div>
-              )}
-            </div>
-          </div>
-          </div>
+  <div className="flex items-center gap-4 mb-8 p-6 bg-gradient-to-r from-violet-50 to-purple-50 rounded-2xl border border-violet-200/50 shadow-lg">
+    <div className="p-3 bg-gradient-to-r from-violet-500 to-purple-500 rounded-xl shadow-lg">
+      <Image className="w-6 h-6 text-white" />
+    </div>
+    <div>
+      <h2 className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+        📸 Media
+      </h2>
+      <p className="text-gray-600 mt-1">Photos and videos showcasing your school</p>
+    </div>
+  </div>
+
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+    {/* Photos Upload */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700">
+        Upload Photos (4–5 recommended, max 5)
+      </label>
+
+      {/* Hidden Input */}
+      <input
+        type="file"
+        accept="image/*"
+        multiple
+        ref={photoInputRef}
+        onChange={handlePhotoChange}
+        className="hidden"
+      />
+
+      {/* Button */}
+      <button
+        type="button"
+        onClick={() => photoInputRef.current.click()}
+        className="mt-2 px-4 py-2 bg-violet-600 text-white rounded-md hover:bg-violet-700 transition"
+      >
+        Choose Photos
+      </button>
+
+      {selectedPhotos?.length > 0 && (
+        <div className="mt-2 text-sm text-gray-600">
+          {selectedPhotos.length} selected
+        </div>
+      )}
+    </div>
+
+    {/* Video Upload */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700">
+        Upload Video (max 20MB)
+      </label>
+
+      {/* Hidden Input */}
+      <input
+        type="file"
+        accept="video/*"
+        ref={videoInputRef}
+        onChange={handleVideoChange}
+        className="hidden"
+      />
+
+      {/* Button */}
+      <button
+        type="button"
+        onClick={() => videoInputRef.current.click()}
+        className="mt-2 px-4 py-2 bg-violet-600 text-white rounded-md hover:bg-violet-700 transition"
+      >
+        Choose Video
+      </button>
+
+      {selectedVideo && (
+        <div className="mt-2 text-sm text-gray-600">
+          {selectedVideo.name}
+        </div>
+      )}
+    </div>
+
+  </div>
+</div>
+
           </div>
 
           <div className="sticky bottom-0 -mx-6 px-6 py-6 bg-gradient-to-r from-white/95 to-white/90 backdrop-blur-xl border-t border-gray-200/50 shadow-2xl">
