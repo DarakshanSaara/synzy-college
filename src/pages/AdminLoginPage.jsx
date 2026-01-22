@@ -47,7 +47,7 @@ const AdminLoginPage = () => {
 
     try {
       // Call the new AuthContext login with userType='admin'
-      await login({ email: data.email, password: data.password }, 'admin');
+      await login({ email: data.email, password: data.password,authProvider: 'email' }, 'admin');
 
       // Remember me
       if (rememberMe) {

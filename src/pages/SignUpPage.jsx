@@ -46,7 +46,7 @@ const SignUpPage = () => {
       name: data.name,
       email: data.email,
       password: data.password,
-      userType: "school", 
+      userType: "college", 
       authProvider: "email",
     };
 
@@ -96,7 +96,7 @@ const handleGoogleSuccess = async (credentialResponse) => {
     const payload = {
       tokenId,
       authProvider: 'google',
-      userType: 'school',
+      userType: 'college',
     };
 
     const res = await googleLogin(payload);
@@ -137,10 +137,10 @@ const handleGoogleSuccess = async (credentialResponse) => {
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-lg">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900">
-            School Registration
+            College Registration
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Create your school account
+            Create your college account
           </p>
         </div>
 

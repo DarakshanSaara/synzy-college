@@ -78,6 +78,7 @@ export const handleApplicationFlow = (studId, schoolId, applicationData = null) 
     schoolId,
     applicationData
   });
+  
 };
 
 // Update existing application (Scenario C)

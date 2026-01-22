@@ -85,7 +85,7 @@ const SchoolProfileView = () => {
         const rawIdCandidate = currentUser?.schoolId || currentUser?._id || '';
 
         // Use lastCreatedId only when the signed-in user is a school account or an admin.
-        const shouldUseLastCreated = !!lastCreatedId && (currentUser?.userType === 'school' || currentUser?.isAdmin);
+        const shouldUseLastCreated = !!lastCreatedId && (currentUser?.userType === 'college' || currentUser?.isAdmin);
 
         // For school/admin users prefer the lastCreatedId (it represents the school record)
         // otherwise prefer the user's associated schoolId or user id. This avoids using

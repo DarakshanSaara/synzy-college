@@ -451,6 +451,7 @@ const videoInputRef = useRef(null);
     city: "",
     state: "",
     pincode: "",
+    establishedYear: "",
     board: "",
     feeRange: "",
     upto: "",
@@ -802,17 +803,17 @@ const handleUseCurrentLocation = () => {
       ];
 
       if (!formData.name?.trim()) requiredErrors.push('School Name');
-      if (!formData.description?.trim()) requiredErrors.push('Description');
+      //if (!formData.description?.trim()) requiredErrors.push('Description');
       if (!formData.state?.trim()) requiredErrors.push('State');
       if (!formData.city?.trim()) requiredErrors.push('City');
-      if (!allowedBoards.includes(formData.board)) requiredErrors.push('Board');
+     
       if (!allowedSchoolModes.includes(normalizedSchoolMode)) requiredErrors.push('School Mode');
       if (!['boy','girl','co-ed'].includes(normalizedGender)) requiredErrors.push('Gender Type');
       if (!Array.isArray(formData.shifts) || formData.shifts.length === 0 || formData.shifts.some(s => !allowedShifts.includes(String(s).toLowerCase()))) {
         requiredErrors.push('Shifts');
       }
       if (!allowedFeeRanges.includes(normalizedFeeRange)) requiredErrors.push('Fee Range');
-      if (!formData.upto?.trim()) requiredErrors.push('Classes Upto');
+     
       if (!formData.email?.trim()) requiredErrors.push('Email');
       if (!formData.phoneNo?.trim()) requiredErrors.push('Phone Number');
       if (!Array.isArray(formData.languageMedium) || formData.languageMedium.length === 0) requiredErrors.push('Language Medium');
@@ -849,9 +850,10 @@ const handleUseCurrentLocation = () => {
         city: formData.city,
         state: formData.state,
         pinCode: formData.pincode ? Number(formData.pincode) : undefined,
-        board: formData.board,
+        establishedYear: formData.establishedYear ? Number(formData.establishedYear) : undefined,
+        
         feeRange: normalizedFeeRange,
-        upto: formData.upto,
+        
         email: formData.email,
         website: formData.website,
         mobileNo: formData.phoneNo,
@@ -1340,19 +1342,21 @@ const handleUseCurrentLocation = () => {
     "Auditorium",
   ];
   const activitiesOptions = [
-    "Focusing on Academics",
-    "Focuses on Practical Learning",
-    "Focuses on Theoretical Learning",
-    "Empowering in Sports",
-    "Empowering in Arts",
-    "Special Focus on Mathematics",
-    "Special Focus on Science",
-    "Special Focus on Physical Education",
-    "Leadership Development",
-    "STEM Activities",
-    "Cultural Education",
-    "Technology Integration",
-    "Environmental Awareness"
+    'Focusing on Academics',
+      'Focuses on Practical Learning',
+      'Focuses on Theoretical Learning',
+      'Empowering in Sports',
+      'Empowering in Arts',
+      'Special Focus on Mathematics',
+      'Special Focus on Science',
+      'Special Focus on Physical Education',
+      'Leadership Development',
+      'STEM Activities',
+      'Cultural Education',
+      'Technology Integration',
+      'Environmental Awareness',
+      'Startup Incubation',
+      'Robotics Club'
   ];
   const feeRangeOptions = [
     "1000 - 10000",
@@ -1656,6 +1660,7 @@ const handleUseCurrentLocation = () => {
       city: school.city || "",
       state: school.state || "",
       pincode: school.pinCode ? String(school.pinCode) : "",
+      establishedYear: school.establishedYear ? String(school.establishedYear) : "",
       board: school.board || "",
       feeRange: school.feeRange || "",
       upto: school.upto || "",
@@ -2066,6 +2071,7 @@ const handleUseCurrentLocation = () => {
         city: school.city || "",
         state: school.state || "",
         pincode: school.pinCode ? String(school.pinCode) : "",
+        establishedYear: school.establishedYear ? String(school.establishedYear) : "",
         board: school.board || "",
         feeRange: school.feeRange || "",
         upto: school.upto || "",
@@ -2511,7 +2517,8 @@ const handleUseCurrentLocation = () => {
               
               <FormField 
               label="Established Year" 
-              name="EstablishedYear" 
+              name="establishedYear" 
+               
               value={formData.establishedYear} onChange={handleInputChange} 
               required 
               />
@@ -3036,7 +3043,18 @@ const handleUseCurrentLocation = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700">Labs - Type</label>
               <div className="mt-2 grid grid-cols-2 gap-3">
-                {['Physics','Chemistry','Biology','Computer','Robotics','Language'].map(opt => (
+                {[ "Computer Lab",
+      "Science Lab",
+      "Research Lab",
+      "Language Lab",
+      "Innovation Lab",
+      "Skill Development Lab",
+      "Simulation Lab",
+      "Digital Lab",
+      "Analytics Lab",
+      "Practical Training Lab",
+      "Workshop",
+      "Multimedia Lab"].map(opt => (
                   <label key={opt} className="flex items-center">
                     <input
                       type="checkbox"

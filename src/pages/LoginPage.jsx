@@ -67,7 +67,7 @@ const onSubmit = async (data) => {
 
     // 2. ✅ DYNAMIC REDIRECTION
     // Check if the logged-in user is a school or a student
-    if (user?.userType === 'school') {
+    if (user?.userType === 'college') {
       navigate("/school-portal/register"); // Or wherever your school home is
     } else {
       navigate("/dashboard"); // Standard student dashboard
@@ -114,7 +114,7 @@ const onSubmit = async (data) => {
 
         // REDIRECTION LOGIC:
         // If it's a school user, send to portal. Otherwise, send to dashboard.
-        if (auth.userType === 'school') {
+        if (auth.userType === 'college') {
           navigate('/school-portal/register');
         } else {
           navigate('/dashboard');

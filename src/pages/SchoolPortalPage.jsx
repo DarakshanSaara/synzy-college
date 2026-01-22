@@ -22,7 +22,7 @@ const SchoolHeader = ({ schoolName, onLogout, applicationsCount, hasProfile, cur
     <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
       <Logo to="/school-portal" size="default" />
       <div className="flex items-center space-x-6">
-        {currentUser?.userType === 'school' && (
+        {currentUser?.userType === 'college' && (
           <Link
             to="/school-portal/register"
             className="text-gray-600 hover:text-blue-600 flex items-center"
@@ -1286,7 +1286,7 @@ const SchoolPortalPage = ({ currentUser, onLogout, onRegister }) => {
 
   useEffect(() => {
     // Assume registered for school users by default (hides link), refine after API check
-    if (currentUser?.userType === 'school') {
+    if (currentUser?.userType === 'college') {
       setHasProfile(true);
     } else if (currentUser?.schoolId) {
       setHasProfile(true);
@@ -1299,7 +1299,7 @@ const SchoolPortalPage = ({ currentUser, onLogout, onRegister }) => {
     const checkProfile = async () => {
       try {
         // For school users, always set hasProfile to true - no need for API checks
-        if (currentUser?.userType === 'school') {
+        if (currentUser?.userType === 'college') {
           setHasProfile(true);
           return;
         }
@@ -1345,7 +1345,7 @@ const SchoolPortalPage = ({ currentUser, onLogout, onRegister }) => {
     checkProfile();
   }, [currentUser?._id, currentUser?.schoolId, currentUser?.userType]);
 
-  if (!currentUser || currentUser.userType !== "school") {
+  if (!currentUser || currentUser.userType !== "college") {
     return (
       <div className="container mx-auto px-6 py-20 text-center">
         <p>Access Denied. Please log in as a school.</p>
@@ -1370,7 +1370,7 @@ const SchoolPortalPage = ({ currentUser, onLogout, onRegister }) => {
             </ErrorBoundary>
           }
         />
-        {currentUser?.userType === 'school' && (
+        {currentUser?.userType === 'college' && (
           <Route
             path="register"
             element={

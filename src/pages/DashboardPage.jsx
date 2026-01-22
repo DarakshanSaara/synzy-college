@@ -56,7 +56,7 @@ const DashboardPage = ({
       case "student":
       case "parent": 
         return <UserDashboard {...props} />;
-      case "school":
+      case "college":
         return <SchoolRedirect />;
       default:
         

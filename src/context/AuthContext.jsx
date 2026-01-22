@@ -115,7 +115,7 @@ export const AuthProvider = ({ children }) => {
           setUser(adminUser);
           localStorage.setItem('userData', JSON.stringify(adminUser));
           // Keep lastCreatedSchoolId for admin/school users, but remove for other account types
-          if (adminUser.userType !== 'school' && !adminUser.isAdmin) {
+          if (adminUser.userType !== 'college' && !adminUser.isAdmin) {
             try { localStorage.removeItem('lastCreatedSchoolId'); } catch (_) {}
           }
           
@@ -136,17 +136,17 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('authToken', token);
 
       const userId = basicAuthData?._id;
-      
-      // Special handling for school accounts
-      if (basicAuthData.userType === 'school') {
-        console.log('🏫 School account login detected');
+
+      // Special handling for college accounts
+      if (basicAuthData.userType === 'college') {
+        console.log('🏫 College account login detected');
         
-        // For school accounts, we don't fetch the school profile here
-        // because school accounts don't have permission to use admin endpoints
+        // For college accounts, we don't fetch the college profile here
+        // because college accounts don't have permission to use admin endpoints
         // The RegistrationPage will handle finding the school profile
         const schoolUserData = {
           ...basicAuthData,
-          userType: 'school',
+          userType: 'college',
           // authId is already in basicAuthData, which will be used to match the school
         };
         
@@ -160,7 +160,7 @@ export const AuthProvider = ({ children }) => {
         setUser(basicAuthData);
         localStorage.setItem('userData', JSON.stringify(basicAuthData));
         // If this is not a school account, clear any last-created-school id to avoid leaking another user's school
-        if (basicAuthData.userType !== 'school') {
+        if (basicAuthData.userType !== 'college') {
           try { localStorage.removeItem('lastCreatedSchoolId'); } catch (_) {}
         }
         toast.success('Login successful!');
@@ -205,7 +205,7 @@ export const AuthProvider = ({ children }) => {
       setUser(fullUserData);
       localStorage.setItem('userData', JSON.stringify(fullUserData));
       // Clear lastCreatedSchoolId for non-school/non-admin users to prevent stale school visibility
-      if (fullUserData.userType !== 'school' && !fullUserData.isAdmin) {
+      if (fullUserData.userType !== 'college' && !fullUserData.isAdmin) {
         try { localStorage.removeItem('lastCreatedSchoolId'); } catch (_) {}
       }
       toast.success('Login successful!');

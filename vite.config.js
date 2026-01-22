@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -20,9 +21,10 @@ export default defineConfig({
   },
   server: {
     historyApiFallback: true,
+    
     proxy: {
       '/api': {
-        target: 'https://api.synzy.in',
+        target: 'https://mycampusinfo-server.onrender.com',
         changeOrigin: true,
         secure: true,
         // keep '/api' prefix so routes match backend

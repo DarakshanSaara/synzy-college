@@ -13,7 +13,7 @@ const Header = ({ isMobileMenuOpen, setMobileMenuOpen, compareCount, shortlistCo
   }
 
   const handleRegisterClick = () => {
-    if (currentUser && currentUser.userType === 'school') {
+    if (currentUser && currentUser.userType === 'college') {
       navigate('/school-portal');
     } else {
       navigate('/signup-school');
@@ -25,7 +25,7 @@ const Header = ({ isMobileMenuOpen, setMobileMenuOpen, compareCount, shortlistCo
     <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
       <Logo />
       <div className="hidden md:flex items-center space-x-8">
-        {(!currentUser || currentUser.userType !== 'school') && (
+        {(!currentUser || currentUser.userType !== 'college') && (
             <>
                 <Link to="/schools" className="text-gray-600 hover:text-blue-600">Browse Schools</Link>
                 {currentUser && (
@@ -159,7 +159,7 @@ const ProfileDropdown = ({ currentUser, onLogout }) => {
           {(currentUser.userType === 'parent' || currentUser.userType === 'student') && (
             <Link to="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</Link>
           )}
-          {currentUser.userType === 'school' && (
+          {currentUser.userType === 'college' && (
             <Link to="/school-portal" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">School Portal</Link>
           )}
           <Link to="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Home</Link>
