@@ -50,6 +50,7 @@ import {
   getAlumniBySchool,
   updateAlumniBySchool, 
 } from "../api/schoolService";
+import { minimum } from "zod/v4-mini";
 
 
 console.log(import.meta.env.VITE_API_BASE_URL);
@@ -353,47 +354,91 @@ const RegistrationPage = () => {
     courseName: "",
     duration: "",
     fees: "",
-    examType: "",
     category: "",
-    rankType: "",
-    maxRankOrPercentile: "",
+    studentStrength: "",
+
+    // MULTIPLE EXAMS PER COURSE
+   exams: [
+  {
+    examType: "",
+    metricType: "Rank", // Rank | Percentile | Percentage
+    minValue: "",
+    maxValue: ""
+  }
+],
+
     placements: [
       {
         year: "",
         totalStudents: "",
         placedStudents: "",
         highestPackage: "",
+        minimumPackage: "",
         averagePackage: "",
-        topRecruiters: []
+        topRecruiters: [""]
       }
     ]
   }
 ]);
 
+
 const addCourse = () => {
-    setCourses(prev => [
-      ...prev,
-      {
-        courseName: "",
-        duration: "",
-        fees: "",
-        examType: "",
-        category: "",
-        rankType: "",
-        maxRankOrPercentile: "",
-        placements: [
-          {
-            year: "",
-            totalStudents: "",
-            placedStudents: "",
-            highestPackage: "",
-            averagePackage: "",
-            topRecruiters: [""]
-          }
-        ]
-      }
-    ]);
-  };
+  setCourses(prev => [
+    ...prev,
+    {
+      courseName: "",
+      duration: "",
+      fees: "",
+      category: "",
+      studentStrength: "",
+
+      exams: [
+  {
+    examType: "",
+    metricType: "Rank", // Rank | Percentile | Percentage
+    minValue: "",
+    maxValue: ""
+  }
+],
+
+      placements: [
+        {
+          year: "",
+          totalStudents: "",
+          placedStudents: "",
+          highestPackage: "",
+            minimumPackage: "",
+          averagePackage: "",
+          topRecruiters: [""]
+        }
+      ]
+    }
+  ]);
+};
+const addExam = (cIndex) => {
+  const updated = [...courses];
+  updated[cIndex].exams.push({
+    examType: "",
+    metricType: "Rank",
+    minValue: "",
+    maxValue: ""
+  });
+  setCourses(updated);
+};
+
+const updateExam = (cIndex, eIndex, field, value) => {
+  const updated = [...courses];
+  updated[cIndex].exams[eIndex][field] = value;
+  setCourses(updated);
+};
+
+const removeExam = (cIndex, eIndex) => {
+  const updated = [...courses];
+  updated[cIndex].exams = updated[cIndex].exams.filter(
+    (_, i) => i !== eIndex
+  );
+  setCourses(updated);
+};
 
 const updateCourse = (index, field, value) => {
   const updated = [...courses];
@@ -417,6 +462,7 @@ const addPlacement = (courseIndex) => {
     totalStudents: "",
     placedStudents: "",
     highestPackage: "",
+      minimumPackage: "",
     averagePackage: "",
     topRecruiters: []
   });
@@ -2688,183 +2734,384 @@ const handleUseCurrentLocation = () => {
             </div>
             <div className="block mt-10" id="courses">
   <div className="flex items-center gap-4 mb-6 p-5 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border shadow">
-    <h3 className="text-xl font-semibold text-indigo-700">📚 Courses Offered</h3>
+    <h3 className="text-xl font-semibold text-indigo-700">
+      📚 Courses Offered
+    </h3>
   </div>
 
- {courses.map((course, cIndex) => (
-        <div
-          key={cIndex}
-          className="mb-10 bg-white border rounded-xl p-6 shadow"
+  {courses.map((course, cIndex) => (
+    <div
+      key={cIndex}
+      className="mb-10 bg-white border rounded-xl p-6 shadow"
+    >
+      {/* COURSE HEADER */}
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold text-indigo-600">
+          Course {cIndex + 1}
+        </h3>
+
+        {courses.length > 1 && (
+          <button
+            type="button"
+            onClick={() => removeCourse(cIndex)}
+            className="text-sm text-red-600"
+          >
+            Remove Course
+          </button>
+        )}
+      </div>
+
+      {/* COURSE + EXAM GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          label="Course Name"
+          value={course.courseName}
+          onChange={(e) =>
+            updateCourse(cIndex, "courseName", e.target.value)
+          }
+          required
+        />
+
+        <FormField
+          label="Duration"
+          value={course.duration}
+          onChange={(e) =>
+            updateCourse(cIndex, "duration", e.target.value)
+          }
+          required
+        />
+
+        <FormField
+          label="Fees (₹)"
+          type="number"
+          value={course.fees}
+          onChange={(e) =>
+            updateCourse(cIndex, "fees", e.target.value)
+          }
+          required
+        />
+
+        <FormField
+          label="Category"
+          value={course.category}
+          onChange={(e) =>
+            updateCourse(cIndex, "category", e.target.value)
+          }
+          required
+        />
+
+        <FormField
+          label="Student Strength"
+          type="number"
+          value={course.studentStrength}
+          onChange={(e) =>
+            updateCourse(cIndex, "studentStrength", e.target.value)
+          }
+          required
+        />
+
+      {/* EXAM ELIGIBILITY */}
+<div className="md:col-span-2 mt-4">
+  <h3 className="text-lg font-semibold text-indigo-700">
+    📝 Exam Eligibility
+  </h3>
+</div>
+
+{course.exams.map((exam, eIndex) => (
+  <React.Fragment key={eIndex}>
+    <div className="md:col-span-2 flex justify-between items-center">
+      <p className="text-sm font-medium text-indigo-600">
+        Exam {eIndex + 1}
+      </p>
+
+      {course.exams.length > 1 && (
+        <button
+          type="button"
+          onClick={() => removeExam(cIndex, eIndex)}
+          className="text-xs text-red-600"
         >
-          {/* COURSE HEADER */}
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-indigo-600">
-              Course {cIndex + 1}
-            </h3>
+          Remove
+        </button>
+      )}
+    </div>
 
-            {courses.length > 1 && (
-              <button
-                type="button"
-                onClick={() => removeCourse(cIndex)}
-                className="text-sm text-red-600"
-              >
-                Remove Course
-              </button>
-            )}
-          </div>
+    {/* Exam Name */}
+    <input
+      className="border px-3 py-2 rounded"
+      placeholder="Exam Name (JEE, CET, NEET...)"
+      value={exam.examType}
+      onChange={(e) =>
+        updateExam(
+          cIndex,
+          eIndex,
+          "examType",
+          e.target.value
+        )
+      }
+    />
 
-          {/* COURSE FIELDS */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label="Course Name" value={course.courseName}
-              onChange={(e) => updateCourse(cIndex, "courseName", e.target.value)} required />
+    {/* Metric Type */}
+    <select
+      className="border px-3 py-2 rounded"
+      value={exam.metricType}
+      onChange={(e) =>
+        updateExam(
+          cIndex,
+          eIndex,
+          "metricType",
+          e.target.value
+        )
+      }
+    >
+      <option value="Rank">Rank</option>
+      <option value="Percentile">Percentile</option>
+      <option value="Percentage">Percentage</option>
+    </select>
 
-            <FormField label="Duration" value={course.duration}
-              onChange={(e) => updateCourse(cIndex, "duration", e.target.value)} required />
+    {/* Min Value */}
+    <input
+      className="border px-3 py-2 rounded"
+      type="number"
+      placeholder={`Min ${exam.metricType}`}
+      value={exam.minValue}
+      onChange={(e) =>
+        updateExam(
+          cIndex,
+          eIndex,
+          "minValue",
+          e.target.value
+        )
+      }
+    />
 
-            <FormField label="Fees (₹)" type="number" value={course.fees}
-              onChange={(e) => updateCourse(cIndex, "fees", e.target.value)} required />
+    {/* Max Value */}
+    <input
+      className="border px-3 py-2 rounded"
+      type="number"
+      placeholder={`Max ${exam.metricType}`}
+      value={exam.maxValue}
+      onChange={(e) =>
+        updateExam(
+          cIndex,
+          eIndex,
+          "maxValue",
+          e.target.value
+        )
+      }
+    />
+  </React.Fragment>
+))}
 
-            <FormField label="Exam Type" value={course.examType}
-              onChange={(e) => updateCourse(cIndex, "examType", e.target.value)} required />
+<div className="md:col-span-2">
+  <button
+    type="button"
+    onClick={() => addExam(cIndex)}
+    className="text-sm text-indigo-700"
+  >
+    + Add Another Exam
+  </button>
+</div>
 
-            <FormField label="Category" value={course.category}
-              onChange={(e) => updateCourse(cIndex, "category", e.target.value)} required />
+        
+      </div>
 
-            <FormField
-              label="Rank Type"
-              type="select"
-              options={["Rank", "Percentile", "Percentage"]}
-              value={course.rankType}
-              onChange={(e) => updateCourse(cIndex, "rankType", e.target.value)}
-              required
-            />
+      {/* PLACEMENTS */}
+      <div className="mt-10">
+        <div className="flex items-center gap-4 mb-6 p-5 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border shadow">
+          <h3 className="text-xl font-semibold text-indigo-700">
+            🎓 Placement Details
+          </h3>
+        </div>
 
-            <FormField
-              label={`Max ${course.rankType || "Rank / Percentile"}`}
-              type="number"
-              value={course.maxRankOrPercentile}
-              onChange={(e) =>
-                updateCourse(cIndex, "maxRankOrPercentile", e.target.value)
-              }
-              required
-            />
-          </div>
-
-          {/* PLACEMENTS */}
-          <div className="mt-10">
-            <div className="flex items-center gap-4 mb-6 p-5 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border shadow">
-              <h3 className="text-xl font-semibold text-indigo-700">
-                🎓 Placement Details
+        {course.placements.map((place, pIndex) => (
+          <div
+            key={pIndex}
+            className="mb-8 bg-white border rounded-xl p-6 shadow"
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-indigo-600">
+                Placement Year {pIndex + 1}
               </h3>
+
+              {course.placements.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    removePlacement(cIndex, pIndex)
+                  }
+                  className="text-sm text-red-600"
+                >
+                  Remove Placement Year
+                </button>
+              )}
             </div>
 
-            {course.placements.map((place, pIndex) => (
-              <div
-                key={pIndex}
-                className="mb-8 bg-white border rounded-xl p-6 shadow"
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input
+                className="border px-3 py-2 rounded"
+                type="number"
+                placeholder="Year"
+                value={place.year}
+                onChange={(e) =>
+                  updatePlacement(
+                    cIndex,
+                    pIndex,
+                    "year",
+                    e.target.value
+                  )
+                }
+              />
+
+              <input
+                className="border px-3 py-2 rounded"
+                type="number"
+                placeholder="Total Students"
+                value={place.totalStudents}
+                onChange={(e) =>
+                  updatePlacement(
+                    cIndex,
+                    pIndex,
+                    "totalStudents",
+                    e.target.value
+                  )
+                }
+              />
+
+              <input
+                className="border px-3 py-2 rounded"
+                type="number"
+                placeholder="Placed Students"
+                value={place.placedStudents}
+                onChange={(e) =>
+                  updatePlacement(
+                    cIndex,
+                    pIndex,
+                    "placedStudents",
+                    e.target.value
+                  )
+                }
+              />
+
+              <input
+                className="border px-3 py-2 rounded"
+                type="number"
+                placeholder="Highest Package (LPA)"
+                value={place.highestPackage}
+                onChange={(e) =>
+                  updatePlacement(
+                    cIndex,
+                    pIndex,
+                    "highestPackage",
+                    e.target.value
+                  )
+                }
+              />
+               <input
+                className="border px-3 py-2 rounded"
+                type="number"
+                placeholder="Minimum Package (LPA)"
+                value={place.minimumPackage}
+                onChange={(e) =>
+                  updatePlacement(
+                    cIndex,
+                    pIndex,
+                    "minimumPackage",
+                    e.target.value
+                  )
+                }
+              />
+
+              <input
+                className="border px-3 py-2 rounded"
+                type="number"
+                placeholder="Average Package (LPA)"
+                value={place.averagePackage}
+                onChange={(e) =>
+                  updatePlacement(
+                    cIndex,
+                    pIndex,
+                    "averagePackage",
+                    e.target.value
+                  )
+                }
+              />
+            </div>
+
+            <p className="mt-3 text-sm font-medium text-indigo-600">
+              Placement % :{" "}
+              {place.totalStudents && place.placedStudents
+                ? Math.round(
+                    (place.placedStudents /
+                      place.totalStudents) *
+                      100
+                  ) + "%"
+                : "0%"}
+            </p>
+
+            <div className="mt-4">
+              <h6 className="text-sm font-medium mb-2">
+                Top Recruiters
+              </h6>
+
+              {place.topRecruiters.map((rec, rIndex) => (
+                <input
+                  key={rIndex}
+                  value={rec}
+                  onChange={(e) => {
+                    const updated = [
+                      ...place.topRecruiters
+                    ];
+                    updated[rIndex] = e.target.value;
+                    updatePlacement(
+                      cIndex,
+                      pIndex,
+                      "topRecruiters",
+                      updated
+                    );
+                  }}
+                  className="border px-3 py-2 rounded mb-2 w-full"
+                  placeholder="Recruiter Name"
+                />
+              ))}
+
+              <button
+                type="button"
+                onClick={() =>
+                  updatePlacement(
+                    cIndex,
+                    pIndex,
+                    "topRecruiters",
+                    [...place.topRecruiters, ""]
+                  )
+                }
+                className="text-sm text-indigo-600"
               >
-                {/* PLACEMENT HEADER */}
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-indigo-600">
-                    Placement Year {pIndex + 1}
-                  </h3>
-
-                  {course.placements.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removePlacement(cIndex, pIndex)}
-                      className="text-sm text-red-600"
-                    >
-                      Remove Placement Year
-                    </button>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input className="border px-3 py-2 rounded" type="number"
-                    placeholder="Year" value={place.year}
-                    onChange={(e) => updatePlacement(cIndex, pIndex, "year", e.target.value)} />
-
-                  <input className="border px-3 py-2 rounded" type="number"
-                    placeholder="Total Students" value={place.totalStudents}
-                    onChange={(e) => updatePlacement(cIndex, pIndex, "totalStudents", e.target.value)} />
-
-                  <input className="border px-3 py-2 rounded" type="number"
-                    placeholder="Placed Students" value={place.placedStudents}
-                    onChange={(e) => updatePlacement(cIndex, pIndex, "placedStudents", e.target.value)} />
-
-                  <input className="border px-3 py-2 rounded" type="number"
-                    placeholder="Highest Package (LPA)" value={place.highestPackage}
-                    onChange={(e) => updatePlacement(cIndex, pIndex, "highestPackage", e.target.value)} />
-
-                  <input className="border px-3 py-2 rounded" type="number"
-                    placeholder="Average Package (LPA)" value={place.averagePackage}
-                    onChange={(e) => updatePlacement(cIndex, pIndex, "averagePackage", e.target.value)} />
-                </div>
-
-                <p className="mt-3 text-sm font-medium text-indigo-600">
-                  Placement % :{" "}
-                  {place.totalStudents && place.placedStudents
-                    ? Math.round((place.placedStudents / place.totalStudents) * 100) + "%"
-                    : "0%"}
-                </p>
-
-                {/* RECRUITERS */}
-                <div className="mt-4">
-                  <h6 className="text-sm font-medium mb-2">Top Recruiters</h6>
-
-                  {place.topRecruiters.map((rec, rIndex) => (
-                    <input
-                      key={rIndex}
-                      value={rec}
-                      onChange={(e) => {
-                        const updated = [...place.topRecruiters];
-                        updated[rIndex] = e.target.value;
-                        updatePlacement(cIndex, pIndex, "topRecruiters", updated);
-                      }}
-                      className="border px-3 py-2 rounded mb-2 w-full"
-                      placeholder="Recruiter Name"
-                    />
-                  ))}
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      updatePlacement(cIndex, pIndex, "topRecruiters", [
-                        ...place.topRecruiters,
-                        ""
-                      ])
-                    }
-                    className="text-sm text-indigo-600"
-                  >
-                    + Add Recruiter
-                  </button>
-                </div>
-              </div>
-            ))}
-
-            <button
-              type="button"
-              onClick={() => addPlacement(cIndex)}
-              className="text-sm text-indigo-700"
-            >
-              + Add Placement Year
-            </button>
+                + Add Recruiter
+              </button>
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
 
-      <button
-        type="button"
-        onClick={addCourse}
-        className="px-4 py-2 bg-indigo-600 text-white rounded-md"
-      >
-        + Add Another Course
-      </button>
-   
-    
-  
+        <button
+          type="button"
+          onClick={() => addPlacement(cIndex)}
+          className="text-sm text-indigo-700"
+        >
+          + Add Placement Year
+        </button>
+      </div>
+    </div>
+  ))}
+
+  <button
+    type="button"
+    onClick={addCourse}
+    className="px-4 py-2 bg-indigo-600 text-white rounded-md"
+  >
+    + Add Another Course
+  </button>
 </div>
+
 
 
             <div className="block" id="amenities">
