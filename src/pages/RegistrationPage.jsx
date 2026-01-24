@@ -349,6 +349,8 @@ const DynamicElearningField = ({ label, value, onChange }) => {
 };
 
 const RegistrationPage = () => {
+  const [customStream, setCustomStream] = useState("");
+
   const [courses, setCourses] = useState([
   {
     courseName: "",
@@ -475,6 +477,40 @@ const addPlacement = (courseIndex) => {
     );
     setCourses(updated);
   };
+ const toggleStream = (stream) => {
+  setFormData(prev => {
+    const current = Array.isArray(prev.streamsOffered)
+      ? prev.streamsOffered
+      : [];
+
+    return {
+      ...prev,
+      streamsOffered: current.includes(stream)
+        ? current.filter(s => s !== stream)
+        : [...current, stream]
+    };
+  });
+};
+
+const addCustomStream = (custom) => {
+  const val = custom.trim();
+  if (!val) return;
+
+  setFormData(prev => {
+    const current = Array.isArray(prev.streamsOffered)
+      ? prev.streamsOffered
+      : [];
+
+    return {
+      ...prev,
+      streamsOffered: current.includes(val)
+        ? current
+        : [...current, val]
+    };
+  });
+};
+
+
 const photoInputRef = useRef(null);
 const videoInputRef = useRef(null);
 
@@ -505,6 +541,7 @@ const videoInputRef = useRef(null);
     website: "",
     phoneNo: "",
     genderType: "co-ed",
+    streamsOffered: [], // Updated: matches backend
     schoolMode: "convent", // Updated: matches backend enum ['convent', 'private', 'government']
     shifts: ["morning"], // Updated: array to match backend
     languageMedium: ["English"], // Updated: array to match backend
@@ -905,6 +942,7 @@ const handleUseCurrentLocation = () => {
         mobileNo: formData.phoneNo,
         schoolMode: normalizedSchoolMode,
         genderType: normalizedGender,
+        
         shifts: (Array.isArray(formData.shifts) ? formData.shifts : [formData.shifts].filter(Boolean)).map(s => String(s).toLowerCase()),
         languageMedium: Array.isArray(formData.languageMedium) ? formData.languageMedium : [formData.languageMedium].filter(Boolean),
         // Backend expects enum string for transportAvailable ('yes' | 'no')
@@ -914,6 +952,7 @@ const handleUseCurrentLocation = () => {
         // Match backend field casing (backend expects capitalized key)
         TeacherToStudentRatio: formData.TeacherToStudentRatio,
         rank: formData.rank,
+        streamsOffered: Array.isArray(formData.streamsOffered) ? formData.streamsOffered : [],
         specialist: Array.isArray(formData.specialist) ? formData.specialist : [],
         tags: Array.isArray(formData.tags) ? formData.tags : [],
        
@@ -1722,6 +1761,7 @@ const handleUseCurrentLocation = () => {
       longitude: school.longitude != null ? String(school.longitude) : "",
       TeacherToStudentRatio: school.TeacherToStudentRatio || "",
       rank: school.rank || "",
+      streamsOffered: Array.isArray(formData.streamsOffered) ? formData.streamsOffered : [],
       specialist: Array.isArray(school.specialist) ? school.specialist : [],
       tags: Array.isArray(school.tags) ? school.tags : [],
       
@@ -2133,6 +2173,7 @@ const handleUseCurrentLocation = () => {
         longitude: school.longitude != null ? String(school.longitude) : "",
         TeacherToStudentRatio: school.TeacherToStudentRatio || "",
         rank: school.rank || "",
+         streamsOffered: Array.isArray(formData.streamsOffered) ? formData.streamsOffered : [],
         specialist: Array.isArray(school.specialist) ? school.specialist : [],
         tags: Array.isArray(school.tags) ? school.tags : []
       }));
@@ -2599,15 +2640,85 @@ const handleUseCurrentLocation = () => {
           onChange={handleInputChange}
           required
         />
-         <FormField
-          label="Stream"
-          name="stream"
-          type="select"
-          options={["Engineering", "Management", "Arts", "Science", "Law", "Medical", "Design", "Humanities"]}
-          value={formData.stream}
-          onChange={handleInputChange}
-          required
-        />
+        <div className="mb-6">
+  <label className="block text-sm font-medium mb-3 text-gray-800">
+    Streams Offered <span className="text-red-500">*</span>
+  </label>
+
+  {/* STREAM PILLS */}
+  <div className="flex flex-wrap gap-2 mb-4">
+    {[
+      "Engineering",
+      "Management",
+      "Arts",
+      "Science",
+      "Law",
+      "Medical",
+      "Design",
+      "Humanities"
+    ].map((stream) => {
+      const selected = Array.isArray(formData.streamsOffered)
+        ? formData.streamsOffered.includes(stream)
+        : false;
+
+      return (
+        <button
+          key={stream}
+          type="button"
+          onClick={() => toggleStream(stream)}
+          className={`px-4 py-1.5 rounded-full text-sm border transition
+            ${
+              selected
+                ? "border-indigo-600 text-indigo-700 font-medium bg-indigo-50"
+                : "border-gray-300 text-gray-700 bg-white hover:border-gray-400"
+            }
+          `}
+        >
+          {stream}
+        </button>
+      );
+    })}
+  </div>
+
+  {/* CUSTOM STREAM INPUT */}
+  <div className="flex gap-3 max-w-md">
+    <input
+      type="text"
+      placeholder="Add custom stream..."
+      className="border border-gray-300 px-4 py-2 rounded-lg w-full focus:outline-none focus:ring-1 focus:ring-indigo-500"
+      value={customStream}
+      onChange={(e) => setCustomStream(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          addCustomStream(customStream);
+          setCustomStream("");
+        }
+      }}
+    />
+
+    <button
+      type="button"
+      onClick={() => {
+        addCustomStream(customStream);
+        setCustomStream("");
+      }}
+      className="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+      disabled={!customStream.trim()}
+    >
+      Add
+    </button>
+  </div>
+
+  {/* SELECTED STREAMS PREVIEW */}
+  {Array.isArray(formData.streamsOffered) &&
+    formData.streamsOffered.length > 0 && (
+      <p className="text-xs text-gray-600 mt-2">
+        Selected: {formData.streamsOffered.join(", ")}
+      </p>
+    )}
+</div>
+
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   College Shifts <span className="text-red-500">*</span>
