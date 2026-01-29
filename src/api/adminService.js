@@ -8,8 +8,8 @@ import apiClient from './axios';
 
 // Register admin
 export const registerAdmin = async (adminData) => {
-  // Use regular auth register with school userType (since admin is registered as school)
-  return await apiClient.post('/auth/register', { ...adminData, userType: 'school' });
+  // Use regular auth register with college userType (since admin is registered as college)
+  return await apiClient.post('/auth/register', { ...adminData, userType: 'college' });
 };
 
 // Login admin
@@ -48,15 +48,15 @@ export const updateApplication = (studId, data) => apiClient.put(`/applications/
 // Delete application
 export const deleteApplication = (studId) => apiClient.delete(`/applications/${studId}`);
 
-// Submit form to school
-export const submitFormToSchool = (schoolId, studId, formId) => 
-  apiClient.post(`/form/${schoolId}/${studId}/${formId}`);
+// Submit form to college
+export const submitFormTocollege = (collegeId, studId, formId) => 
+  apiClient.post(`/form/${collegeId}/${studId}/${formId}`);
 
 // Get forms by student
 export const getFormsByStudent = (studId) => apiClient.get(`/form/student/${studId}`);
 
-// Get forms by school
-export const getFormsBySchool = (schoolId) => apiClient.get(`/form/school/${schoolId}`);
+// Get forms by college
+export const getFormsBycollege = (collegeId) => apiClient.get(`/form/college/${collegeId}`);
 
 // Track form
 export const trackForm = (formId) => apiClient.get(`/form/track/${formId}`);
@@ -72,10 +72,10 @@ export const updateFormStatus = (formId, status) =>
  */
 
 // Handle complete application flow with scenarios
-export const handleApplicationFlow = (studId, schoolId, applicationData = null) => {
+export const handleApplicationFlow = (studId, collegeId, applicationData = null) => {
   return apiClient.post('/api/application-flow', {
     studId,
-    schoolId,
+    collegeId,
     applicationData
   });
   
@@ -88,65 +88,75 @@ export const updateExistingApplication = (studId, updateData) => {
 
 /**
  * ============================
- * School CRUD Operations
+ * college CRUD Operations
  * ============================
  */
 
-// ✅ FIXED: Updated to match router.post('/schools/by-auth/:authId')
-export const addSchool = (data) => {
-  const { authId, ...bodyData } = data;
-  
-  if (!authId) {
-    console.error("❌ addSchool called without authId in payload", data);
-    throw new Error("authId is required to create a school");
-  }
-
-  // Matches your backend route: router.post('/schools/by-auth/:authId', addSchoolByAuth);
-  return apiClient.post(`/admin/schools/auth/${authId}`, bodyData);
+// ✅ FIXED: Updated to match router.post('/college/by-auth/:authId')
+export const addcollege = (data) => {
+  return apiClient.post('/colleges/add', data);
 };
 
-export const addAmenities = (data) => apiClient.post('/admin/schools/amenities/', data);
-export const addActivities = (data) => apiClient.post('/admin/schools/activities/', data);
-export const addAlumni = (data) => apiClient.post('/admin/alumnus', data);
-export const addInfrastructure = (data) => apiClient.post('/admin/schools/infrastructure/', data);
-export const addOtherDetails = (data) => apiClient.post('/admin/schools/other-details/', data);
-export const addFeesAndScholarships = (data) =>
-  apiClient.post('/admin/schools/fees-scholarships/', data);
-export const addAcademics = (data) => apiClient.post('/admin/schools/academics/', data);
-export const addFaculty = (data) => apiClient.post('/admin/schools/faculty/', data);
 
-export const addAdmissionTimeline = (data) =>
-  apiClient.post('/admin/schools/admission-timeline/', data);
+export const addAmenities = (data) =>
+  apiClient.post('/college/amenities/add', data);
+
+
+export const addAlumni = (data) =>
+  apiClient.post('/college/alumnus/add', data);
+
+
+export const addOtherDetails = (data) =>
+  apiClient.post('/college/other-details/add', data);
+
+export const addFeesAndScholarships = (data) =>
+  apiClient.post('/college/fees-scholarships/add', data);
+export const addAcademics = (data) =>
+  apiClient.post('/college/academics/add', data);
+
+export const addFaculty = (data) => apiClient.post('/college/faculty/add', data);
+
+
 export const addTechnologyAdoption = (data) =>
-  apiClient.post('/admin/schools/technology-adoption/', data);
-export const addSafetyAndSecurity = (data) =>
-  apiClient.post('/admin/schools/safety-security/', data);
-export const addInternationalExposure = (data) =>
-  apiClient.post('/admin/schools/international-exposure/', data);
+  apiClient.post('/college/technology-adoption/add', data);
+export const getAcademicsById = (collegeId) =>
+  apiClient.get(`/college/academics/${encodeURIComponent(collegeId)}`);
+export const getOtherDetailsById = (collegeId) =>
+  apiClient.get(`/college/other-details/${encodeURIComponent(collegeId)}`);
+export const getTechnologyAdoptionById = (collegeId) =>
+  apiClient.get(`/college/technology-adoption/${encodeURIComponent(collegeId)}`);
+export const getSafetyAndSecurityById = (collegeId) =>
+  apiClient.get(`/college/safety/${encodeURIComponent(collegeId)}`);
+export const getInternationalExposureById = (collegeId) =>
+  apiClient.get(`/college/international/${encodeURIComponent(collegeId)}`);
+
+
 
 /**
  * ============================
- * Get / Update School Info
+ * Get / Update college Info
  * ============================
  */
 
-export const getSchoolById = (schoolId, config) =>
-  apiClient.get(`/admin/schools/auth/${encodeURIComponent(schoolId)}`, config);
-export const getSchoolById1 = (schoolId, config) =>
-  apiClient.get(`/admin/schools/${encodeURIComponent(schoolId)}`, config);
+export const getcollegeById = (collegeId) =>
+  apiClient.get(`/colleges/${encodeURIComponent(collegeId)}`);
 
-export const updateSchoolInfo = (schoolId, data) =>
-  apiClient.put(`/admin/schools/auth/${encodeURIComponent(schoolId)}`, data);
+export const getcollegeById1 = (collegeId, config) =>
+  apiClient.get(`/admin/college/${encodeURIComponent(collegeId)}`, config);
 
-export const updateSchoolStatus = (schoolId, newStatus) =>
-  apiClient.put(`/admin/schools/${encodeURIComponent(schoolId)}`, { status: newStatus });
+export const updatecollegeInfo = (collegeId, data) =>
+  apiClient.put(`/admin/college/auth/${encodeURIComponent(collegeId)}`, data);
 
-export const getSchoolsByStatus = async (status) => {
+export const updatecollegetatus = (collegeId, newStatus) =>
+  apiClient.put(`/admin/college/${encodeURIComponent(collegeId)}`, { status: newStatus });
+export const getcollegesByStatus = (status) => getcollegeByStatus(status);
+
+export const getcollegeByStatus = async (status) => {
   try {
-    return await apiClient.get(`/admin/schools/status/${encodeURIComponent(status)}`);
+    return await apiClient.get(`/admin/college/status/${encodeURIComponent(status)}`);
   } catch (error) {
     const message = error?.response?.data?.message || '';
-    if (error?.response?.status === 500 && message.includes('No schools found with status')) {
+    if (error?.response?.status === 500 && message.includes('No college found with status')) {
       return {
         data: {
           data: [],
@@ -159,12 +169,12 @@ export const getSchoolsByStatus = async (status) => {
   }
 };
 
-export const getAllSchools = () => apiClient.get('/admin/schools/status/all');
-export const getPendingSchools = async () => {
+export const getAllcollege = () => apiClient.get('/admin/college/status/all');
+export const getPendingcollege = async () => {
   const candidates = [
-    '/admin/schools/admin/pending',
-    '/admin/schools/pending',
-    '/admin/schools/status/pending',
+    '/admin/college/admin/pending',
+    '/admin/college/pending',
+    '/admin/college/status/pending',
   ];
   let lastErr;
   for (const path of candidates) {
@@ -175,7 +185,7 @@ export const getPendingSchools = async () => {
       lastErr = e;
     }
   }
-  throw lastErr || new Error('Failed to fetch pending schools');
+  throw lastErr || new Error('Failed to fetch pending college');
 };
 
 /**
@@ -184,46 +194,36 @@ export const getPendingSchools = async () => {
  * ============================
  */
 
-export const getFacultyById = (schoolId) =>
-  apiClient.get(`/admin/schools/faculty/${encodeURIComponent(schoolId)}`);
-export const updateFaculty = (schoolId, data) =>
-  apiClient.put(`/admin/schools/faculty/${encodeURIComponent(schoolId)}`, data);
+// ADD faculty
 
-export const getAdmissionTimelineById = async (schoolId) => {
+
+// GET faculty by collegeId
+export const getFacultyById = (collegeId) =>
+  apiClient.get(`/college/faculty/${encodeURIComponent(collegeId)}`);
+
+// UPDATE faculty
+export const updateFaculty = (collegeId, data) =>
+  apiClient.put(`/college/faculty/${encodeURIComponent(collegeId)}`, data);
+
+// DELETE faculty (optional)
+export const deleteFaculty = (collegeId) =>
+  apiClient.delete(`/college/faculty/${encodeURIComponent(collegeId)}`);
+
+
+export const getAdmissionTimelineById = async (collegeId) => {
   try {
-    return await apiClient.get(`/admin/schools/admission-timeline/${encodeURIComponent(schoolId)}`, {
-      headers: { 'X-Silent-Request': '1' }
-    });
+    return await apiClient.get(
+      `/college/admission/${encodeURIComponent(collegeId)}`,
+      {
+        headers: { 'X-Silent-Request': '1' }
+      }
+    );
   } catch (e) {
     if (e?.response?.status === 404) return { data: null };
     throw e;
   }
 };
-export const updateAdmissionTimeline = (schoolId, data) =>
-  apiClient.put(`/admin/schools/admission-timeline/${encodeURIComponent(schoolId)}`, data);
 
-export const getTechnologyAdoptionById = (schoolId) =>
-  apiClient.get(`/admin/schools/technology-adoption/${encodeURIComponent(schoolId)}`);
-export const updateTechnologyAdoption = (schoolId, data) =>
-  apiClient.put(`/admin/schools/technology-adoption/${encodeURIComponent(schoolId)}`, data);
-
-export const getSafetyAndSecurityById = (schoolId) =>
-  apiClient.get(`/admin/schools/safety-security/${encodeURIComponent(schoolId)}`);
-export const updateSafetyAndSecurity = (schoolId, data) =>
-  apiClient.put(`/admin/schools/safety-security/${encodeURIComponent(schoolId)}`, data);
-
-export const getInternationalExposureById = async (schoolId) => {
-  try {
-    return await apiClient.get(`/admin/schools/international-exposure/${encodeURIComponent(schoolId)}`, {
-      headers: { 'X-Silent-Request': '1' }
-    });
-  } catch (e) {
-    if (e?.response?.status === 404) return { data: null };
-    throw e;
-  }
-};
-export const updateInternationalExposure = (schoolId, data) =>
-  apiClient.put(`/admin/schools/international-exposure/${encodeURIComponent(schoolId)}`, data);
 
 /**
  * ============================
@@ -231,31 +231,31 @@ export const updateInternationalExposure = (schoolId, data) =>
  * ============================
  */
 
-export const getSchoolPhotos = (schoolId) =>
-  apiClient.get(`/admin/${encodeURIComponent(schoolId)}/photos`);
-export const getSchoolVideos = (schoolId) =>
-  apiClient.get(`/admin/${encodeURIComponent(schoolId)}/videos`);
+export const getcollegePhotos = (collegeId) =>
+  apiClient.get(`/admin/${encodeURIComponent(collegeId)}/photos`);
+export const getcollegeVideos = (collegeId) =>
+  apiClient.get(`/admin/${encodeURIComponent(collegeId)}/videos`);
 
-export const uploadSchoolPhotos = (schoolId, files) => {
+export const uploadcollegePhotos = (collegeId, files) => {
   const formData = new FormData();
   Array.from(files).forEach((f) => formData.append('files', f));
-  return apiClient.post(`/admin/${encodeURIComponent(schoolId)}/upload/photos`, formData, {
+  return apiClient.post(`/admin/${encodeURIComponent(collegeId)}/upload/photos`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 };
 
-export const uploadSchoolVideo = (schoolId, file) => {
+export const uploadcollegeVideo = (collegeId, file) => {
   const formData = new FormData();
   formData.append('file', file);
-  return apiClient.post(`/admin/${encodeURIComponent(schoolId)}/upload/video`, formData, {
+  return apiClient.post(`/admin/${encodeURIComponent(collegeId)}/upload/video`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 };
 
-export const deleteSchoolPhoto = (schoolId, publicId) =>
-  apiClient.delete(`/admin/${encodeURIComponent(schoolId)}/photo/${encodeURIComponent(publicId)}`);
-export const deleteSchoolVideo = (schoolId, publicId) =>
-  apiClient.delete(`/admin/${encodeURIComponent(schoolId)}/video/${encodeURIComponent(publicId)}`);
+export const deletecollegePhoto = (collegeId, publicId) =>
+  apiClient.delete(`/admin/${encodeURIComponent(collegeId)}/photo/${encodeURIComponent(publicId)}`);
+export const deletecollegeVideo = (collegeId, publicId) =>
+  apiClient.delete(`/admin/${encodeURIComponent(collegeId)}/video/${encodeURIComponent(publicId)}`);
 
 /**
  * ============================
@@ -276,23 +276,23 @@ export const changeAdminPassword = (passwordData) =>
  */
 
 export const deleteUser = (userId) => apiClient.delete(`/admin/users/${userId}`);
-export const deleteSchool = (schoolId) => apiClient.delete(`/admin/schools/${schoolId}`);
+export const deletecollege = (collegeId) => apiClient.delete(`/admin/college/${collegeId}`);
 
-// More resilient existence check that won't crash the UI if the id isn't a school id
-export const getSchoolByAuthId = async (authId) => {
+// More resilient existence check that won't crash the UI if the id isn't a college id
+export const getcollegeByAuthId = async (authId) => {
   if (!authId) return { data: null };
   try {
-    debugger
-    console.log(`🔍 Finding school by authId: ${authId}`);
-    // ✅ FIXED: Matches router.get('/schools/by-auth/:authId')
-    const res = await apiClient.get(`/admin/schools/auth/${encodeURIComponent(authId)}`, {
+    
+    console.log(`🔍 Finding college by authId: ${authId}`);
+    // ✅ FIXED: Matches router.get('/college/by-auth/:authId')
+    const res = await apiClient.get(`/admin/college/auth/${encodeURIComponent(authId)}`, {
       headers: { 'X-Silent-Request': '1' }
     });
-    console.log(`✅ Found school by authId:`, res?.data);
+    console.log(`✅ Found college by authId:`, res?.data);
     return res;
   } catch (error) {
     const status = error?.response?.status;
-    console.warn(`⚠️ School not found for authId ${authId}, status: ${status}`);
+    console.warn(`⚠️ college not found for authId ${authId}, status: ${status}`);
     if (status === 404 || status === 400 || status === 500) {
       return { data: null };
     }
@@ -300,10 +300,10 @@ export const getSchoolByAuthId = async (authId) => {
   }
 };
 
-export const checkSchoolProfileExists = async (authId) => {
+export const checkcollegeProfileExists = async (authId) => {
   if (!authId) return { data: null };
   try {
-    const res = await getSchoolById(authId, { headers: { 'X-Silent-Request': '1' } });
+    const res = await getcollegeById(authId, { headers: { 'X-Silent-Request': '1' } });
     return res;
   } catch (error) {
     const status = error?.response?.status;
@@ -317,36 +317,116 @@ export const checkSchoolProfileExists = async (authId) => {
 
 /**
  * ============================
- * School Sub-Data Retrieval
+ * college Sub-Data Retrieval
  * ============================
  */
+export const addHostel = (data) =>
+  apiClient.post('/college/hostel/add', data);
 
-export const getAmenitiesById = (schoolId) =>
-  apiClient.get(`/admin/schools/amenities/${encodeURIComponent(schoolId)}`);
-export const getActivitiesById = (schoolId) =>
-  apiClient.get(`/admin/schools/activities/${encodeURIComponent(schoolId)}`);
-export const getInfrastructureById = (schoolId) =>
-  apiClient.get(`/admin/schools/infrastructure/${encodeURIComponent(schoolId)}`);
-export const getFeesAndScholarshipsById = (schoolId) =>
-  apiClient.get(`/admin/schools/fees-scholarships/${encodeURIComponent(schoolId)}`);
-export const getAcademicsById = (schoolId) =>
-  apiClient.get(`/admin/schools/academics/${encodeURIComponent(schoolId)}`);
-export const updateAcademics = (schoolId, data) =>
-  apiClient.put(`/admin/schools/academics/${encodeURIComponent(schoolId)}`, data);
-export const getOtherDetailsById = (schoolId) =>
-  apiClient.get(`/admin/schools/other-details/${encodeURIComponent(schoolId)}`);
+export const getHostelsByCollege = (collegeId) =>
+  apiClient.get(`/college/hostel/${encodeURIComponent(collegeId)}`);
 
-// Update endpoints for sub-resources (used during edit mode to avoid duplicate key errors)
-export const updateAmenities = (schoolId, data) =>
-  apiClient.put(`/admin/schools/amenities/${encodeURIComponent(schoolId)}`, data);
-export const updateActivities = (schoolId, data) =>
-  apiClient.put(`/admin/schools/activities/${encodeURIComponent(schoolId)}`, data);
-export const updateInfrastructure = (schoolId, data) =>
-  apiClient.put(`/admin/schools/infrastructure/${encodeURIComponent(schoolId)}`, data);
-export const updateFeesAndScholarshipsById = (schoolId, data) =>
-  apiClient.put(`/admin/schools/fees-scholarships/${encodeURIComponent(schoolId)}`, data);
-export const updateOtherDetailsById = (schoolId, data) =>
-  apiClient.put(`/admin/schools/other-details/${encodeURIComponent(schoolId)}`, data);
+export const updateHostel = (hostelId, data) =>
+  apiClient.put(`/college/hostel/${encodeURIComponent(hostelId)}`, data);
+
+export const deleteHostel = (hostelId) =>
+  apiClient.delete(`/college/hostel/${encodeURIComponent(hostelId)}`);
+export const addExam = (data) =>
+  apiClient.post('/college/exam', data);
+
+export const getCollegeExams = (id) =>
+  apiClient.get(`/college/exam/${encodeURIComponent(id)}`);
+export const upsertCourseFee = (data) =>
+  apiClient.post('/college/course-fee', data);
+
+export const getCourseFeesByCollege = (collegeId) =>
+  apiClient.get(`/college/course-fee/college/${encodeURIComponent(collegeId)}`);
+export const addCourse = (data) =>
+  apiClient.post('/college/course/add', data);
+
+export const getCoursesByCollege = (collegeId) =>
+  apiClient.get(`/college/courses/college/${encodeURIComponent(collegeId)}`);
+
+export const updateCourse = (courseId, data) =>
+  apiClient.put(`/college/course/${encodeURIComponent(courseId)}`, data);
+export const addPlacement = (data) =>
+  apiClient.post('/college/placement/add', data);
+
+export const getPlacementsByCourse = (courseId) =>
+  apiClient.get(`/college/placement/${encodeURIComponent(courseId)}`);
+
+export const getPlacementsByCollege = (collegeId) =>
+  apiClient.get(`/college/placement/college/${encodeURIComponent(collegeId)}`);
+
+export const updatePlacement = (placementId, data) =>
+  apiClient.put(`/college/placement/${encodeURIComponent(placementId)}`, data);
+export const addScholarship = (data) =>
+  apiClient.post('/college/scholarship/add', data);
+export const getFeesAndScholarshipsById = (collegeId) => {
+  return apiClient.get(`/admin/colleges/fees-scholarships/${encodeURIComponent(collegeId)}`);
+};
+export const getInfrastructureById = (collegeId) => {
+  return apiClient.get(`/admin/colleges/infrastructure/${encodeURIComponent(collegeId)}`);
+};
+export const getScholarshipsByCollege = (collegeId) =>
+  apiClient.get(`/college/scholarship/${encodeURIComponent(collegeId)}`);
+export const addActivities = (data) =>
+  apiClient.post('/college/activities/add', data);
+export const getActivitiesByCollegeId = (collegeId) =>
+  apiClient.get(`/college/activities/${collegeId}`);
+
+export const getActivitiesByCollege = (collegeId) =>
+  apiClient.get(`/college/activities/${encodeURIComponent(collegeId)}`);
+
+export const updateActivities = (collegeId, data) =>
+  apiClient.put(`/college/activities/${encodeURIComponent(collegeId)}`, data);
+
+export const deleteActivities = (collegeId) =>
+  apiClient.delete(`/college/activities/${encodeURIComponent(collegeId)}`);
+export const addInfrastructure = (data) =>
+  apiClient.post('/college/infrastructure/add', data);
+
+export const getInfrastructureByCollege = (collegeId) =>
+  apiClient.get(`/college/infrastructure/${encodeURIComponent(collegeId)}`);
+
+export const updateInfrastructure = (collegeId, data) =>
+  apiClient.put(`/college/infrastructure/${encodeURIComponent(collegeId)}`, data);
+
+export const deleteInfrastructure = (collegeId) =>
+  apiClient.delete(`/college/infrastructure/${encodeURIComponent(collegeId)}`);
+export const addInternationalExposure = (data) =>
+  apiClient.post('/college/international/add', data);
+
+export const getInternationalExposureByCollege = (collegeId) =>
+  apiClient.get(`/college/international/${encodeURIComponent(collegeId)}`);
+
+export const updateInternationalExposure = (collegeId, data) =>
+  apiClient.put(`/college/international/${encodeURIComponent(collegeId)}`, data);
+export const addSafetyAndSecurity = (data) =>
+  apiClient.post('/college/safety/add', data);
+
+export const getSafetyByCollege = (collegeId) =>
+  apiClient.get(`/college/safety/${encodeURIComponent(collegeId)}`);
+
+export const updateSafetyByCollege = (collegeId, data) =>
+  apiClient.put(`/college/safety/${encodeURIComponent(collegeId)}`, data);
+export const addAdmissionTimeline = (data) =>
+  apiClient.post('/college/admission/add', data);
+
+export const getAdmissionTimelineByCollege = (collegeId) =>
+  apiClient.get(`/college/admission/${encodeURIComponent(collegeId)}`);
+
+export const updateAdmissionTimeline = (collegeId, data) =>
+  apiClient.put(`/college/admission/${encodeURIComponent(collegeId)}`, data);
+
+export const getAmenitiesByCollegeId = (collegeId) =>
+  apiClient.get(`/college/amenities/${collegeId}`);
+export const updateAmenities = (collegeId, data) =>
+  apiClient.put(`/college/amenities/${collegeId}`, data);
+export const updateOtherDetails = (collegeId, data) =>
+  apiClient.put(`/college/other-details/${collegeId}`, data);
+export const updateSafetyAndSecurity = (collegeId, data) =>
+  apiClient.put(`/college/safety/${collegeId}`, data);
 
 /**
  * ============================
@@ -354,11 +434,16 @@ export const updateOtherDetailsById = (schoolId, data) =>
  * ============================
  */
 
-export const getStudentApplicationsBySchool = (schoolId) =>
-  apiClient.get(`/applications?schoolId=${encodeURIComponent(schoolId)}`);
+export const getStudentApplicationsBycollege = (collegeId) =>
+  apiClient.get(`/applications?collegeId=${encodeURIComponent(collegeId)}`);
 
-export const getStudentApplicationsBySchoolEmail = (schoolEmail) =>
-  apiClient.get(`/applications?schoolEmail=${encodeURIComponent(schoolEmail)}`);
+export const getStudentApplicationsBycollegeEmail = (collegeEmail) =>
+  apiClient.get(`/applications?collegeEmail=${encodeURIComponent(collegeEmail)}`);
 
 export const getAllStudentApplications = () =>
   apiClient.get('/applications');
+export const getApprovedcolleges = () => getcollegeByStatus('approved');
+export const getRejectedcolleges = () => getcollegeByStatus('rejected');
+export const getPendingcolleges = () => getPendingcollege();
+export const updatecollegeStatus = (collegeId, newStatus) =>
+  apiClient.put(`/admin/college/${encodeURIComponent(collegeId)}`, { status: newStatus });

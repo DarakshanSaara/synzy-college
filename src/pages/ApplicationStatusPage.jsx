@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getFormsByStudent, generateStudentPdf } from '../api/userService';
-import { getSchoolById } from '../api/adminService';
+import { getcollegeById } from '../api/adminService';
 
 const ApplicationStatusPage = () => {
   const navigate = useNavigate();
@@ -11,8 +11,8 @@ const ApplicationStatusPage = () => {
   const [forms, setForms] = useState([]);
   const [displayForms, setDisplayForms] = useState([]);
   const [error, setError] = useState('');
-  const [schoolNameById, setSchoolNameById] = useState({});
-  const [cachedAppliedSchools, setCachedAppliedSchools] = useState([]);
+  const [collegeNameById, setcollegeNameById] = useState({});
+  const [cachedAppliedcolleges, setCachedAppliedcolleges] = useState([]);
 
  const handleViewPdf = async (studId, applicationId) => {
   if (!studId || !applicationId) return;
@@ -55,66 +55,66 @@ const ApplicationStatusPage = () => {
     run();
   }, [currentUser]);
 
-  // Resolve school names for any ids returned in forms
+  // Resolve college names for any ids returned in forms
   useEffect(() => {
-    // Load any locally cached school info saved during apply flow
+    // Load any locally cached college info saved during apply flow
     try {
       const userId = currentUser?._id;
       if (typeof localStorage !== 'undefined' && userId) {
         const cached = [];
         for (let i = 0; i < localStorage.length; i++) {
           const k = localStorage.key(i);
-          if (k && k.startsWith(`schoolInfo:${userId}:`)) {
+          if (k && k.startsWith(`collegeInfo:${userId}:`)) {
             const raw = localStorage.getItem(k);
             try {
               const parsed = JSON.parse(raw || '{}');
-              if (parsed && (parsed.schoolId || parsed.schoolName)) {
+              if (parsed && (parsed.collegeId || parsed.collegeName)) {
                 cached.push(parsed);
               }
             } catch (_) {}
           }
         }
-        setCachedAppliedSchools(cached);
+        setCachedAppliedcolleges(cached);
       }
     } catch (_) {}
 
     const fetchNames = async () => {
       const ids = forms
         .map(f => {
-          const ref = f.schoolId || f.school;
+          const ref = f.collegeId || f.college;
           return typeof ref === 'object' ? (ref?._id || ref?.id) : ref;
         })
         .filter(Boolean);
-      const unique = Array.from(new Set(ids)).filter(id => !schoolNameById[id]);
+      const unique = Array.from(new Set(ids)).filter(id => !collegeNameById[id]);
       if (!unique.length) return;
       try {
-        const results = await Promise.allSettled(unique.map(id => getSchoolById(id)));
+        const results = await Promise.allSettled(unique.map(id => getcollegeById(id)));
         const map = {};
         results.forEach((res, i) => {
           const id = unique[i];
           if (res.status === 'fulfilled') {
-            const schoolData = res.value?.data?.data || res.value?.data;
-            map[id] = schoolData?.name || schoolData?.schoolName || `School ID: ${id.slice(-8)}...`;
+            const collegeData = res.value?.data?.data || res.value?.data;
+            map[id] = collegeData?.name || collegeData?.collegeName || `college ID: ${id.slice(-8)}...`;
           } else {
-            console.warn(`Failed to fetch school name for ID: ${id}`, res.reason);
-            map[id] = `School ID: ${id.slice(-8)}...`;
+            console.warn(`Failed to fetch college name for ID: ${id}`, res.reason);
+            map[id] = `college ID: ${id.slice(-8)}...`;
           }
         });
-        setSchoolNameById(prev => ({ ...prev, ...map }));
+        setcollegeNameById(prev => ({ ...prev, ...map }));
       } catch (error) {
-        console.error('Error fetching school names:', error);
+        console.error('Error fetching college names:', error);
         // Set fallback names for all IDs
         const map = {};
         unique.forEach(id => {
-          map[id] = `School ID: ${id.slice(-8)}...`;
+          map[id] = `college ID: ${id.slice(-8)}...`;
         });
-        setSchoolNameById(prev => ({ ...prev, ...map }));
+        setcollegeNameById(prev => ({ ...prev, ...map }));
       }
     };
     if (forms?.length) fetchNames();
-  }, [forms, schoolNameById, currentUser]);
+  }, [forms, collegeNameById, currentUser]);
 
-  // Merge API forms with locally cached applications to ensure all applied schools appear
+  // Merge API forms with locally cached applications to ensure all applied colleges appear
   useEffect(() => {
     try {
       const userId = currentUser?._id;
@@ -122,11 +122,11 @@ const ApplicationStatusPage = () => {
       if (typeof localStorage !== 'undefined' && userId) {
         for (let i = 0; i < localStorage.length; i++) {
           const k = localStorage.key(i);
-          if (k && k.startsWith(`schoolInfo:${userId}:`)) {
+          if (k && k.startsWith(`collegeInfo:${userId}:`)) {
             const raw = localStorage.getItem(k);
             try {
               const parsed = JSON.parse(raw || '{}');
-              if (parsed && (parsed.schoolId || parsed.schoolName)) {
+              if (parsed && (parsed.collegeId || parsed.collegeName)) {
                 cached.push(parsed);
               }
             } catch (_) {}
@@ -136,18 +136,18 @@ const ApplicationStatusPage = () => {
 
       const synthesizedFromCache = cached.map((c) => ({
         _synthetic: true,
-        schoolName: c.schoolName,
-        schoolId: c.schoolId,
+        collegeName: c.collegeName,
+        collegeId: c.collegeId,
         status: 'Submitted',
         createdAt: c.createdAt || null,
       }));
 
-      // Dedupe by strong id or schoolId+createdAt+schoolName
+      // Dedupe by strong id or collegeId+createdAt+collegeName
       const map = new Map();
       [...forms, ...synthesizedFromCache].forEach((item, idx) => {
         const strong = item?._id || item?.id;
-        const sId = typeof item?.schoolId === 'object' ? (item?.schoolId?._id || item?.schoolId?.id) : item?.schoolId;
-        const sName = item?.schoolName || item?.school?.name || '';
+        const sId = typeof item?.collegeId === 'object' ? (item?.collegeId?._id || item?.collegeId?.id) : item?.collegeId;
+        const sName = item?.collegeName || item?.college?.name || '';
         const when = item?.createdAt || item?.updatedAt || '';
         const key = strong || `${sId || 'noid'}-${when || 'notime'}-${sName || 'noname'}-${idx}`;
         map.set(String(key), item);
@@ -171,7 +171,7 @@ const ApplicationStatusPage = () => {
       <div className="max-w-5xl mx-auto px-4">
         <div className="mb-6">
           <h1 className="text-2xl font-semibold text-gray-900">Applied Forms</h1>
-          <p className="text-gray-600 text-sm mt-1">All schools you have applied to and their current status.</p>
+          <p className="text-gray-600 text-sm mt-1">All colleges you have applied to and their current status.</p>
         </div>
 
         {isLoading ? (
@@ -190,51 +190,51 @@ const ApplicationStatusPage = () => {
               console.log('Application keys:', Object.keys(f));
               console.log('Application values:', Object.values(f));
 
-              const schoolRef = f.schoolId || f.school;
-              const idStr = typeof schoolRef === 'object' ? (schoolRef?._id || schoolRef?.id) : schoolRef;
+              const collegeRef = f.collegeId || f.college;
+              const idStr = typeof collegeRef === 'object' ? (collegeRef?._id || collegeRef?.id) : collegeRef;
 
-              // Enhanced school name resolution - includes local cache fallbacks when ids are missing
-              let schoolName = 'Loading...';
+              // Enhanced college name resolution - includes local cache fallbacks when ids are missing
+              let collegeName = 'Loading...';
 
-              if (f.schoolName) {
-                schoolName = f.schoolName;
-              } else if (idStr && typeof localStorage !== 'undefined' && localStorage.getItem(`schoolName:${idStr}`)) {
-                schoolName = localStorage.getItem(`schoolName:${idStr}`);
-              } else if (typeof schoolRef === 'object' && (schoolRef?.name || schoolRef?.schoolName)) {
-                schoolName = schoolRef.name || schoolRef.schoolName;
-              } else if (idStr && schoolNameById[idStr] && schoolNameById[idStr] !== 'School') {
-                schoolName = schoolNameById[idStr];
-              } else if (f.school && typeof f.school === 'object' && f.school.name) {
-                schoolName = f.school.name;
-              } else if (idStr && schoolNameById[idStr]) {
-                schoolName = schoolNameById[idStr];
+              if (f.collegeName) {
+                collegeName = f.collegeName;
+              } else if (idStr && typeof localStorage !== 'undefined' && localStorage.getItem(`collegeName:${idStr}`)) {
+                collegeName = localStorage.getItem(`collegeName:${idStr}`);
+              } else if (typeof collegeRef === 'object' && (collegeRef?.name || collegeRef?.collegeName)) {
+                collegeName = collegeRef.name || collegeRef.collegeName;
+              } else if (idStr && collegeNameById[idStr] && collegeNameById[idStr] !== 'college') {
+                collegeName = collegeNameById[idStr];
+              } else if (f.college && typeof f.college === 'object' && f.college.name) {
+                collegeName = f.college.name;
+              } else if (idStr && collegeNameById[idStr]) {
+                collegeName = collegeNameById[idStr];
               } else {
                 // No IDs present → try last applied and cached mappings
                 let fallbackName = null;
                 try {
                   if (typeof localStorage !== 'undefined') {
-                    const lastId = localStorage.getItem('lastAppliedSchoolId');
+                    const lastId = localStorage.getItem('lastAppliedcollegeId');
                     if (lastId) {
-                      const n = localStorage.getItem(`schoolName:${lastId}`);
+                      const n = localStorage.getItem(`collegeName:${lastId}`);
                       if (n) fallbackName = n;
                     }
-                    if (!fallbackName && cachedAppliedSchools?.length) {
-                      fallbackName = cachedAppliedSchools[0]?.schoolName || null;
+                    if (!fallbackName && cachedAppliedcolleges?.length) {
+                      fallbackName = cachedAppliedcolleges[0]?.collegeName || null;
                     }
                   }
                 } catch (_) {}
-                schoolName = fallbackName || 'Unknown School';
+                collegeName = fallbackName || 'Unknown college';
               }
 
-              // Debug logging for school name resolution
-              console.log('School name resolution for application:', f._id, {
-                fSchoolName: f.schoolName,
-                schoolRef: schoolRef,
+              // Debug logging for college name resolution
+              console.log('college name resolution for application:', f._id, {
+                fcollegeName: f.collegeName,
+                collegeRef: collegeRef,
                 idStr: idStr,
-                schoolNameById: schoolNameById[idStr],
-                localStorageName: typeof localStorage !== 'undefined' ? localStorage.getItem(`schoolName:${idStr}`) : undefined,
-                fSchool: f.school,
-                finalSchoolName: schoolName
+                collegeNameById: collegeNameById[idStr],
+                localStorageName: typeof localStorage !== 'undefined' ? localStorage.getItem(`collegeName:${idStr}`) : undefined,
+                fcollege: f.college,
+                finalcollegeName: collegeName
               });
               const rawStatus = (f.status || f.applicationStatus || f.formStatus || f.decision || 'pending');
               const status = String(rawStatus).toLowerCase().includes('submit') ? 'submitted' : (String(rawStatus).toLowerCase());
@@ -245,13 +245,13 @@ const ApplicationStatusPage = () => {
                     <div className="min-w-0">
                       {idStr ? (
                         <button 
-                          onClick={() => navigate(`/school/${idStr}`)}
+                          onClick={() => navigate(`/college/${idStr}`)}
                           className="font-semibold text-gray-900 hover:text-blue-600 hover:underline truncate text-left block w-full"
                         >
-                          {schoolName}
+                          {collegeName}
                         </button>
                       ) : (
-                        <div className="font-semibold text-gray-900 truncate">{schoolName}</div>
+                        <div className="font-semibold text-gray-900 truncate">{collegeName}</div>
                       )}
                       <div className="text-xs text-gray-500 mt-1">Status: <span className={status.includes('accept') ? 'text-green-700' : status.includes('reject') ? 'text-red-600' : 'text-amber-600'}>{status}</span></div>
                       <div className="text-xs text-gray-400 mt-1">Submitted: {submitted}</div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getSafetyAndSecurityById, getFeesAndScholarshipsById, getTechnologyAdoptionById } from '../api/adminService';
 
-const SchoolDetails = ({ schoolId }) => {
+const collegeDetails = ({ collegeId }) => {
   const [safetyData, setSafetyData] = useState(null);
   const [feesData, setFeesData] = useState(null);
   const [techData, setTechData] = useState(null);
@@ -15,9 +15,9 @@ const SchoolDetails = ({ schoolId }) => {
         setError(null);
 
         const [safetyRes, feesRes, techRes] = await Promise.allSettled([
-          getSafetyAndSecurityById(schoolId),
-          getFeesAndScholarshipsById(schoolId),
-          getTechnologyAdoptionById(schoolId)
+          getSafetyAndSecurityById(collegeId),
+          getFeesAndScholarshipsById(collegeId),
+          getTechnologyAdoptionById(collegeId)
         ]);
 
         if (safetyRes.status === 'fulfilled') {
@@ -30,20 +30,20 @@ const SchoolDetails = ({ schoolId }) => {
           setTechData(techRes.value.data);
         }
       } catch (err) {
-        console.error('Error fetching school details:', err);
-        setError('Failed to load school details');
+        console.error('Error fetching college details:', err);
+        setError('Failed to load college details');
       } finally {
         setLoading(false);
       }
     };
 
-    if (schoolId) {
+    if (collegeId) {
       fetchData();
     }
-  }, [schoolId]);
+  }, [collegeId]);
 
   if (loading) {
-    return <div>Loading school details...</div>;
+    return <div>Loading college details...</div>;
   }
 
   if (error) {
@@ -100,4 +100,4 @@ const SchoolDetails = ({ schoolId }) => {
   );
 };
 
-export default SchoolDetails;
+export default collegeDetails;

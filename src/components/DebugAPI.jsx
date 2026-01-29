@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { getSchoolsByStatus } from '../api/adminService';
+import { getcollegesByStatus } from '../api/adminService';
 import { getAllBlogs } from '../api/blogService';
 
 const DebugAPI = () => {
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const testPendingSchools = async () => {
+  const testPendingcolleges = async () => {
     setLoading(true);
     try {
-      const response = await getSchoolsByStatus('pending');
+      const response = await getcollegesByStatus('pending');
       setResult(JSON.stringify(response.data, null, 2));
     } catch (error) {
       setResult(`Error: ${error.message}\n${error.response?.data || ''}`);
@@ -35,11 +35,11 @@ const DebugAPI = () => {
       <h3 className="text-lg font-bold mb-4">API Debug</h3>
       <div className="space-x-2 mb-4">
         <button
-          onClick={testPendingSchools}
+          onClick={testPendingcolleges}
           disabled={loading}
           className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
         >
-          Test Pending Schools
+          Test Pending colleges
         </button>
         <button
           onClick={testBlogs}

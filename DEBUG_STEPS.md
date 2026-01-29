@@ -1,4 +1,4 @@
-# Debugging: "No linked school profile found" Error
+# Debugging: "No linked college profile found" Error
 
 ## Steps to Debug
 
@@ -10,14 +10,14 @@
 
 Expected console output:
 ```
-❌ localStorage schoolId not valid, trying other methods...
-❌ currentUser.schoolId not valid, trying other methods...
-🔍 Fetching all schools to find match by authId...
+❌ localStorage collegeId not valid, trying other methods...
+❌ currentUser.collegeId not valid, trying other methods...
+🔍 Fetching all colleges to find match by authId...
 ```
 
 Then either:
-- `✅ Found school by filtering all schools with authId`
-- OR `❌ Could not fetch all schools: [error message]`
+- `✅ Found college by filtering all colleges with authId`
+- OR `❌ Could not fetch all colleges: [error message]`
 
 ### 2. Check Your User Object
 
@@ -29,47 +29,47 @@ JSON.parse(localStorage.getItem('userData'))
 **What to look for:**
 - Does it have an `_id` field?
 - What is the value of `_id`?
-- Does it have `userType: 'school'` or `isAdmin: true`?
+- Does it have `userType: 'college'` or `isAdmin: true`?
 
-### 3. Check If School Exists in Database
+### 3. Check If college Exists in Database
 
-In the browser console, try manually fetching all schools:
+In the browser console, try manually fetching all colleges:
 ```javascript
-fetch('http://localhost:8080/api/admin/schools/status/all', {
+fetch('http://localhost:8080/api/admin/colleges/status/all', {
   headers: {
     'Authorization': 'Bearer ' + localStorage.getItem('authToken')
   }
 })
 .then(r => r.json())
 .then(data => {
-  console.log('All schools:', data);
+  console.log('All colleges:', data);
   const userData = JSON.parse(localStorage.getItem('userData'));
   console.log('Your authId:', userData._id);
-  console.log('Matching school:', data.data?.find(s => s.authId === userData._id));
+  console.log('Matching college:', data.data?.find(s => s.authId === userData._id));
 })
 ```
 
 ### 4. Common Issues & Solutions
 
-#### Issue A: `getAllSchools()` endpoint returns error
+#### Issue A: `getAllcolleges()` endpoint returns error
 **Solution:** Check if you're logged in with the correct admin credentials
 
-#### Issue B: No schools returned
-**Solution:** Create a school profile first using the registration form
+#### Issue B: No colleges returned
+**Solution:** Create a college profile first using the registration form
 
-#### Issue C: School exists but authId doesn't match
-**Problem:** The school's `authId` field doesn't match your user's `_id`
-**Solution:** The school needs to be created with your current user's `_id` as the `authId`
+#### Issue C: college exists but authId doesn't match
+**Problem:** The college's `authId` field doesn't match your user's `_id`
+**Solution:** The college needs to be created with your current user's `_id` as the `authId`
 
 #### Issue D: User not logged in properly
 **Solution:** Log out and log back in to refresh your session
 
-### 5. Quick Fix: Manually Set School ID
+### 5. Quick Fix: Manually Set college ID
 
-If you know your school's ID, you can set it manually:
+If you know your college's ID, you can set it manually:
 ```javascript
 // In browser console:
-localStorage.setItem('lastCreatedSchoolId', 'YOUR_SCHOOL_ID_HERE');
+localStorage.setItem('lastCreatedcollegeId', 'YOUR_college_ID_HERE');
 ```
 
 Then refresh and try to edit again.

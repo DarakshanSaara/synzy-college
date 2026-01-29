@@ -7,7 +7,7 @@ import {
   checkApplicationExists,
   updateExistingApplication
 } from '../api/applicationService';
-import { getSchoolById } from '../api/adminService';
+import { getcollegeById } from '../api/adminService';
 import { 
   Loader2, 
   CheckCircle, 
@@ -16,7 +16,7 @@ import {
   Send, 
   Edit3,
   User,
-  School,
+  
   ArrowRight,
   ArrowLeft,
   Clock,
@@ -26,46 +26,46 @@ import {
 
 const ApplicationFlowPage = () => {
   const navigate = useNavigate();
-  const { schoolId } = useParams();
+  const { collegeId } = useParams();
   const { user: currentUser } = useAuth();
   
   const [loading, setLoading] = useState(false);
-  const [schoolLoading, setSchoolLoading] = useState(false);
+  const [collegeLoading, setcollegeLoading] = useState(false);
   const [scenario, setScenario] = useState(null); // 'first-time', 'returning', 'update'
   const [application, setApplication] = useState(null);
-  const [school, setSchool] = useState(null);
+  const [college, setcollege] = useState(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [applications, setApplications] = useState([]);
 
-  // Fetch school details
+  // Fetch college details
   useEffect(() => {
-    if (schoolId) {
-      fetchSchoolDetails();
+    if (collegeId) {
+      fetchcollegeDetails();
     }
-  }, [schoolId]);
+  }, [collegeId]);
 
-  // Check application status on mount (only after school is loaded)
+  // Check application status on mount (only after college is loaded)
   useEffect(() => {
-    if (currentUser?._id && schoolId && school && !schoolLoading) {
+    if (currentUser?._id && collegeId && college && !collegeLoading) {
       checkApplicationStatus();
     }
-  }, [currentUser, schoolId, school, schoolLoading]);
+  }, [currentUser, collegeId, college, collegeLoading]);
   
-  const fetchSchoolDetails = async () => {
+  const fetchcollegeDetails = async () => {
     try {
-      setSchoolLoading(true);
-      console.log('🏫 Fetching school details for:', schoolId);
-      const response = await getSchoolById(schoolId);
-      console.log('✅ School details fetched:', response.data.data);
-      setSchool(response.data.data);
+      setcollegeLoading(true);
+      console.log('🏫 Fetching college details for:', collegeId);
+      const response = await getcollegeById(collegeId);
+      console.log('✅ college details fetched:', response.data.data);
+      setcollege(response.data.data);
     } catch (error) {
-      console.error('❌ Error fetching school details:', error);
-      toast.error('Failed to fetch school details');
-      setError('Failed to load school details. Please try again.');
+      console.error('❌ Error fetching college details:', error);
+      toast.error('Failed to fetch college details');
+      setError('Failed to load college details. Please try again.');
     } finally {
-      setSchoolLoading(false);
+      setcollegeLoading(false);
     }
   };
 
@@ -95,8 +95,8 @@ const ApplicationFlowPage = () => {
   };
 
   const handleDirectSubmit = async () => {
-    if (!application || !schoolId) {
-      toast.error('Missing application data or school ID');
+    if (!application || !collegeId) {
+      toast.error('Missing application data or college ID');
       return;
     }
 
@@ -105,14 +105,14 @@ const ApplicationFlowPage = () => {
     
     try {
       const studentId = currentUser.studentId || currentUser._id;
-      const result = await handleApplicationFlow(studentId, schoolId);
+      const result = await handleApplicationFlow(studentId, collegeId);
       
       if (result.success) {
         setFormSubmitted(true);
         if (result.formSubmission?.alreadySubmitted) {
-          toast.info('Application already submitted to this school!');
+          toast.info('Application already submitted to this college!');
         } else {
-          toast.success('Application submitted to school successfully!');
+          toast.success('Application submitted to college successfully!');
         }
         
         setTimeout(() => {
@@ -148,8 +148,8 @@ const ApplicationFlowPage = () => {
   };
 
   const handleGoToForm = () => {
-    // Navigate to application form with school context
-    navigate(`/student-application/${schoolId}`);
+    // Navigate to application form with college context
+    navigate(`/student-application/${collegeId}`);
   };
 
   const handleGoToUpdateForm = (section = null) => {
@@ -160,15 +160,15 @@ const ApplicationFlowPage = () => {
     if (section) {
       params.append('section', section);
     }
-    navigate(`/student-application/${schoolId}?${params.toString()}`);
+    navigate(`/student-application/${collegeId}?${params.toString()}`);
   };
 
-  if (schoolLoading) {
+  if (collegeLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-indigo-600" />
-          <p className="text-gray-600">Loading school details...</p>
+          <p className="text-gray-600">Loading college details...</p>
         </div>
       </div>
     );
@@ -210,7 +210,7 @@ const ApplicationFlowPage = () => {
           <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Success!</h2>
           <p className="text-gray-600 mb-4">
-            Your application has been submitted to {school?.name || 'the school'} successfully.
+            Your application has been submitted to {college?.name || 'the college'} successfully.
           </p>
           <p className="text-sm text-gray-500">
             Redirecting to application status page...
@@ -226,7 +226,7 @@ const ApplicationFlowPage = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Apply to {school?.name || 'School'}
+            Apply to {college?.name || 'college'}
           </h1>
           <p className="text-gray-600">
             {scenario === 'first-time' 
@@ -245,7 +245,7 @@ const ApplicationFlowPage = () => {
               <p className="text-sm text-blue-800">
                 {scenario === 'first-time' 
                   ? 'First-time applicants need to fill out the complete application form once. This data will be saved and can be reused for future applications.'
-                  : 'You already have an application on file. You can submit directly to schools or update your information if needed.'
+                  : 'You already have an application on file. You can submit directly to colleges or update your information if needed.'
                 }
               </p>
             </div>
@@ -311,7 +311,7 @@ const ApplicationFlowPage = () => {
             </button>
             {/* Edit this specific child */}
             <button
-              onClick={() => navigate(`/student-application/${schoolId}?appId=${app._id}`)}
+              onClick={() => navigate(`/student-application/${collegeId}?appId=${app._id}`)}
               className="px-3 py-1 border border-indigo-600 text-indigo-600 rounded text-sm"
             >
               Edit
@@ -323,7 +323,7 @@ const ApplicationFlowPage = () => {
 
     {/* BUTTON TO ADD BROTHER/SISTER */}
     <button
-      onClick={() => navigate(`/student-application/${schoolId}`)} // No ID means Create New
+      onClick={() => navigate(`/student-application/${collegeId}`)} // No ID means Create New
       className="w-full py-3 border-2 border-dashed border-indigo-300 text-indigo-600 font-semibold rounded-lg hover:bg-indigo-50"
     >
       + Add Another Child (Sibling)

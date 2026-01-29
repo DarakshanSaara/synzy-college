@@ -26,9 +26,9 @@ export const getShortlist = async (authId) => {
   }
 };
 
-export const addToShortlist = async (authId, schoolId) => {
+export const addToShortlist = async (authId, collegeId) => {
   try {
-    const response = await apiClient.post('/users/shortlist', { authId, schoolId });
+    const response = await apiClient.post('/users/shortlist', { authId, collegeId });
     return response.data;
   } catch (error) {
     console.error("Error adding to shortlist:", error.response?.data || error.message);
@@ -36,24 +36,24 @@ export const addToShortlist = async (authId, schoolId) => {
   }
 };
 
-export const removeFromShortlist = async (authId, schoolId) => {
+export const removeFromShortlist = async (authId, collegeId) => {
   try {
-    console.log('API: Removing from shortlist:', { authId, schoolId });
+    console.log('API: Removing from shortlist:', { authId, collegeId });
     
-    // Ensure schoolId is a string
-    const normalizedSchoolId = String(schoolId);
+    // Ensure collegeId is a string
+    const normalizedcollegeId = String(collegeId);
     
-    // Try with the normalized schoolId
+    // Try with the normalized collegeId
     const response = await apiClient.post('/users/shortlist/remove', { 
       authId, 
-      schoolId: normalizedSchoolId 
+      collegeId: normalizedcollegeId 
     });
     
     console.log('API: Remove successful:', response.data);
     return response.data;
   } catch (error) {
     console.error("Error removing from shortlist:", {
-      request: { authId, schoolId },
+      request: { authId, collegeId },
       error: error.response?.data || error.message,
       status: error.response?.status,
       fullError: error
@@ -65,7 +65,7 @@ export const removeFromShortlist = async (authId, schoolId) => {
       try {
         const retryResponse = await apiClient.post('/users/shortlist/remove', { 
           authId, 
-          _id: String(schoolId)  // Try with _id field
+          _id: String(collegeId)  // Try with _id field
         });
         console.log('API: Remove successful with _id:', retryResponse.data);
         return retryResponse.data;
@@ -328,7 +328,7 @@ export const generateStudentPdf = async (studId,applicationId) => {
 
 export const getFormsByStudent = async (studId) => {
   // console.log(`🔍 Fetching forms for student: ${studId}`);
-  debugger
+  
   const candidates = [
     `/form/student/${studId}`,        // some deployments
     `/applications/${studId}`,        // application-routes get by student
@@ -357,9 +357,9 @@ export const getFormsByStudent = async (studId) => {
       // Merge and dedupe; be careful not to collapse distinct items lacking strong ids
       const map = new Map();
       [...all, ...normalizedArray].forEach((item, idx) => {
-        const schoolKey = (typeof item?.schoolId === 'object' ? (item?.schoolId?._id || item?.schoolId?.id) : item?.schoolId) || item?.school || 'unknown';
+        const collegeKey = (typeof item?.collegeId === 'object' ? (item?.collegeId?._id || item?.collegeId?.id) : item?.collegeId) || item?.college || 'unknown';
         const timeKey = item?.createdAt || item?.updatedAt || '';
-        const fallbackKey = `${schoolKey}-${timeKey}-${idx}`;
+        const fallbackKey = `${collegeKey}-${timeKey}-${idx}`;
         const key = item?._id || item?.id || fallbackKey;
         map.set(String(key), item);
       });

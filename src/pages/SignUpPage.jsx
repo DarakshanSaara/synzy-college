@@ -14,7 +14,7 @@ import { useAuth } from "../context/AuthContext";
 import { registerUser } from "../api/authService";
 
 const signUpSchema = z.object({
-  name: z.string().min(1, { message: "School name is required" }),
+  name: z.string().min(1, { message: "college name is required" }),
   email: z.string().email({ message: "Invalid email address" }),
   password: z
     .string()
@@ -37,7 +37,7 @@ const SignUpPage = () => {
   });
 
   // =====================
-  // EMAIL SIGNUP (SCHOOL)
+  // EMAIL SIGNUP (college)
   // =====================
   const onSubmit = async (data) => {
   setIsLoading(true);
@@ -58,15 +58,15 @@ const SignUpPage = () => {
       const { token, user } = res.data.data;
 
       // 3. ✅ CRITICAL: Update AuthContext state
-      // This tells the app "The user is now a logged-in School"
+      // This tells the app "The user is now a logged-in college"
     
 
 setAuthSession(user, token);
 
-      toast.success("School account created successfully!");
+      toast.success("college account created successfully!");
       
       // 4. Navigate now that permissions are set in state
-      navigate("/school-portal/register", { replace: true });
+      navigate("/college-portal/register", { replace: true });
     }
   } catch (error) {
     console.error("Signup error:", error);
@@ -79,7 +79,7 @@ setAuthSession(user, token);
 };
 
   // =====================
-  // GOOGLE SIGNUP (SCHOOL)
+  // GOOGLE SIGNUP (college)
   // =====================
  // 1. Make sure you have this at the top of your SignUpPage component:
 // const { login } = useAuth();
@@ -115,7 +115,7 @@ const handleGoogleSuccess = async (credentialResponse) => {
         
         // ✅ Navigate once state is updated
         // Note: replace: true prevents users from hitting 'back' to go to signup
-        navigate('/school-portal/register', { replace: true });
+        navigate('/college-portal/register', { replace: true });
       } else {
         throw new Error("Missing token or user data from server");
       }
@@ -145,10 +145,10 @@ const handleGoogleSuccess = async (credentialResponse) => {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* SCHOOL NAME */}
+          {/* college NAME */}
           <div>
             <label className="text-sm font-medium text-gray-700">
-              School Name
+              college Name
             </label>
             <input
               type="text"
@@ -156,7 +156,7 @@ const handleGoogleSuccess = async (credentialResponse) => {
               className={`w-full px-3 py-2 mt-1 border rounded-md ${
                 errors.name ? "border-red-500" : "border-gray-300"
               }`}
-              placeholder="Delhi Public School"
+              placeholder="Delhi Public college"
               disabled={isLoading}
             />
             {errors.name && (
@@ -177,7 +177,7 @@ const handleGoogleSuccess = async (credentialResponse) => {
               className={`w-full px-3 py-2 mt-1 border rounded-md ${
                 errors.email ? "border-red-500" : "border-gray-300"
               }`}
-              placeholder="school@example.com"
+              placeholder="college@example.com"
               disabled={isLoading}
             />
             {errors.email && (
@@ -218,7 +218,7 @@ const handleGoogleSuccess = async (credentialResponse) => {
             disabled={isLoading}
             className="w-full px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
           >
-            {isLoading ? "Creating Account..." : "Register School"}
+            {isLoading ? "Creating Account..." : "Register college"}
           </button>
         </form>
 
@@ -241,7 +241,7 @@ const handleGoogleSuccess = async (credentialResponse) => {
 
         {/* SIGN IN LINK */}
         <p className="text-sm text-center text-gray-600">
-          Already have a school account?{" "}
+          Already have a college account?{" "}
           <Link to="/login" className="text-blue-600 hover:underline">
             Sign In
           </Link>

@@ -9,13 +9,13 @@ const ComparePage = ({ comparisonList, onCompareToggle, shortlist, onShortlistTo
   if (!comparisonList || comparisonList.length === 0) {
     return (
       <div className="container mx-auto px-6 py-20 text-center">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">Compare Schools</h1>
-        <p className="text-gray-600 mb-8">You haven't selected any schools to compare yet.</p>
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">Compare colleges</h1>
+        <p className="text-gray-600 mb-8">You haven't selected any colleges to compare yet.</p>
         <Link 
-          to="/schools"
+          to="/colleges"
           className="bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-700 shadow-lg"
         >
-          Explore Schools
+          Explore colleges
         </Link>
       </div>
     );
@@ -24,7 +24,7 @@ const ComparePage = ({ comparisonList, onCompareToggle, shortlist, onShortlistTo
   const features = [
     { key: 'board', label: 'Board' },
     { key: 'genderType', label: 'Gender Type' },
-    { key: 'schoolMode', label: 'School Mode' },
+    { key: 'collegeMode', label: 'college Mode' },
     { key: 'feeRange', label: 'Fee Range (INR)' },
     { key: 'state', label: 'State' },
     { key: 'city', label: 'City' },
@@ -33,16 +33,16 @@ const ComparePage = ({ comparisonList, onCompareToggle, shortlist, onShortlistTo
   const handleCompleteComparison = async () => {
     setIsProcessing(true);
     try {
-      // Remove all compared schools from shortlist sequentially
+      // Remove all compared colleges from shortlist sequentially
       let removedCount = 0;
-      for (const school of comparisonList) {
-        // Check if the school is in shortlist before removing
+      for (const college of comparisonList) {
+        // Check if the college is in shortlist before removing
         const isInShortlist = shortlist?.some(
-          (item) => (item.schoolId || item._id) === (school.schoolId || school._id)
+          (item) => (item.collegeId || item._id) === (college.collegeId || college._id)
         );
         if (isInShortlist) {
           // Wait for each removal to complete before proceeding to the next
-          await onShortlistToggle(school);
+          await onShortlistToggle(college);
           removedCount++;
           // Add a small delay to ensure state updates properly
           await new Promise(resolve => setTimeout(resolve, 100));
@@ -50,22 +50,22 @@ const ComparePage = ({ comparisonList, onCompareToggle, shortlist, onShortlistTo
       }
 
       // Clear the comparison list
-      comparisonList.forEach((school) => {
-        onCompareToggle(school);
+      comparisonList.forEach((college) => {
+        onCompareToggle(college);
       });
 
       // Add a small delay before showing success and navigating for better UX
       await new Promise(resolve => setTimeout(resolve, 300));
       
       if (removedCount > 0) {
-        toast.success(`Comparison completed! ${removedCount} school${removedCount > 1 ? 's' : ''} removed from shortlist.`);
+        toast.success(`Comparison completed! ${removedCount} college${removedCount > 1 ? 's' : ''} removed from shortlist.`);
       } else {
         toast.success('Comparison completed!');
       }
       
       // Delay navigation slightly so user can see the success message
       setTimeout(() => {
-        navigate('/schools');
+        navigate('/colleges');
       }, 1500);
     } catch (error) {
       toast.error('Error completing comparison. Please try again.');
@@ -77,19 +77,19 @@ const ComparePage = ({ comparisonList, onCompareToggle, shortlist, onShortlistTo
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-4xl font-extrabold text-gray-900 mb-8 text-center">School Comparison</h1>
+      <h1 className="text-4xl font-extrabold text-gray-900 mb-8 text-center">college Comparison</h1>
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-200 shadow-lg rounded-lg">
           <thead>
             <tr className="bg-gray-100">
               <th className="p-4 text-left font-semibold text-gray-700 w-1/5">Feature</th>
-              {comparisonList.map(school => (
+              {comparisonList.map(college => (
 
-                <th key={school.schoolId} className="p-4 text-left font-semibold text-gray-700 border-l">
+                <th key={college.collegeId} className="p-4 text-left font-semibold text-gray-700 border-l">
                   <div className="flex justify-between items-center">
                    
-                    <span>{school.name}</span>
-                    <button onClick={() => onCompareToggle(school)} className="text-red-500 hover:text-red-700">
+                    <span>{college.name}</span>
+                    <button onClick={() => onCompareToggle(college)} className="text-red-500 hover:text-red-700">
                       <XCircle size={20} />
                     </button>
                   </div>
@@ -101,11 +101,11 @@ const ComparePage = ({ comparisonList, onCompareToggle, shortlist, onShortlistTo
             {features.map(feature => (
               <tr key={feature.key} className="border-t">
                 <td className="p-4 font-medium text-gray-600">{feature.label}</td>
-                {comparisonList.map(school => (
+                {comparisonList.map(college => (
                   
-                  <td key={school.schoolId} className="p-4 border-l text-gray-800">
+                  <td key={college.collegeId} className="p-4 border-l text-gray-800">
                     
-                    {school[feature.key] || 'N/A'}
+                    {college[feature.key] || 'N/A'}
                   </td>
                 ))}
               </tr>
@@ -139,8 +139,8 @@ const ComparePage = ({ comparisonList, onCompareToggle, shortlist, onShortlistTo
         </button>
         <p className="text-sm text-gray-600 mt-2">
           {isProcessing 
-            ? 'Removing schools from shortlist...' 
-            : 'This will remove compared schools from your shortlist'}
+            ? 'Removing colleges from shortlist...' 
+            : 'This will remove compared colleges from your shortlist'}
         </p>
       </div>
     </div>

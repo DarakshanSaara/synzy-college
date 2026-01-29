@@ -87,7 +87,7 @@ const ChatbotPage = () => {
 		// Send ONE value per field to match backend schema (strings)
 		if (selFee.length) filters.feeRange = selFee[0];
 		if (selBoards.length) filters.board = selBoards[0];
-		if (selTypes.length) filters.schoolMode = selTypes[0]; // backend expects 'schoolMode'
+		if (selTypes.length) filters.collegeMode = selTypes[0]; // backend expects 'collegeMode'
 		if (selGender) filters.genderType = selGender;
 		if (selTransport) filters.transportAvailable = selTransport; // send 'yes' | 'no'
 		if (selRanks.length) filters.rank = selRanks[0];
@@ -133,7 +133,7 @@ const ChatbotPage = () => {
 			const payload = { ...buildFilters() };
 			if (text) payload.query = text;
 			const resp = await chatbotFilter(payload, { useAI: true });
-			const names = Array.isArray(resp?.recommendedSchools) ? resp.recommendedSchools : [];
+			const names = Array.isArray(resp?.recommendedcolleges) ? resp.recommendedcolleges : [];
 			setResults(names);
 			setMessages(prev => [...prev, { role: 'assistant', text: 'Your selection and question were sent.' }]);
 		} catch (err) {
@@ -156,12 +156,12 @@ const ChatbotPage = () => {
 
 				<div className="grid grid-cols-1 gap-8">
 					<div className="bg-white rounded-lg shadow p-6 flex flex-col">
-						<h2 className="text-lg font-semibold text-gray-800">Ask about schools</h2>
-						<p className="text-gray-600 mb-4">Pick chips in the sections below. We'll fetch matching schools.</p>
+						<h2 className="text-lg font-semibold text-gray-800">Ask about colleges</h2>
+						<p className="text-gray-600 mb-4">Pick chips in the sections below. We'll fetch matching colleges.</p>
 						{/* Quick questions removed */}
 						<div className="space-y-4 mb-6">
 							<div>
-								<h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2"><IndianRupee size={18} className="text-gray-800" /> Schools with fee range:</h3>
+								<h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2"><IndianRupee size={18} className="text-gray-800" /> colleges with fee range:</h3>
 								<div className="flex flex-wrap gap-3">
 									{feeRanges.map(fr => (
 										<Chip key={fr} active={selFee.includes(fr)} onClick={() => setSelFee(prev => prev.includes(fr) ? prev.filter(x => x !== fr) : [...prev, fr])}>{fr}</Chip>
@@ -169,7 +169,7 @@ const ChatbotPage = () => {
 								</div>
 							</div>
 							<div>
-								<h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2"><BookOpen size={18} className="text-gray-800" /> Schools with board:</h3>
+								<h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2"><BookOpen size={18} className="text-gray-800" /> colleges with board:</h3>
 								<div className="flex flex-wrap gap-3">
 									{boards.map(b => (
 										<Chip key={b} active={selBoards.includes(b)} onClick={() => setSelBoards(prev => prev.includes(b) ? prev.filter(x => x !== b) : [...prev, b])}>{b}</Chip>
@@ -177,7 +177,7 @@ const ChatbotPage = () => {
 								</div>
 							</div>
 							<div>
-								<h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2"><Filter size={18} className="text-gray-800" /> Schools with type:</h3>
+								<h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2"><Filter size={18} className="text-gray-800" /> colleges with type:</h3>
 								<div className="flex flex-wrap gap-3">
 									{types.map(t => (
 										<Chip key={t} active={selTypes.includes(t)} onClick={() => setSelTypes(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}>{t}</Chip>
@@ -185,7 +185,7 @@ const ChatbotPage = () => {
 								</div>
 							</div>
 							<div>
-								<h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2"><Users size={18} className="text-gray-800" /> Schools with gender:</h3>
+								<h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2"><Users size={18} className="text-gray-800" /> colleges with gender:</h3>
 								<div className="flex flex-wrap gap-3">
 									{genders.map(g => (
 										<Chip key={g} active={selGender === g} onClick={() => setSelGender(prev => prev === g ? '' : g)}>{g}</Chip>
@@ -193,7 +193,7 @@ const ChatbotPage = () => {
 								</div>
 							</div>
 							<div>
-								<h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2"><Bus size={18} className="text-gray-800" /> Schools with transport:</h3>
+								<h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2"><Bus size={18} className="text-gray-800" /> colleges with transport:</h3>
 								<div className="flex flex-wrap gap-3">
 									{transportOptions.map(t => (
 										<Chip key={t} active={selTransport === t} onClick={() => setSelTransport(prev => prev === t ? '' : t)}>{t}</Chip>
@@ -201,19 +201,19 @@ const ChatbotPage = () => {
 								</div>
 							</div>
 							<div>
-								<h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2"><Building2 size={18} className="text-gray-800" /> Schools in my area only</h3>
+								<h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2"><Building2 size={18} className="text-gray-800" /> colleges in my area only</h3>
 								<div className="flex flex-wrap gap-3">
 									<Chip active={onlyArea} onClick={() => setOnlyArea(v => !v)}>{onlyArea ? 'Yes' : 'No'}</Chip>
 								</div>
 							</div>
 							<div>
-								<h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2"><Building2 size={18} className="text-gray-800" /> Schools in my city only</h3>
+								<h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2"><Building2 size={18} className="text-gray-800" /> colleges in my city only</h3>
 								<div className="flex flex-wrap gap-3">
 									<Chip active={onlyCity} onClick={() => setOnlyCity(v => !v)}>{onlyCity ? 'yes' : 'no'}</Chip>
 								</div>
 							</div>
 							<div>
-								<h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2"><Trophy size={18} className="text-gray-800" /> Schools with rank:</h3>
+								<h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2"><Trophy size={18} className="text-gray-800" /> colleges with rank:</h3>
 								<div className="flex flex-wrap gap-3">
 									{ranks.map(r => (
 										<Chip key={r} active={selRanks.includes(r)} onClick={() => setSelRanks(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r])}>{r}</Chip>
@@ -239,7 +239,7 @@ const ChatbotPage = () => {
 					{/* Results */}
 					{Array.isArray(results) && results.length > 0 && (
 						<div className="mt-4">
-							<h3 className="text-md font-semibold text-gray-800 mb-2">Matching schools</h3>
+							<h3 className="text-md font-semibold text-gray-800 mb-2">Matching colleges</h3>
 							<ul className="list-disc pl-5 text-gray-800">
 								{results.map((name, idx) => (
 									<li key={idx}>{name}</li>

@@ -14,17 +14,17 @@ import {
   GitCompare,
   Eye
 } from 'lucide-react';
-import { searchSchools } from '../api/searchService';
+import { searchcolleges } from '../api/searchService';
 import { getUserPreferences } from '../api/preferencesService';
-import SchoolCard from '../components/SchoolCard';
+import collegeCard from '../components/collegeCard';
 import { useAuth } from '../context/AuthContext';
 
 const HomePage = ({ onCompareToggle, comparisonList, shortlist, onShortlistToggle }) => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
-  const [matchingSchools, setMatchingSchools] = useState([]);
-  const [matchingCitySchools, setMatchingCitySchools] = useState([]);
-  const [boardNearbySchools, setBoardNearbySchools] = useState([]);
+  const [matchingcolleges, setMatchingcolleges] = useState([]);
+  const [matchingCitycolleges, setMatchingCitycolleges] = useState([]);
+  const [boardNearbycolleges, setBoardNearbycolleges] = useState([]);
   const [loading, setLoading] = useState({
     matching: false,
     matchingCity: false,
@@ -35,69 +35,69 @@ const HomePage = ({ onCompareToggle, comparisonList, shortlist, onShortlistToggl
   const [userPreferences, setUserPreferences] = useState({
     boards: ['CBSE', 'ICSE'],
     cities: ['Mumbai', 'Delhi', 'Bangalore'],
-    schoolMode: ['private'],
+    collegeMode: ['private'],
     genderType: ['co-ed'],
     feeRange: ['25000 - 50000', '50000 - 75000']
   });
 
-  // Fetch schools matching user preferences
-  const fetchMatchingSchools = async () => {
+  // Fetch colleges matching user preferences
+  const fetchMatchingcolleges = async () => {
     setLoading(prev => ({ ...prev, matching: true }));
     try {
-      const response = await searchSchools({
+      const response = await searchcolleges({
         boards: userPreferences.boards,
         cities: userPreferences.cities,
-        schoolMode: userPreferences.schoolMode,
+        collegeMode: userPreferences.collegeMode,
         genderType: userPreferences.genderType,
         feeRange: userPreferences.feeRange,
         page: 1,
         limit: 6
       });
-      setMatchingSchools(response.data || []);
+      setMatchingcolleges(response.data || []);
     } catch (error) {
       // Silently fall back to empty list to avoid console noise in UX
-      setMatchingSchools([]);
+      setMatchingcolleges([]);
     } finally {
       setLoading(prev => ({ ...prev, matching: false }));
     }
   };
 
-  // Fetch schools matching preferences in the city
-  const fetchMatchingCitySchools = async () => {
+  // Fetch colleges matching preferences in the city
+  const fetchMatchingCitycolleges = async () => {
     setLoading(prev => ({ ...prev, matchingCity: true }));
     try {
-      const response = await searchSchools({
+      const response = await searchcolleges({
         boards: userPreferences.boards,
         cities: userPreferences.cities?.length ? userPreferences.cities : ['Mumbai','Delhi','Bangalore'],
-        schoolMode: userPreferences.schoolMode,
+        collegeMode: userPreferences.collegeMode,
         genderType: userPreferences.genderType,
         feeRange: userPreferences.feeRange,
         page: 1,
         limit: 6
       });
-      setMatchingCitySchools(response.data || []);
+      setMatchingCitycolleges(response.data || []);
     } catch (error) {
       // Silently fall back to empty list
-      setMatchingCitySchools([]);
+      setMatchingCitycolleges([]);
     } finally {
       setLoading(prev => ({ ...prev, matchingCity: false }));
     }
   };
 
-  // Fetch board schools nearby (boards in user's preferred cities)
-  const fetchBoardNearbySchools = async () => {
+  // Fetch board colleges nearby (boards in user's preferred cities)
+  const fetchBoardNearbycolleges = async () => {
     setLoading(prev => ({ ...prev, boardNearby: true }));
     try {
-      const response = await searchSchools({
+      const response = await searchcolleges({
         boards: userPreferences.boards?.length ? userPreferences.boards : ['CBSE','ICSE','IB'],
         cities: userPreferences.cities?.length ? userPreferences.cities : ['Mumbai','Delhi','Bangalore'],
         page: 1,
         limit: 6
       });
-      setBoardNearbySchools(response.data || []);
+      setBoardNearbycolleges(response.data || []);
     } catch (error) {
       // Silently fall back to empty list
-      setBoardNearbySchools([]);
+      setBoardNearbycolleges([]);
     } finally {
       setLoading(prev => ({ ...prev, boardNearby: false }));
     }
@@ -122,16 +122,16 @@ const HomePage = ({ onCompareToggle, comparisonList, shortlist, onShortlistToggl
   }, [currentUser]);
 
   useEffect(() => {
-    fetchMatchingSchools();
-    fetchMatchingCitySchools();
-    fetchBoardNearbySchools();
+    fetchMatchingcolleges();
+    fetchMatchingCitycolleges();
+    fetchBoardNearbycolleges();
   }, [userPreferences]);
 
-  const SchoolSection = ({ 
+  const collegeSection = ({ 
     title, 
     subtitle, 
     icon, 
-    schools, 
+    colleges, 
     loading, 
     emptyMessage,
     onViewAll,
@@ -168,19 +168,19 @@ const HomePage = ({ onCompareToggle, comparisonList, shortlist, onShortlistToggl
               </div>
             ))}
           </div>
-        ) : schools.length > 0 ? (
+        ) : colleges.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {schools.map((school) => (
-              <SchoolCard
-                key={school._id || school.id || school.schoolId}
-                school={school}
-                onCardClick={() => navigate(`/school/${school._id || school.id || school.schoolId}`)}
+            {colleges.map((college) => (
+              <collegeCard
+                key={college._id || college.id || college.collegeId}
+                college={college}
+                onCardClick={() => navigate(`/college/${college._id || college.id || college.collegeId}`)}
                 onCompareToggle={onCompareToggle}
-                isCompared={comparisonList?.some(item => (item.schoolId || item._id) === (school._id || school.id || school.schoolId))}
+                isCompared={comparisonList?.some(item => (item.collegeId || item._id) === (college._id || college.id || college.collegeId))}
                 currentUser={currentUser}
                 onShortlistToggle={onShortlistToggle}
-                isShortlisted={shortlist?.some(item => (item.schoolId || item._id) === (school._id || school.id || school.schoolId))}
-                onApply={() => navigate(`/apply/${school._id || school.id || school.schoolId}`)}
+                isShortlisted={shortlist?.some(item => (item.collegeId || item._id) === (college._id || college.id || college.collegeId))}
+                onApply={() => navigate(`/apply/${college._id || college.id || college.collegeId}`)}
               />
             ))}
           </div>
@@ -195,7 +195,7 @@ const HomePage = ({ onCompareToggle, comparisonList, shortlist, onShortlistToggl
               className="inline-flex items-center gap-2 mt-4 text-blue-600 hover:text-blue-700 font-medium"
             >
               <Search size={16} />
-              Search Schools
+              Search colleges
             </Link>
           </div>
         )}
@@ -209,12 +209,12 @@ const HomePage = ({ onCompareToggle, comparisonList, shortlist, onShortlistToggl
       <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-20">
         <div className="container mx-auto px-6 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            {currentUser ? `Welcome back, ${currentUser.email?.split('@')[0] || 'User'}!` : 'Find Your Perfect School'}
+            {currentUser ? `Welcome back, ${currentUser.email?.split('@')[0] || 'User'}!` : 'Find Your Perfect college'}
           </h1>
           <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
             {currentUser 
-              ? 'Discover schools that match your preferences and educational goals'
-              : 'Discover, compare, and apply to the best schools tailored to your preferences'
+              ? 'Discover colleges that match your preferences and educational goals'
+              : 'Discover, compare, and apply to the best colleges tailored to your preferences'
             }
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -230,42 +230,42 @@ const HomePage = ({ onCompareToggle, comparisonList, shortlist, onShortlistToggl
               className="bg-blue-500 text-white font-semibold px-8 py-4 rounded-lg hover:bg-blue-400 shadow-lg text-lg flex items-center gap-2"
             >
               <Filter size={20} />
-              School Predictor
+              college Predictor
             </button>
           </div>
         </div>
       </section>
 
-      {/* Section 1: School matching preference */}
-      <SchoolSection
-        title="School matching preference"
+      {/* Section 1: college matching preference */}
+      <collegeSection
+        title="college matching preference"
         subtitle="Personalized picks based on your saved preferences"
         icon={<Star size={24} className="text-blue-600" />}
-        schools={matchingSchools}
+        colleges={matchingcolleges}
         loading={loading.matching}
-        emptyMessage="No schools match your current preferences. Try adjusting your filters or explore all schools."
+        emptyMessage="No colleges match your current preferences. Try adjusting your filters or explore all colleges."
         viewAllLink="/search"
       />
 
-      {/* Section 2: School matching preference in the city */}
-      <SchoolSection
-        title="School matching preference in the city"
+      {/* Section 2: college matching preference in the city */}
+      <collegeSection
+        title="college matching preference in the city"
         subtitle="Matches in your preferred cities using your filters"
         icon={<MapPin size={24} className="text-green-600" />}
-        schools={matchingCitySchools}
+        colleges={matchingCitycolleges}
         loading={loading.matchingCity}
         emptyMessage="No matches in selected cities. Try changing city preferences."
         viewAllLink="/search"
       />
 
-      {/* Section 3: Board school nearby */}
-      <SchoolSection
-        title="Board school nearby"
-        subtitle="CBSE, ICSE, IB schools near your preferred locations"
+      {/* Section 3: Board college nearby */}
+      <collegeSection
+        title="Board college nearby"
+        subtitle="CBSE, ICSE, IB colleges near your preferred locations"
         icon={<GraduationCap size={24} className="text-purple-600" />}
-        schools={boardNearbySchools}
+        colleges={boardNearbycolleges}
         loading={loading.boardNearby}
-        emptyMessage="No nearby board schools found. Explore all boards."
+        emptyMessage="No nearby board colleges found. Explore all boards."
         viewAllLink="/search"
       />
 
@@ -284,7 +284,7 @@ const HomePage = ({ onCompareToggle, comparisonList, shortlist, onShortlistToggl
                 <Search size={24} className="text-blue-600" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Advanced Search</h3>
-              <p className="text-gray-600 text-sm">Find schools with detailed filters</p>
+              <p className="text-gray-600 text-sm">Find colleges with detailed filters</p>
             </Link>
 
             <Link
@@ -294,7 +294,7 @@ const HomePage = ({ onCompareToggle, comparisonList, shortlist, onShortlistToggl
               <div className="p-3 bg-green-100 rounded-lg w-fit mx-auto mb-4 group-hover:bg-green-200 transition-colors">
                 <Filter size={24} className="text-green-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">School Predictor</h3>
+              <h3 className="font-semibold text-gray-900 mb-2">college Predictor</h3>
               <p className="text-gray-600 text-sm">Get AI-powered recommendations</p>
             </Link>
 
@@ -305,18 +305,18 @@ const HomePage = ({ onCompareToggle, comparisonList, shortlist, onShortlistToggl
               <div className="p-3 bg-purple-100 rounded-lg w-fit mx-auto mb-4 group-hover:bg-purple-200 transition-colors">
                 <GitCompare size={24} className="text-purple-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Compare Schools</h3>
-              <p className="text-gray-600 text-sm">Side-by-side school comparison</p>
+              <h3 className="font-semibold text-gray-900 mb-2">Compare colleges</h3>
+              <p className="text-gray-600 text-sm">Side-by-side college comparison</p>
             </Link>
 
             <Link
-              to="/schools"
+              to="/colleges"
               className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center group"
             >
               <div className="p-3 bg-orange-100 rounded-lg w-fit mx-auto mb-4 group-hover:bg-orange-200 transition-colors">
                 <Eye size={24} className="text-orange-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Browse All Schools</h3>
+              <h3 className="font-semibold text-gray-900 mb-2">Browse All colleges</h3>
               <p className="text-gray-600 text-sm">Explore our complete database</p>
             </Link>
           </div>
@@ -329,7 +329,7 @@ const HomePage = ({ onCompareToggle, comparisonList, shortlist, onShortlistToggl
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div>
               <div className="text-4xl font-bold mb-2">1000+</div>
-              <div className="text-blue-100">Schools Listed</div>
+              <div className="text-blue-100">colleges Listed</div>
             </div>
             <div>
               <div className="text-4xl font-bold mb-2">50+</div>

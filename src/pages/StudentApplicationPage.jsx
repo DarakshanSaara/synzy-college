@@ -5,8 +5,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { submitApplication, generateStudentPdf, getUserProfile, createStudentProfile } from '../api/userService';
-import { createApplication, checkApplicationExists, updateExistingApplication, submitFormToSchool,getApplicationById } from '../api/applicationService';
-import { getSchoolById } from '../api/adminService';
+import { createApplication, checkApplicationExists, updateExistingApplication, submitFormTocollege,getApplicationById } from '../api/applicationService';
+import { getcollegeById } from '../api/adminService';
 import { FileText, User, Users, Home, BookOpen, PlusCircle, Trash2, Shield } from 'lucide-react';
 const initialFormState = {
     name: '', location: '', dob: '', age: '', gender: '', motherTongue: '',
@@ -14,7 +14,7 @@ const initialFormState = {
     nationality: '', religion: '', caste: '', subcaste: '', aadharNo: '',
     bloodGroup: '', allergicTo: '', interest: '',
     standard: '', 
-    lastSchoolName: '', classCompleted: '', lastAcademicYear: '',
+    lastcollegeName: '', classCompleted: '', lastAcademicYear: '',
     reasonForLeaving: '', board: '',
     fatherName: '', fatherAge: '', fatherQualification: '', fatherProfession: '',
     fatherAnnualIncome: '', fatherPhoneNo: '', fatherAadharNo: '', fatherEmail: '',
@@ -84,10 +84,10 @@ const FormField = ({ label, name, type = 'text', value, onChange, required = fal
 };
 
 const StudentApplicationPage = () => {
-    const { schoolId } = useParams();
+    const { collegeId } = useParams();
     const { user: currentUser } = useAuth();
     const navigate = useNavigate();
-    const [school, setSchool] = useState(null);
+    const [college, setcollege] = useState(null);
     const [loading, setLoading] = useState(true);
     const [step, setStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -121,7 +121,7 @@ const StudentApplicationPage = () => {
 
     const ensureStudentProfileExists = async () => {
         try {
-            debugger;
+            
             console.log('🔍 Checking if student profile exists for:', currentUser.authId);
 
             // Check if student profile exists
@@ -199,7 +199,7 @@ const StudentApplicationPage = () => {
         setIsSubmitting(true);
         
         try {
-            debugger
+        
             // Ensure student profile exists
             const profileExists = await ensureStudentProfileExists();
             if (!profileExists) {
@@ -214,9 +214,9 @@ const StudentApplicationPage = () => {
                 ...formData,
                 siblings,
                 studId: studentId,
-                schoolId,
-                schoolName: school.name,
-                schoolEmail: school.email,
+                collegeId,
+                collegeName: college.name,
+                collegeEmail: college.email,
             };
 
             // ---------------------------------------------------
@@ -252,7 +252,7 @@ const StudentApplicationPage = () => {
                 toast.success("PDF generated successfully!");
             } catch (pdfError) {
                 console.error("❌ PDF Generation Error:", pdfError);
-                toast.error("PDF generation failed. Cannot submit to school.");
+                toast.error("PDF generation failed. Cannot submit to college.");
                 return;
             }
 
@@ -270,34 +270,34 @@ const StudentApplicationPage = () => {
             }
 
             // ---------------------------------------------------
-            // 3️⃣ SUBMIT APPLICATION TO SCHOOL (AFTER PDF SUCCESS)
+            // 3️⃣ SUBMIT APPLICATION TO college (AFTER PDF SUCCESS)
             // ---------------------------------------------------
-            // console.log("📤 Submitting application to school...");
+            // console.log("📤 Submitting application to college...");
 
             try {
-                const formSubmission = await submitFormToSchool(
-                    schoolId,
+                const formSubmission = await submitFormTocollege(
+                    collegeId,
                     studentId,
                     pdfId,
                     applicationId,
                 );
 
                 if (formSubmission.alreadySubmitted) {
-                    toast.info("Application already submitted to this school!");
+                    toast.info("Application already submitted to this college!");
                 } else {
-                    toast.success("Application submitted to school successfully!");
+                    toast.success("Application submitted to college successfully!");
                 }
             } catch (submitError) {
-                console.error("❌ School Submission Error:", submitError);
-                toast.error("Application saved and PDF created, but submission to school failed.");
+                console.error("❌ college Submission Error:", submitError);
+                toast.error("Application saved and PDF created, but submission to college failed.");
                 return;
             }
 
-            // Emit event for school portal updates
+            // Emit event for college portal updates
             window.dispatchEvent(new CustomEvent("applicationAdded", {
                 detail: {
-                    schoolId,
-                    schoolEmail: school.email,
+                    collegeId,
+                    collegeEmail: college.email,
                     applicationData: result.data,
                     pdfId
                 }
@@ -307,7 +307,7 @@ const StudentApplicationPage = () => {
 
             // Redirect
             setTimeout(() => {
-                navigate(`/apply/${schoolId}`);
+                navigate(`/apply/${collegeId}`);
             }, 2000);
 
         } catch (error) {
@@ -333,63 +333,63 @@ const StudentApplicationPage = () => {
     const prevStep = () => setStep(prev => prev - 1);
 
     // Allow all authenticated users to access student application forms
-    // School users can now submit applications to other schools if needed
+    // college users can now submit applications to other colleges if needed
     // useEffect(() => {
-    //     if (currentUser && currentUser.userType === 'school') {
-    //         toast.error('School accounts cannot submit student applications.');
-    //         navigate('/school-portal');
+    //     if (currentUser && currentUser.userType === 'college') {
+    //         toast.error('college accounts cannot submit student applications.');
+    //         navigate('/college-portal');
     //     }
     // }, [currentUser, navigate]);
 
-    // Fetch school details to get school name
+    // Fetch college details to get college name
     useEffect(() => {
-        const fetchSchool = async () => {
-            if (!schoolId) {
-                console.error('❌ StudentApplicationPage: No schoolId provided');
-                toast.error('No school ID provided');
-                navigate('/schools');
+        const fetchcollege = async () => {
+            if (!collegeId) {
+                console.error('❌ StudentApplicationPage: No collegeId provided');
+                toast.error('No college ID provided');
+                navigate('/colleges');
                 return;
             }
 
-            // console.log('🏫 StudentApplicationPage: Valid schoolId provided:', schoolId);
+            // console.log('🏫 StudentApplicationPage: Valid collegeId provided:', collegeId);
 
             try {
                 setLoading(true);
-                // console.log('🏫 StudentApplicationPage: Starting school fetch for schoolId:', schoolId);
+                // console.log('🏫 StudentApplicationPage: Starting college fetch for collegeId:', collegeId);
                 // console.log('🏫 StudentApplicationPage: Current loading state:', loading);
 
                 // Add timeout to prevent hanging
                 const response = await Promise.race([
-                    getSchoolById(schoolId),
+                    getcollegeById(collegeId),
                     new Promise((_, reject) =>
-                        setTimeout(() => reject(new Error('School details request timeout')), 10000)
+                        setTimeout(() => reject(new Error('college details request timeout')), 10000)
                     )
                 ]);
                 // console.log('🏫 StudentApplicationPage: Raw API response:', response);
 
-                const schoolData = response?.data?.data || response?.data;
-                // console.log('✅ StudentApplicationPage: School details fetched:', schoolData);
+                const collegeData = response?.data?.data || response?.data;
+                // console.log('✅ StudentApplicationPage: college details fetched:', collegeData);
 
-                if (!schoolData) {
-                    console.error('❌ StudentApplicationPage: No school data in response');
-                    throw new Error('No school data received');
+                if (!collegeData) {
+                    console.error('❌ StudentApplicationPage: No college data in response');
+                    throw new Error('No college data received');
                 }
 
-                setSchool(schoolData);
-                // console.log('✅ StudentApplicationPage: School state set successfully');
+                setcollege(collegeData);
+                // console.log('✅ StudentApplicationPage: college state set successfully');
             } catch (error) {
-                console.error('❌ StudentApplicationPage: Error fetching school details:', error);
+                console.error('❌ StudentApplicationPage: Error fetching college details:', error);
                 console.error('❌ StudentApplicationPage: Error details:', error.response?.data || error.message);
-                toast.error('Could not load school details');
-                navigate('/schools');
+                toast.error('Could not load college details');
+                navigate('/colleges');
             } finally {
-                console.log('🏁 StudentApplicationPage: School fetching completed, setting loading to false');
+                console.log('🏁 StudentApplicationPage: college fetching completed, setting loading to false');
                 setLoading(false);
             }
         };
 
-        fetchSchool();
-    }, [schoolId, navigate]);
+        fetchcollege();
+    }, [collegeId, navigate]);
 
     // Check for update mode and load existing application
 useEffect(() => {
@@ -460,22 +460,22 @@ useEffect(() => {
             <div className="min-h-screen bg-gray-100 flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading school details...</p>
+                    <p className="text-gray-600">Loading college details...</p>
                 </div>
             </div>
         );
     }
 
-    if (!school) {
+    if (!college) {
         return (
             <div className="min-h-screen bg-gray-100 flex items-center justify-center">
                 <div className="text-center">
-                    <p className="text-gray-600 mb-4">Could not load school details.</p>
+                    <p className="text-gray-600 mb-4">Could not load college details.</p>
                     <button
-                        onClick={() => navigate('/schools')}
+                        onClick={() => navigate('/colleges')}
                         className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
                     >
-                        Back to Schools
+                        Back to colleges
                     </button>
                 </div>
             </div>
@@ -562,7 +562,7 @@ useEffect(() => {
                             </h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <FormField label="Class/Grade Applying For" name="standard" type="select" options={['KGs', 'Grade 1 - 5', 'Grade 6-10']} value={formData.standard} onChange={handleInputChange} required />
-                                <FormField label="Last School Name" name="lastSchoolName" value={formData.lastSchoolName} onChange={handleInputChange} />
+                                <FormField label="Last college Name" name="lastcollegeName" value={formData.lastcollegeName} onChange={handleInputChange} />
                                 <FormField label="Class Completed" name="classCompleted" value={formData.classCompleted} onChange={handleInputChange} />
                                 <FormField label="Last Academic Year" name="lastAcademicYear" value={formData.lastAcademicYear} onChange={handleInputChange} />
                                 <FormField label="Reason For Leaving" name="reasonForLeaving" value={formData.reasonForLeaving} onChange={handleInputChange} />
@@ -634,7 +634,7 @@ useEffect(() => {
                                 <FormField label="Present Address" name="presentAddress" value={formData.presentAddress} onChange={handleInputChange} required />
                                 <FormField label="Permanent Address" name="permanentAddress" value={formData.permanentAddress} onChange={handleInputChange} required />
                                 <FormField label="Language Spoken at Home" name="homeLanguage" value={formData.homeLanguage} onChange={handleInputChange} required />
-                                <FormField label="Yearly School Budget (INR)" name="yearlyBudget" value={formData.yearlyBudget} onChange={handleInputChange} required />
+                                <FormField label="Yearly college Budget (INR)" name="yearlyBudget" value={formData.yearlyBudget} onChange={handleInputChange} required />
                             </div>
                             <div>
                                 <h3 className="text-lg font-medium text-gray-700 mb-2">Sibling Information (if any)</h3>

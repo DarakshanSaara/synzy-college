@@ -1,267 +1,351 @@
-import apiClient from "./axios";
+// src/api/collegeService.js
 
-/* ===================== BLOGS ===================== */
-export const createBlog = (data) => apiClient.post("/college/blogs", data);
-export const getAllBlogs = () => apiClient.get("/college/blogs");
-export const getBlogById = (id) => apiClient.get(`/college/blogs/${id}`);
+import apiClient from './axios';
 
-/* ===================== SEARCH & PREDICTION ===================== */
-export const searchColleges = (query) =>
-  apiClient.get(`/college/search`, { params: query });
+/**
+ * Public college APIs (user-facing)
+ * All routes are prefixed with /api in app.js
+ */
 
-export const predictColleges = (data) =>
-  apiClient.post("/college/predict-colleges", data);
+/**
+ * Get colleges by status (public endpoint)
+ * Backend: GET /api/colleges/status/:status
+ */
+export const getPubliccollegesByStatus = (status) => {
+  const safeStatus = encodeURIComponent(status);
+  return apiClient.get(`/admin/colleges/status/${safeStatus}`);
+};
 
-/* ===================== CORE COLLEGE ===================== */
-export const addCollege = (data) => apiClient.post("/college/add", data);
-export const getColleges = () => apiClient.get("/college");
-export const getCollegeById = (collegeId) =>
-  apiClient.get(`/college/${collegeId}`);
+/**
+ * Get a single college by ID
+ * Backend: GET /api/colleges/:id
+ */
+export const getcollegeById = (collegeId) => {
+  return apiClient.get(`/admin/colleges/${encodeURIComponent(collegeId)}`);
+};
 
-export const updateCollegeByAuthId = (collegeId, data) =>
-  apiClient.put(`/college/${collegeId}`, data);
+/**
+ * Search colleges
+ * Backend: GET /api/colleges/search?q=...&filters... OR /api/search
+ */
+export const searchcolleges = async (searchQuery, filters = {}) => {
+  const params = new URLSearchParams();
+  if (searchQuery) params.append('q', searchQuery);
+  
+  // Add any additional filters
+  Object.keys(filters).forEach(key => {
+    if (filters[key]) {
+      params.append(key, filters[key]);
+    }
+  });
+  
+  try {
+    return await apiClient.get(`/admin/search?${params.toString()}`);
+  } catch (error) {
+    // Handle 404 as "no results found" instead of error
+    if (error.response?.status === 404) {
+      return {
+        data: {
+          status: 'success',
+          message: 'No colleges found for the given search.',
+          data: [],
+          pagination: {
+            page: 1,
+            limit: 10,
+            total: 0,
+            totalPages: 0
+          }
+        }
+      };
+    }
+    // Re-throw other errors
+    throw error;
+  }
+};
 
-export const deleteCollegeByAuthId = (collegeId) =>
-  apiClient.delete(`/college/${collegeId}`);
+/**
+ * Compare colleges
+ * Backend: POST /api/colleges/compare
+ */
+export const comparecolleges = (collegeIds) => {
+  return apiClient.post('/admin/compare', { collegeIds });
+};
 
-/* ===================== COURSES ===================== */
-export const addCourse = (data) => apiClient.post("/college/course/add", data);
-export const getCoursesByCollege = (collegeId) =>
-  apiClient.get(`/college/courses/college/${collegeId}`);
-export const updateCourse = (courseId, data) =>
-  apiClient.put(`/college/course/${courseId}`, data);
+/**
+ * Filter colleges by fee range
+ * Backend: GET /api/colleges/filter-feeRange?min=...&max=...
+ */
+export const getcollegesByFeeRange = (minFee, maxFee) => {
+  const params = new URLSearchParams();
+  if (minFee) params.append('min', minFee);
+  if (maxFee) params.append('max', maxFee);
+  return apiClient.get(`/admin/filter-feeRange?${params.toString()}`);
+};
 
-/* ===================== HOSTEL ===================== */
-export const getHostelsByCollegeId = (collegeId) =>
-  apiClient.get(`/college/hostel/${collegeId}`);
+/**
+ * Filter colleges by shift
+ * Backend: GET /api/colleges/filter-Shift?shift=...
+ */
+export const getcollegesByShift = (shift) => {
+  return apiClient.get(`/admin/filter-Shift?shift=${encodeURIComponent(shift)}`);
+};
 
-export const addHostel = (data) =>
-  apiClient.post("/college/hostel/add", data);
+/**
+ * Get college card data
+ * Backend: GET /api/colleges/card/:id
+ */
+export const getcollegeCardData = (collegeId) => {
+  return apiClient.get(`/admin/card/${encodeURIComponent(collegeId)}`);
+};
 
-export const updateHostel = (id, data) =>
-  apiClient.put(`/college/hostel/${id}`, data);
-
-export const deleteHostel = (id) =>
-  apiClient.delete(`/college/hostel/${id}`);
-
-/* ===================== EXAMS ===================== */
-export const addCourseExams = (data) =>
-  apiClient.post("/college/exam", data);
-
-export const getCollegeExams = (id) =>
-  apiClient.get(`/college/exam/${id}`);
-
-/* ===================== COURSE FEES ===================== */
-export const upsertCourseFee = (data) =>
-  apiClient.post("/college/course-fee", data);
-
-export const getCourseFeesByCollegeId = (collegeId) =>
-  apiClient.get(`/college/course-fee/college/${collegeId}`);
-
-/* ===================== PLACEMENTS ===================== */
-export const addCoursePlacement = (data) =>
-  apiClient.post("/college/placement/add", data);
-
-export const getCoursePlacements = (courseId) =>
-  apiClient.get(`/college/placement/${courseId}`);
-
-export const getPlacementsByCollege = (collegeId) =>
-  apiClient.get(`/college/placement/college/${collegeId}`);
-
-export const updateCoursePlacement = (placementId, data) =>
-  apiClient.put(`/college/placement/${placementId}`, data);
-
-/* ===================== SCHOLARSHIPS ===================== */
-export const addScholarship = (data) =>
-  apiClient.post("/college/scholarship/add", data);
-
-export const getScholarshipsByCollege = (collegeId) =>
-  apiClient.get(`/college/scholarship/${collegeId}`);
-
-/* ===================== COMPARE ===================== */
-export const compareSchools = (data) =>
-  apiClient.post("/college/compare", data);
-
-/* ===================== ACTIVITIES ===================== */
-export const addActivities = (data) =>
-  apiClient.post("/college/activities/add", data);
-
-export const getActivitiesByCollegeId = (collegeId) =>
-  apiClient.get(`/college/activities/${collegeId}`);
-
-export const updateActivities = (collegeId, data) =>
-  apiClient.put(`/college/activities/${collegeId}`, data);
-
-export const deleteActivities = (collegeId) =>
-  apiClient.delete(`/college/activities/${collegeId}`);
-
-/* ===================== ALUMNI ===================== */
-export const addAlumni = (data) =>
-  apiClient.post("/college/alumni/add", data);
-
-export const getAlumniByCollegeId = (collegeId) =>
-  apiClient.get(`/college/alumni/${collegeId}`);
-
-export const updateAlumni = (collegeId, data) =>
-  apiClient.put(`/college/alumni/${collegeId}`, data);
-
-export const deleteAlumni = (collegeId) =>
-  apiClient.delete(`/college/alumni/${collegeId}`);
-
-/* ===================== AMENITIES ===================== */
-export const addAmenities = (data) =>
-  apiClient.post("/college/amenities/add", data);
-
+/**
+ * Get amenities by college ID
+ * Backend: GET /api/colleges/amenities/:id
+ */
 export const getAmenitiesByCollegeId = (collegeId) =>
   apiClient.get(`/college/amenities/${collegeId}`);
+/**
+ * Get activities by college ID
+ * Backend: GET /api/colleges/activities/:id
+ */
 
-export const updateAmenities = (collegeId, data) =>
-  apiClient.put(`/college/amenities/${collegeId}`, data);
+/**
+ * Get alumni by college ID
+ * Backend: GET /api/colleges/alumnus/:id
+ */
+export const getAlumniBycollege = (collegeId) => {
+  return apiClient.get(`/admin/alumnus/${encodeURIComponent(collegeId)}`);
+};
+export const updateAlumniBycollege = (collegeId,data) => {
+  return apiClient.put(`/admin/alumnus/${encodeURIComponent(collegeId)}`,data);
+};
 
-export const deleteAmenities = (collegeId) =>
-  apiClient.delete(`/college/amenities/${collegeId}`);
+/**
+ * Get infrastructure by college ID
+ * Backend: GET /api/admin/colleges/infrastructure/:id
+ */
 
-/* ===================== OTHER DETAILS ===================== */
-export const addOtherDetails = (data) =>
-  apiClient.post("/college/other-details/add", data);
 
-export const getOtherDetailsByCollegeId = (collegeId) =>
-  apiClient.get(`/college/other-details/${collegeId}`);
+/**
+ * Get other details by college ID
+ * Backend: GET /api/colleges/other-details/:id
+ */
+export const getOtherDetailsById = (collegeId) => {
+  return apiClient.get(`/admin/colleges/other-details/${encodeURIComponent(collegeId)}`);
+};
 
-export const updateOtherDetails = (collegeId, data) =>
-  apiClient.put(`/college/other-details/${collegeId}`, data);
+/**
+ * Get academics by college ID
+ * Backend: GET /api/admin/colleges/academics/:id
+ */
 
-export const deleteOtherDetails = (collegeId) =>
-  apiClient.delete(`/college/other-details/${collegeId}`);
+/**
+ * Get fees and scholarships by college ID
+ * Backend: GET /api/admin/colleges/fees-scholarships/:id
+ */
 
-/* ===================== FACULTY ===================== */
-export const addFaculty = (data) =>
-  apiClient.post("/college/faculty/add", data);
 
-export const getFacultyByCollegeId = (collegeId) =>
-  apiClient.get(`/college/faculty/${collegeId}`);
+/**
+ * Get technology adoption by college ID
+ * Backend: GET /api/colleges/technology-adoption/:id
+ */
+export const getTechnologyAdoptionById = (collegeId) => {
+  return apiClient.get(`/admin/colleges/technology-adoption/${encodeURIComponent(collegeId)}`);
+};
 
-export const updateFaculty = (collegeId, data) =>
-  apiClient.put(`/college/faculty/${collegeId}`, data);
+/**
+ * Get admission details by college ID
+ * Backend: GET /api/colleges/admission/:id
+ */
+export const getAdmissionDetails = (collegeId) => {
+  return apiClient.get(`/admin/colleges/admission-timeline/${encodeURIComponent(collegeId)}`);
+};
 
-export const deleteFaculty = (collegeId) =>
-  apiClient.delete(`/college/faculty/${collegeId}`);
+/**
+ * Get college photos
+ * Backend: GET /api/colleges/:id/photos
+ */
+export const getcollegePhotos = (collegeId) => {
+  return apiClient.get(`/admin/${encodeURIComponent(collegeId)}/photos`);
+};
 
-/* ===================== INFRASTRUCTURE ===================== */
-export const addInfrastructure = (data) =>
-  apiClient.post("/college/infrastructure/add", data);
+/**
+ * Get college videos
+ * Backend: GET /api/colleges/:id/videos
+ */
+export const getcollegeVideos = (collegeId) => {
+  return apiClient.get(`/admin/${encodeURIComponent(collegeId)}/videos`);
+};
 
-export const getInfrastructureByCollegeId = (collegeId) =>
-  apiClient.get(`/college/infrastructure/${collegeId}`);
+/**
+ * Get specific college photo
+ * Backend: GET /api/colleges/:id/photo/:publicId
+ */
+export const getcollegePhoto = (collegeId, publicId) => {
+  return apiClient.get(`/admin/${encodeURIComponent(collegeId)}/photo/${encodeURIComponent(publicId)}`);
+};
 
-export const updateInfrastructure = (collegeId, data) =>
-  apiClient.put(`/college/infrastructure/${collegeId}`, data);
+/**
+ * Get specific college video
+ * Backend: GET /api/colleges/:id/video/:publicId
+ */
+export const getcollegeVideo = (collegeId, publicId) => {
+  return apiClient.get(`/admin/${encodeURIComponent(collegeId)}/video/${encodeURIComponent(publicId)}`);
+};
 
-export const deleteInfrastructure = (collegeId) =>
-  apiClient.delete(`/college/infrastructure/${collegeId}`);
+/**
+ * Add support/help request
+ * Backend: POST /api/colleges/support (requires authentication)
+ */
+export const addSupport = (supportData) => {
+  return apiClient.post('/admin/support', supportData);
+};
 
-/* ===================== INTERNATIONAL ===================== */
-export const addInternationalExposure = (data) =>
-  apiClient.post("/college/international/add", data);
+/**
+ * Get support requests by student ID
+ * Backend: GET /api/colleges/support/:studId
+ */
+export const getSupportByStudent = (studentId) => {
+  return apiClient.get(`/admin/support/${encodeURIComponent(studentId)}`);
+};
 
-export const getInternationalExposureByCollegeId = (collegeId) =>
-  apiClient.get(`/college/international/${collegeId}`);
+/**
+ * Get specific support request
+ * Backend: GET /api/colleges/support-id/:supportId
+ */
+export const getSupportById = (supportId) => {
+  return apiClient.get(`/admin/support-id/${encodeURIComponent(supportId)}`);
+};
 
-export const updateInternationalExposure = (collegeId, data) =>
-  apiClient.put(`/college/international/${collegeId}`, data);
+/**
+ * Delete support request
+ * Backend: DELETE /api/colleges/support/:supportId (requires authentication)
+ */
+export const deleteSupport = (supportId) => {
+  return apiClient.delete(`/admin/support/${encodeURIComponent(supportId)}`);
+};
 
-export const deleteInternationalExposure = (collegeId) =>
-  apiClient.delete(`/college/international/${collegeId}`);
+/**
+ * Predict colleges based on criteria
+ * Backend: POST /api/colleges/predict-colleges OR /api/colleges/predict
+ */
+export const predictcolleges = (predictorData) => {
+  return apiClient.post('/admin/predict-colleges', predictorData);
+};
 
-/* ===================== SAFETY ===================== */
-export const addSafetyAndSecurity = (data) =>
-  apiClient.post("/college/safety/add", data);
+/**
+ * Get all blogs
+ * Backend: GET /api/colleges/blogs
+ */
+export const getAllBlogs = () => {
+  return apiClient.get('/admin/blogs');
+};
 
-export const getSafetyAndSecurityByCollegeId = (collegeId) =>
-  apiClient.get(`/college/safety/${collegeId}`);
+/**
+ * Get blog by ID
+ * Backend: GET /api/colleges/blogs/:id
+ */
+export const getBlogById = (blogId) => {
+  return apiClient.get(`/admin/blogs/${encodeURIComponent(blogId)}`);
+};
 
-export const updateSafetyAndSecurity = (collegeId, data) =>
-  apiClient.put(`/college/safety/${collegeId}`, data);
+/**
+ * Create a new blog
+ * Backend: POST /api/colleges/blogs
+ */
+export const createBlog = (blogData) => {
+  return apiClient.post('/admin/blogs', blogData);
+};
 
-export const deleteSafetyAndSecurity = (collegeId) =>
-  apiClient.delete(`/college/safety/${collegeId}`);
+/**
+ * Get admission status by student ID
+ * Backend: GET /api/colleges/admission-status/:studentId (requires authentication)
+ */
+export const getAdmissionStatusByStudent = (studentId) => {
+  return apiClient.get(`/admin/admission-status/${encodeURIComponent(studentId)}`);
+};
 
-/* ===================== ADMISSION TIMELINE ===================== */
-export const addAdmissionTimeline = (data) =>
-  apiClient.post("/college/admission/add", data);
+/**
+ * Add admission status
+ * Backend: POST /api/colleges/admission-status (requires authentication)
+ */
+export const addAdmissionStatus = (statusData) => {
+  return apiClient.post('/admin/admission-status', statusData);
+};
 
-export const getAdmissionTimelineByCollegeId = (collegeId) =>
-  apiClient.get(`/college/admission/${collegeId}`);
+/**
+ * Update admission status
+ * Backend: PUT /api/colleges/admission-status/:studentId/:collegeId (requires authentication)
+ */
+export const updateAdmissionStatus = (studentId, collegeId, statusData) => {
+  return apiClient.put(`/admin/admission-status/${encodeURIComponent(studentId)}/${encodeURIComponent(collegeId)}`, statusData);
+};
 
-export const updateAdmissionTimeline = (collegeId, data) =>
-  apiClient.put(`/college/admission/${collegeId}`, data);
+/**
+ * Delete admission status
+ * Backend: DELETE /api/colleges/admission-status/:studentId/:collegeId (requires authentication)
+ */
+export const deleteAdmissionStatus = (studentId, collegeId) => {
+  return apiClient.delete(`/admin/admission-status/${encodeURIComponent(studentId)}/${encodeURIComponent(collegeId)}`);
+};
 
-export const deleteAdmissionTimeline = (collegeId) =>
-  apiClient.delete(`/college/admission/${collegeId}`);
+/**
+ * Filter colleges by student preferences
+ * Backend: GET /api/colleges/filter/:studentId (requires authentication)
+ */
+export const filtercollegesByPreferences = (studentId) => {
+  return apiClient.get(`/admin/filter/${encodeURIComponent(studentId)}`);
+};
+
+/**
+ * Get nearby colleges based on location
+ * Backend: GET /api/admin/colleges/nearby?longitude=...&latitude=...&state=...
+ */
+export const getNearbycolleges = (longitude, latitude, state) => {
+  const params = new URLSearchParams();
+  if (longitude) params.append('longitude', longitude);
+  if (latitude) params.append('latitude', latitude);
+  if (state) params.append('state', state);
+  return apiClient.get(`/admin/colleges/nearby?${params.toString()}`);
+};
 
 export default {
-  createBlog,
+  getPubliccollegesByStatus,
+  getcollegeById,
+  searchcolleges,
+  comparecolleges,
+  getcollegesByFeeRange,
+  getcollegesByShift,
+  getcollegeCardData,
+  getAmenitiesByCollegeId,
+  
+  getAlumniBycollege,
+  
+
+
+
+
+  
+  getOtherDetailsById,
+ 
+  getTechnologyAdoptionById,
+  getAdmissionDetails,
+  getcollegePhotos,
+  getcollegeVideos,
+  getcollegePhoto,
+  getcollegeVideo,
+  addSupport,
+  getSupportByStudent,
+  getSupportById,
+  deleteSupport,
+  predictcolleges,
   getAllBlogs,
   getBlogById,
-  searchColleges,
-  predictColleges,
-  addCollege,
-  getColleges,
-  getCollegeById,
-  updateCollegeByAuthId,
-  deleteCollegeByAuthId,
-  addCourse,
-  getCoursesByCollege,
-  updateCourse,
-  getHostelsByCollegeId,
-  addHostel,
-  updateHostel,
-  deleteHostel,
-  addCourseExams,
-  getCollegeExams,
-  upsertCourseFee,
-  getCourseFeesByCollegeId,
-  addCoursePlacement,
-  getCoursePlacements,
-  getPlacementsByCollege,
-  updateCoursePlacement,
-  addScholarship,
-  getScholarshipsByCollege,
-  compareSchools,
-  addActivities,
-  getActivitiesByCollegeId,
-  updateActivities,
-  deleteActivities,
-  addAlumni,
-  getAlumniByCollegeId,
-  updateAlumni,
-  deleteAlumni,
-  addAmenities,
-  getAmenitiesByCollegeId,
-  updateAmenities,
-  deleteAmenities,
-  addOtherDetails,
-  getOtherDetailsByCollegeId,
-  updateOtherDetails,
-  deleteOtherDetails,
-  addFaculty,
-  getFacultyByCollegeId,
-  updateFaculty,
-  deleteFaculty,
-  addInfrastructure,
-  getInfrastructureByCollegeId,
-  updateInfrastructure,
-  deleteInfrastructure,
-  addInternationalExposure,
-  getInternationalExposureByCollegeId,
-  updateInternationalExposure,
-  deleteInternationalExposure,
-  addSafetyAndSecurity,
-  getSafetyAndSecurityByCollegeId,
-  updateSafetyAndSecurity,
-  deleteSafetyAndSecurity,
-  addAdmissionTimeline,
-  getAdmissionTimelineByCollegeId,
-  updateAdmissionTimeline,
-  deleteAdmissionTimeline,
+  createBlog,
+  getAdmissionStatusByStudent,
+  addAdmissionStatus,
+  updateAdmissionStatus,
+  deleteAdmissionStatus,
+  filtercollegesByPreferences,
+  getNearbycolleges
 };

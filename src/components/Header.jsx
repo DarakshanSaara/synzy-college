@@ -1,22 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { School, Menu, X, LogOut, User, ChevronDown, Shield } from 'lucide-react';
+import { 
+   Menu, X, LogOut, User, ChevronDown, Shield } from 'lucide-react';
 import NotificationIcon from './NotificationIcon';
 import Logo from './Logo';
 
 const Header = ({ isMobileMenuOpen, setMobileMenuOpen, compareCount, shortlistCount = 0, currentUser, onLogout }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const authPages = ['/login', '/signup', '/signup-school', '/forgot-password', '/admin/login', '/admin/signup'];
-  if (authPages.includes(location.pathname) || location.pathname.startsWith('/school-portal') || location.pathname.startsWith('/admin/dashboard')) {
+  const authPages = ['/login', '/signup', '/signup-college', '/forgot-password', '/admin/login', '/admin/signup'];
+  if (authPages.includes(location.pathname) || location.pathname.startsWith('/college-portal') || location.pathname.startsWith('/admin/dashboard')) {
     return null;
   }
 
   const handleRegisterClick = () => {
     if (currentUser && currentUser.userType === 'college') {
-      navigate('/school-portal');
+      navigate('/college-portal');
     } else {
-      navigate('/signup-school');
+      navigate('/signup-college');
     }
   };
 
@@ -27,11 +28,11 @@ const Header = ({ isMobileMenuOpen, setMobileMenuOpen, compareCount, shortlistCo
       <div className="hidden md:flex items-center space-x-8">
         {(!currentUser || currentUser.userType !== 'college') && (
             <>
-                <Link to="/schools" className="text-gray-600 hover:text-blue-600">Browse Schools</Link>
+                <Link to="/colleges" className="text-gray-600 hover:text-blue-600">Browse colleges</Link>
                 {currentUser && (
                   <>
-                    <Link to="/search-schools" className="text-gray-600 hover:text-blue-600">Search Schools</Link>
-                    <Link to="/predictor" className="text-gray-600 hover:text-blue-600">Predict Schools</Link>
+                    <Link to="/search-colleges" className="text-gray-600 hover:text-blue-600">Search colleges</Link>
+                    <Link to="/predictor" className="text-gray-600 hover:text-blue-600">Predict colleges</Link>
                   </>
                 )}
                 <Link to="/compare" className="text-gray-600 hover:text-blue-600 relative">
@@ -64,8 +65,8 @@ const Header = ({ isMobileMenuOpen, setMobileMenuOpen, compareCount, shortlistCo
                 </div>*/}
                
                 <div className="flex items-center gap-2">
-                  <School size={16} className="text-blue-600" />
-                  <Link to="/signup-school" className="text-blue-600 hover:text-blue-700 font-medium">School Login</Link>
+                  <college size={16} className="text-blue-600" />
+                  <Link to="/signup-college" className="text-blue-600 hover:text-blue-700 font-medium">college Login</Link>
                 </div>
             </>
         )}
@@ -78,13 +79,13 @@ const Header = ({ isMobileMenuOpen, setMobileMenuOpen, compareCount, shortlistCo
     </nav>
     {isMobileMenuOpen && (
       <div className="md:hidden bg-white shadow-lg absolute top-full left-0 w-full">
-        {(!currentUser || currentUser.userType !== 'school') && (
+        {(!currentUser || currentUser.userType !== 'college') && (
           <>
-            <Link to="/schools" className="block py-2 px-6 text-gray-600 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>Browse Schools</Link>
+            <Link to="/colleges" className="block py-2 px-6 text-gray-600 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>Browse colleges</Link>
             {currentUser && (
               <>
-                <Link to="/search-schools" className="block py-2 px-6 text-gray-600 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>Search Schools</Link>
-                <Link to="/predictor" className="block py-2 px-6 text-gray-600 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>Predict Schools</Link>
+                <Link to="/search-colleges" className="block py-2 px-6 text-gray-600 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>Search colleges</Link>
+                <Link to="/predictor" className="block py-2 px-6 text-gray-600 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>Predict colleges</Link>
               </>
             )}
             <Link to="/compare" className="block py-2 px-6 text-gray-600 hover:bg-gray-100" onClick={() => setMobileMenuOpen(false)}>Compare {compareCount > 0 && `(${compareCount})`}</Link>
@@ -116,9 +117,9 @@ const Header = ({ isMobileMenuOpen, setMobileMenuOpen, compareCount, shortlistCo
                 <User size={16} />
                 <span className="font-medium">User/Parent Login</span>
               </Link>
-              <Link to="/signup-school" className="flex items-center justify-center gap-2 w-full text-center text-blue-600 hover:text-blue-700 py-2" onClick={() => setMobileMenuOpen(false)}>
-                <School size={16} />
-                <span className="font-medium">School Login</span>
+              <Link to="/signup-college" className="flex items-center justify-center gap-2 w-full text-center text-blue-600 hover:text-blue-700 py-2" onClick={() => setMobileMenuOpen(false)}>
+                <college size={16} />
+                <span className="font-medium">college Login</span>
               </Link>
             </>
           )}
@@ -160,7 +161,7 @@ const ProfileDropdown = ({ currentUser, onLogout }) => {
             <Link to="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</Link>
           )}
           {currentUser.userType === 'college' && (
-            <Link to="/school-portal" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">School Portal</Link>
+            <Link to="/college-portal" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">college Portal</Link>
           )}
           <Link to="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Home</Link>
           <button onClick={onLogout} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">

@@ -16,9 +16,9 @@ This implementation provides a complete application flow system that handles thr
 - `DELETE /api/applications/:studId` - Delete application
 
 ### Form Submission Endpoints
-- `POST /api/form/:schoolId/:studId/:formId` - Submit form to school
+- `POST /api/form/:collegeId/:studId/:formId` - Submit form to college
 - `GET /api/form/student/:studId` - Get forms by student
-- `GET /api/form/school/:schoolId` - Get forms by school
+- `GET /api/form/college/:collegeId` - Get forms by college
 
 ## Frontend Implementation
 
@@ -30,11 +30,11 @@ Complete API service with all endpoints and flow handlers:
 checkApplicationExists(studId)     // Step 1: Check if exists
 createApplication(data)            // Create new application
 updateExistingApplication(studId, data) // Update existing
-submitFormToSchool(schoolId, studId, formId) // Step 2: Submit to school
+submitFormTocollege(collegeId, studId, formId) // Step 2: Submit to college
 
 // Flow handlers
-handleApplicationFlow(studId, schoolId, applicationData) // Complete flow
-completeApplicationFlow(studId, schoolId, applicationData) // Alternative flow
+handleApplicationFlow(studId, collegeId, applicationData) // Complete flow
+completeApplicationFlow(studId, collegeId, applicationData) // Alternative flow
 ```
 
 ### 2. Application Flow Handler (`/src/components/ApplicationFlowHandler.jsx`)
@@ -72,32 +72,32 @@ Smart router that determines the appropriate flow:
 ```
 Press Apply → Check application → 404 Error 
 → Show form → Fill all details → Save application 
-→ Submit to school → Form created
+→ Submit to college → Form created
 ```
 
 **Implementation:**
 1. `checkApplicationExists()` returns 404
 2. User navigates to application form
 3. Form submission calls `createApplication()`
-4. After creation, calls `submitFormToSchool()`
+4. After creation, calls `submitFormTocollege()`
 
 ### Scenario B: Returning Applicant
 ```
 Press Apply → Check application → 200 Success 
 → Application exists → Skip form 
-→ Submit to school → Form created
+→ Submit to college → Form created
 ```
 
 **Implementation:**
 1. `checkApplicationExists()` returns application data
 2. User sees existing application details
-3. Direct submit calls `submitFormToSchool()` with existing application ID
+3. Direct submit calls `submitFormTocollege()` with existing application ID
 
 ### Scenario C: Update Needed
 ```
 Review application → Need changes 
 → PUT /api/applications/:studId → Update data 
-→ Submit to new school → Updated data used
+→ Submit to new college → Updated data used
 ```
 
 **Implementation:**
@@ -105,7 +105,7 @@ Review application → Need changes
 2. Navigates to form with `?update=true` parameter
 3. Form pre-populates with existing data
 4. Submission calls `updateExistingApplication()`
-5. After update, can submit to schools
+5. After update, can submit to colleges
 
 ## Key Features
 
@@ -116,7 +116,7 @@ Review application → Need changes
 
 ### 2. FormId Context
 - `formId` in URLs represents the application ID
-- Links student's `StudentApplication` to school submissions
+- Links student's `StudentApplication` to college submissions
 - Maintains data consistency across submissions
 
 ### 3. Smart Flow Detection
@@ -138,17 +138,17 @@ const application = await checkApplicationExists(studId);
 
 if (!application) {
   // Scenario A: First-time
-  navigate('/student-application?schoolId=' + schoolId);
+  navigate('/student-application?collegeId=' + collegeId);
 } else {
   // Scenario B: Returning
-  navigate('/application-flow/' + schoolId);
+  navigate('/application-flow/' + collegeId);
 }
 ```
 
 ### Complete Flow Handler
 ```javascript
 // Handle all scenarios
-const result = await handleApplicationFlow(studId, schoolId, applicationData);
+const result = await handleApplicationFlow(studId, collegeId, applicationData);
 
 if (result.scenario === 'first-time') {
   // Show form
@@ -161,8 +161,8 @@ if (result.scenario === 'first-time') {
 ```javascript
 // Update existing application
 const updated = await updateExistingApplication(studId, updateData);
-// Then submit to school
-const submitted = await submitFormToSchool(schoolId, studId, updated._id);
+// Then submit to college
+const submitted = await submitFormTocollege(collegeId, studId, updated._id);
 ```
 
 ## Error Handling

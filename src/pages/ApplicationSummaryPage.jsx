@@ -7,15 +7,15 @@ import { FileText, Eye, Download, CheckCircle } from 'lucide-react';
 
 const ApplicationSummaryPage = () => {
   const navigate = useNavigate();
-  const { schoolId: paramSchoolId } = useParams();
+  const { collegeId: paramcollegeId } = useParams();
   const location = useLocation();
   const { currentUser } = useAuth();
   const [application, setApplication] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Get schoolId from URL params or query string
-  const schoolId = paramSchoolId || new URLSearchParams(location.search).get('schoolId');
+  // Get collegeId from URL params or query string
+  const collegeId = paramcollegeId || new URLSearchParams(location.search).get('collegeId');
 
   useEffect(() => {
     if (!currentUser) {
@@ -291,7 +291,7 @@ const ApplicationSummaryPage = () => {
               Go Back
             </button>
             <button
-              onClick={() => navigate(`/apply/${schoolId}`)}
+              onClick={() => navigate(`/apply/${collegeId}`)}
               className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
             >
               Edit Application

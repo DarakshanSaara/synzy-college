@@ -1,21 +1,21 @@
-// src/pages/SchoolsPage.jsx
+// src/pages/collegesPage.jsx
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getPublicSchoolsByStatus } from "../api/schoolService";
-import SchoolCard from "../components/SchoolCard";
+import { getPubliccollegesByStatus } from "../api/collegeService";
+import collegeCard from "../components/collegeCard";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
-import { getCurrentLocation, addDistanceToSchools } from "../utils/distanceUtils";
-import { addScoresToSchools } from "../utils/scoreUtils";
+import { getCurrentLocation, addDistanceTocolleges } from "../utils/distanceUtils";
+import { addScoresTocolleges } from "../utils/scoreUtils";
 
-const SchoolsPage = ({
+const collegesPage = ({
   onCompareToggle,
   comparisonList,
   shortlist,
   onShortlistToggle,
 }) => {
-  const [schools, setSchools] = useState([]);
+  const [colleges, setcolleges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState(null);
   const [locationError, setLocationError] = useState(null);
@@ -33,7 +33,7 @@ const SchoolsPage = ({
       setUserLocation(location);
       setShowLocationOptions(false);
       // Show success message only for manual request
-      toast.success("Location access granted! Schools are now sorted by distance.");
+      toast.success("Location access granted! colleges are now sorted by distance.");
     } catch (error) {
       console.warn("Could not get user location:", error.message);
       setLocationError(error.message);
@@ -57,7 +57,7 @@ const SchoolsPage = ({
       setUserLocation(cityCoordinates[city]);
       setLocationError(null);
       setShowLocationOptions(false);
-      toast.success(`Location set to ${city}. Schools are now sorted by distance.`);
+      toast.success(`Location set to ${city}. colleges are now sorted by distance.`);
     }
   };
 
@@ -79,10 +79,10 @@ const SchoolsPage = ({
   }, []);
 
   useEffect(() => {
-    const loadSchools = async () => {
+    const loadcolleges = async () => {
       try {
         setLoading(true);
-        const response = await getPublicSchoolsByStatus("accepted");
+        const response = await getPubliccollegesByStatus("accepted");
         // Normalize possible shapes: array, {data: [...]}, {data: {data: [...]}}
         const raw = response?.data;
         let normalized = Array.isArray(raw)
@@ -92,8 +92,8 @@ const SchoolsPage = ({
           : [];
         
         // Add mock coordinates for testing if they don't exist
-        normalized = normalized.map((school, index) => {
-          if (!school.coordinates && !school.lat && !school.latitude) {
+        normalized = normalized.map((college, index) => {
+          if (!college.coordinates && !college.lat && !college.latitude) {
             // Add mock coordinates around Bangalore area for testing
             const baseLat = 12.9716;
             const baseLng = 77.5946;
@@ -101,25 +101,25 @@ const SchoolsPage = ({
             const randomLng = baseLng + (Math.random() - 0.5) * 0.2;
             
             return {
-              ...school,
+              ...college,
               coordinates: {
                 latitude: randomLat,
                 longitude: randomLng
               }
             };
           }
-          return school;
+          return college;
         });
 
-        // Add calculated scores to all schools
-        normalized = addScoresToSchools(normalized);
+        // Add calculated scores to all colleges
+        normalized = addScoresTocolleges(normalized);
 
-        // Add distance to schools if user location is available
+        // Add distance to colleges if user location is available
         if (userLocation) {
-          normalized = addDistanceToSchools(normalized, userLocation);
+          normalized = addDistanceTocolleges(normalized, userLocation);
         }
 
-        // Sort schools based on selected criteria
+        // Sort colleges based on selected criteria
         normalized.sort((a, b) => {
           switch (sortBy) {
             case 'distance':
@@ -145,33 +145,33 @@ const SchoolsPage = ({
           }
         });
         
-        setSchools(normalized);
+        setcolleges(normalized);
       } catch (error) {
-        console.error("Error fetching schools:", error);
+        console.error("Error fetching colleges:", error);
         const errorMessage =
           error.response?.data?.message ||
-          "Could not load schools. Please try again later.";
+          "Could not load colleges. Please try again later.";
         toast.error(errorMessage);
-        setSchools([]);
+        setcolleges([]);
       } finally {
         setLoading(false);
       }
     };
-    loadSchools();
+    loadcolleges();
   }, [userLocation, sortBy]); // Re-run when user location or sort criteria changes
 
   
 
-  const handleCardClick = (school) => {
-    navigate(`/school/${school._id || school.id || school.schoolId}`);
+  const handleCardClick = (college) => {
+    navigate(`/college/${college._id || college.id || college.collegeId}`);
   };
 
-  const handleApplyClick = (school) => {
-    const schoolId = school._id || school.id || school.schoolId;
-    if (schoolId) {
-      try { localStorage.setItem('lastAppliedSchoolId', String(schoolId)); } catch (_) {}
+  const handleApplyClick = (college) => {
+    const collegeId = college._id || college.id || college.collegeId;
+    if (collegeId) {
+      try { localStorage.setItem('lastAppliedcollegeId', String(collegeId)); } catch (_) {}
     }
-    const dest = `/apply/${schoolId}`;
+    const dest = `/apply/${collegeId}`;
     if (!currentUser) {
       localStorage.setItem('redirectPath', dest);
       navigate('/login');
@@ -183,7 +183,7 @@ const SchoolsPage = ({
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen text-xl">
-        Loading schools...
+        Loading colleges...
       </div>
     );
   }
@@ -192,7 +192,7 @@ const SchoolsPage = ({
     <div className="bg-gray-100 min-h-screen">
       <div className="container mx-auto px-6 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800">Explore Schools</h1>
+          <h1 className="text-3xl font-bold text-gray-800">Explore colleges</h1>
           <div className="flex items-center gap-4">
             {/* Sort Dropdown */}
             <div className="relative">
@@ -248,33 +248,33 @@ const SchoolsPage = ({
           </div>
         </div>
 
-        {Array.isArray(schools) && schools.length > 0 ? (
+        {Array.isArray(colleges) && colleges.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {schools
-              .filter((school) => school)
-              .map((school) => {
-                // Get the unique ID from the school object, whether it's schoolId or _id
-                const schoolId = school.schoolId || school._id;
-                const isCompared = comparisonList.some(item => (item.schoolId || item._id) === schoolId);
-                const isShortlisted = shortlist.some(item => (item.schoolId || item._id) === schoolId);
+            {colleges
+              .filter((college) => college)
+              .map((college) => {
+                // Get the unique ID from the college object, whether it's collegeId or _id
+                const collegeId = college.collegeId || college._id;
+                const isCompared = comparisonList.some(item => (item.collegeId || item._id) === collegeId);
+                const isShortlisted = shortlist.some(item => (item.collegeId || item._id) === collegeId);
                 return (
-                  <SchoolCard
-                    key={schoolId}
-                    school={school}
-                    onCardClick={() => handleCardClick(school)}
-                    onCompareToggle={() => onCompareToggle(school)}
+                  <collegeCard
+                    key={collegeId}
+                    college={college}
+                    onCardClick={() => handleCardClick(college)}
+                    onCompareToggle={() => onCompareToggle(college)}
                     isCompared={isCompared}
                     currentUser={currentUser}
-                    onShortlistToggle={() => onShortlistToggle(school)}
+                    onShortlistToggle={() => onShortlistToggle(college)}
                     isShortlisted={isShortlisted}
-                    onApply={() => handleApplyClick(school)}
+                    onApply={() => handleApplyClick(college)}
                   />
                 );
               })}
           </div>
         ) : (
           <div className="text-center text-gray-500 mt-16">
-            <p>No accepted schools found.</p>
+            <p>No accepted colleges found.</p>
             <p>Please check back later.</p>
           </div>
         )}
@@ -283,4 +283,4 @@ const SchoolsPage = ({
   );
 };
 
-export default SchoolsPage;
+export default collegesPage;

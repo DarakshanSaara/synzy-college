@@ -6,13 +6,13 @@ import {
   checkApplicationExists, 
   createApplication, 
   completeApplicationFlow,
-  submitFormToSchool 
+  submitFormTocollege 
 } from '../api/applicationService';
 import { Loader2, CheckCircle, AlertCircle, FileText, Send } from 'lucide-react';
 
 const ApplicationFlow = () => {
   const navigate = useNavigate();
-  const { schoolId } = useParams();
+  const { collegeId } = useParams();
   const { user: currentUser } = useAuth();
   
   const [step, setStep] = useState(1);
@@ -24,10 +24,10 @@ const ApplicationFlow = () => {
 
   // Step 1: Check if application exists
   useEffect(() => {
-    if (currentUser?._id && schoolId) {
+    if (currentUser?._id && collegeId) {
       checkExistingApplication();
     }
-  }, [currentUser, schoolId]);
+  }, [currentUser, collegeId]);
 
   const checkExistingApplication = async () => {
     setLoading(true);
@@ -40,7 +40,7 @@ const ApplicationFlow = () => {
         setApplicationExists(true);
         setApplicationData(application.data);
         setStep(2); // Skip to Step 2 if application exists
-        toast.info('Application already exists. Proceeding to submit to school.');
+        toast.info('Application already exists. Proceeding to submit to college.');
       } else {
         setApplicationExists(false);
         setStep(1); // Show application form
@@ -80,9 +80,9 @@ const ApplicationFlow = () => {
     }
   };
 
-  const handleSubmitToSchool = async () => {
-    if (!applicationData || !schoolId) {
-      toast.error('Missing application data or school ID');
+  const handleSubmitTocollege = async () => {
+    if (!applicationData || !collegeId) {
+      toast.error('Missing application data or college ID');
       return;
     }
 
@@ -91,10 +91,10 @@ const ApplicationFlow = () => {
     
     try {
       const formId = applicationData._id || applicationData.id;
-      const result = await submitFormToSchool(schoolId, currentUser._id, formId);
+      const result = await submitFormTocollege(collegeId, currentUser._id, formId);
       
       setFormSubmitted(true);
-      toast.success('Form submitted to school successfully!');
+      toast.success('Form submitted to college successfully!');
       
       // Navigate to application status page after successful submission
       setTimeout(() => {
@@ -102,9 +102,9 @@ const ApplicationFlow = () => {
       }, 2000);
       
     } catch (error) {
-      console.error('Error submitting form to school:', error);
-      setError('Failed to submit form to school. Please try again.');
-      toast.error('Failed to submit form to school.');
+      console.error('Error submitting form to college:', error);
+      setError('Failed to submit form to college. Please try again.');
+      toast.error('Failed to submit form to college.');
     } finally {
       setLoading(false);
     }
@@ -117,7 +117,7 @@ const ApplicationFlow = () => {
     try {
       const result = await completeApplicationFlow(
         currentUser._id, 
-        schoolId, 
+        collegeId, 
         formData
       );
       
@@ -174,7 +174,7 @@ const ApplicationFlow = () => {
           <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Success!</h2>
           <p className="text-gray-600 mb-4">
-            Your application has been submitted to the school successfully.
+            Your application has been submitted to the college successfully.
           </p>
           <p className="text-sm text-gray-500">
             Redirecting to application status page...
@@ -207,7 +207,7 @@ const ApplicationFlow = () => {
               }`}>
                 2
               </div>
-              <span className="ml-2 font-medium">Submit to School</span>
+              <span className="ml-2 font-medium">Submit to college</span>
             </div>
           </div>
         </div>
@@ -223,7 +223,7 @@ const ApplicationFlow = () => {
               <p className="text-gray-600">
                 {applicationExists === false 
                   ? 'Please fill out the application form to proceed.'
-                  : 'Your application is ready to submit to the school.'
+                  : 'Your application is ready to submit to the college.'
                 }
               </p>
             </div>
@@ -257,14 +257,14 @@ const ApplicationFlow = () => {
           </div>
         )}
 
-        {/* Step 2: Submit to School */}
+        {/* Step 2: Submit to college */}
         {step === 2 && (
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="text-center mb-6">
               <Send className="h-12 w-12 text-indigo-600 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Submit to School</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Submit to college</h2>
               <p className="text-gray-600">
-                Submit your application to the selected school.
+                Submit your application to the selected college.
               </p>
             </div>
 
@@ -288,7 +288,7 @@ const ApplicationFlow = () => {
                 Back
               </button>
               <button
-                onClick={handleSubmitToSchool}
+                onClick={handleSubmitTocollege}
                 disabled={loading}
                 className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               >
@@ -298,7 +298,7 @@ const ApplicationFlow = () => {
                     Submitting...
                   </>
                 ) : (
-                  'Submit to School'
+                  'Submit to college'
                 )}
               </button>
             </div>

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Search, ArrowLeft, ChevronRight, ChevronDown, MapPin, GraduationCap, Building, Users, DollarSign, Filter } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { searchSchools } from '../api/searchService';
-import SchoolCard from '../components/SchoolCard';
+import { searchcolleges } from '../api/searchService';
+import collegeCard from '../components/collegeCard';
 
 const states = [
   'Maharashtra', 'Karnataka', 'Delhi', 'Kerala', 'Gujarat', 'Tamil Nadu',
@@ -21,7 +21,7 @@ const educationBoards = [
   'BSE', 'SEBA', 'MPBSE', 'STATE', 'OTHER'
 ];
 
-const schoolModes = ['convent', 'private', 'government'];
+const collegeModes = ['convent', 'private', 'government'];
 const genderTypes = ['boy', 'girl', 'co-ed'];
 const feeRanges = [
   "1000 - 10000",
@@ -43,7 +43,7 @@ const SearchPage = () => {
   const [selectedStates, setSelectedStates] = useState([]);
   const [selectedCities, setSelectedCities] = useState([]);
   const [selectedBoards, setSelectedBoards] = useState([]);
-  const [selectedSchoolModes, setSelectedSchoolModes] = useState([]);
+  const [selectedcollegeModes, setSelectedcollegeModes] = useState([]);
   const [selectedGenderTypes, setSelectedGenderTypes] = useState([]);
   const [selectedFeeRanges, setSelectedFeeRanges] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
@@ -77,8 +77,8 @@ const SearchPage = () => {
             : [...prev, item]
         );
         break;
-      case 'schoolMode':
-        setSelectedSchoolModes(prev => 
+      case 'collegeMode':
+        setSelectedcollegeModes(prev => 
           prev.includes(item) 
             ? prev.filter(s => s !== item)
             : [...prev, item]
@@ -130,8 +130,8 @@ const SearchPage = () => {
         }
         break;
       case 4:
-        if (selectedSchoolModes.length === 0) {
-          setError('Please select at least one school type');
+        if (selectedcollegeModes.length === 0) {
+          setError('Please select at least one college type');
           return false;
         }
         break;
@@ -170,27 +170,27 @@ const SearchPage = () => {
         states: selectedStates,
         cities: selectedCities,
         boards: selectedBoards,
-        schoolMode: selectedSchoolModes,
+        collegeMode: selectedcollegeModes,
         genderType: selectedGenderTypes,
         feeRange: selectedFeeRanges,
         page: 1,
         limit: 20
       };
       
-      const response = await searchSchools({ ...searchParams, progressive: false });
+      const response = await searchcolleges({ ...searchParams, progressive: false });
       setSearchResults(response.data || []);
       
-      // Show message when no schools are found, but don't treat it as an error
+      // Show message when no colleges are found, but don't treat it as an error
       if (!response.data || response.data.length === 0) {
-        setError('No schools found matching your criteria. Try adjusting your filters or expanding your search.');
+        setError('No colleges found matching your criteria. Try adjusting your filters or expanding your search.');
       }
     } catch (error) {
       console.error('Search error:', error);
       // Only show error for actual failures, not for "no results found"
       if (error.response?.status !== 404) {
-        setError('Failed to search schools. Please try again.');
+        setError('Failed to search colleges. Please try again.');
       } else {
-        setError('No schools found matching your criteria. Try adjusting your filters or expanding your search.');
+        setError('No colleges found matching your criteria. Try adjusting your filters or expanding your search.');
       }
       setSearchResults([]);
     } finally {
@@ -203,7 +203,7 @@ const SearchPage = () => {
     setSelectedStates([]);
     setSelectedCities([]);
     setSelectedBoards([]);
-    setSelectedSchoolModes([]);
+    setSelectedcollegeModes([]);
     setSelectedGenderTypes([]);
     setSelectedFeeRanges([]);
     setSearchResults([]);
@@ -217,7 +217,7 @@ const SearchPage = () => {
       case 1: return 'Basic Search';
       case 2: return 'Location';
       case 3: return 'Education Board';
-      case 4: return 'School Type';
+      case 4: return 'college Type';
       case 5: return 'Gender & Fees';
       case 6: return 'Review & Search';
       default: return '';
@@ -230,8 +230,8 @@ const SearchPage = () => {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Find Your Perfect School</h2>
-              <p className="text-gray-600">Start by searching for schools by name or keywords</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Find Your Perfect college</h2>
+              <p className="text-gray-600">Start by searching for colleges by name or keywords</p>
             </div>
             
             <div className="relative max-w-2xl mx-auto">
@@ -241,7 +241,7 @@ const SearchPage = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && nextStep()}
-                placeholder="Search schools by name, keywords..."
+                placeholder="Search colleges by name, keywords..."
                 className="w-full pl-12 pr-4 py-4 text-lg border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -271,7 +271,7 @@ const SearchPage = () => {
           <div className="space-y-6">
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Choose Location</h2>
-              <p className="text-gray-600">Select states and cities where you want to find schools</p>
+              <p className="text-gray-600">Select states and cities where you want to find colleges</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -373,7 +373,7 @@ const SearchPage = () => {
                 onClick={nextStep}
                 className="px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium"
               >
-                Continue to School Type
+                Continue to college Type
                 <ChevronRight size={20} className="inline ml-2" />
               </button>
             </div>
@@ -384,17 +384,17 @@ const SearchPage = () => {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">School Type</h2>
-              <p className="text-gray-600">Choose the type of school you prefer</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">college Type</h2>
+              <p className="text-gray-600">Choose the type of college you prefer</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {schoolModes.map((mode) => (
+              {collegeModes.map((mode) => (
                 <button
                   key={mode}
-                  onClick={() => toggleSelection(mode, 'schoolMode')}
+                  onClick={() => toggleSelection(mode, 'collegeMode')}
                   className={`px-6 py-4 rounded-xl text-lg font-medium transition-all ${
-                    selectedSchoolModes.includes(mode)
+                    selectedcollegeModes.includes(mode)
                       ? 'bg-blue-600 text-white shadow-md'
                       : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-blue-300'
                   }`}
@@ -532,10 +532,10 @@ const SearchPage = () => {
                 </div>
               )}
               
-              {selectedSchoolModes.length > 0 && (
+              {selectedcollegeModes.length > 0 && (
                 <div className="flex items-center">
                   <Building size={20} className="text-gray-500 mr-3" />
-                  <span className="text-gray-700"><strong>School Type:</strong> {selectedSchoolModes.join(', ')}</span>
+                  <span className="text-gray-700"><strong>college Type:</strong> {selectedcollegeModes.join(', ')}</span>
                 </div>
               )}
               
@@ -566,7 +566,7 @@ const SearchPage = () => {
                 disabled={loading}
                 className="px-8 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 font-medium disabled:opacity-50"
               >
-                {loading ? 'Searching...' : 'Search Schools'}
+                {loading ? 'Searching...' : 'Search colleges'}
               </button>
             </div>
           </div>
@@ -590,7 +590,7 @@ const SearchPage = () => {
               >
                 <ArrowLeft size={20} className="text-gray-600" />
               </button>
-              <h1 className="text-xl font-semibold text-gray-900">Search Schools</h1>
+              <h1 className="text-xl font-semibold text-gray-900">Search colleges</h1>
             </div>
             <button
               onClick={clearAll}
@@ -641,32 +641,32 @@ const SearchPage = () => {
         {hasSearched && (
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Search Results ({searchResults.length} schools found)
+              Search Results ({searchResults.length} colleges found)
             </h2>
             
             {loading ? (
               <div className="text-center py-8">
-                <div className="text-gray-500">Searching for schools...</div>
+                <div className="text-gray-500">Searching for colleges...</div>
               </div>
             ) : searchResults.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {searchResults.map((school, idx) => (
-                  <SchoolCard
-                    key={`${school._id || school.id || school.schoolId || 'school'}-${idx}`}
-                    school={school}
-                    onCardClick={() => navigate(`/school/${school._id || school.id || school.schoolId}`)}
+                {searchResults.map((college, idx) => (
+                  <collegeCard
+                    key={`${college._id || college.id || college.collegeId || 'college'}-${idx}`}
+                    college={college}
+                    onCardClick={() => navigate(`/college/${college._id || college.id || college.collegeId}`)}
                     onCompareToggle={() => {}}
                     isCompared={false}
                     currentUser={null}
                     onShortlistToggle={() => {}}
                     isShortlisted={false}
-                    onApply={() => navigate(`/apply/${school._id || school.id || school.schoolId}`)}
+                    onApply={() => navigate(`/apply/${college._id || college.id || college.collegeId}`)}
                   />
                 ))}
               </div>
             ) : (
               <div className="text-center py-8">
-                <div className="text-gray-500">No schools found matching your criteria.</div>
+                <div className="text-gray-500">No colleges found matching your criteria.</div>
                 <button
                   onClick={clearAll}
                   className="mt-4 px-4 py-2 text-blue-600 hover:text-blue-700 font-medium"

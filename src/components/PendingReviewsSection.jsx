@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getPendingReviews, acceptReview, rejectReview, getSchoolName } from '../api/reviewService';
+import { getPendingReviews, acceptReview, rejectReview, getcollegeName } from '../api/reviewService';
 import { toast } from 'react-toastify';
 import { 
   Star, 
@@ -8,7 +8,7 @@ import {
   XCircle, 
   Clock, 
   User, 
-  School, 
+ 
   MessageCircle,
   Heart,
   RefreshCw
@@ -19,7 +19,7 @@ const PendingReviewsSection = () => {
   const [pendingReviews, setPendingReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingReviews, setProcessingReviews] = useState(new Set());
-  const [schoolNames, setSchoolNames] = useState({});
+  const [collegeNames, setcollegeNames] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const reviewsPerPage = 5;
@@ -67,8 +67,8 @@ const PendingReviewsSection = () => {
       
       setPendingReviews(currentReviews);
       
-      // Fetch school names for all reviews
-      await fetchSchoolNames(currentReviews);
+      // Fetch college names for all reviews
+      await fetchcollegeNames(currentReviews);
     } catch (error) {
       console.error('Error fetching pending reviews:', error);
       toast.error('Failed to load pending reviews');
@@ -79,22 +79,22 @@ const PendingReviewsSection = () => {
     }
   };
 
-  const fetchSchoolNames = async (reviews) => {
-    const schoolIds = [...new Set(reviews.map(review => review.schoolId))];
+  const fetchcollegeNames = async (reviews) => {
+    const collegeIds = [...new Set(reviews.map(review => review.collegeId))];
     const names = {};
     
-    // Fetch school names in parallel
-    const promises = schoolIds.map(async (schoolId) => {
+    // Fetch college names in parallel
+    const promises = collegeIds.map(async (collegeId) => {
       try {
-        const name = await getSchoolName(schoolId);
-        names[schoolId] = name;
+        const name = await getcollegeName(collegeId);
+        names[collegeId] = name;
       } catch (error) {
-        names[schoolId] = 'Unknown School';
+        names[collegeId] = 'Unknown college';
       }
     });
     
     await Promise.all(promises);
-    setSchoolNames(prev => ({ ...prev, ...names }));
+    setcollegeNames(prev => ({ ...prev, ...names }));
   };
 
   const handleAcceptReview = async (reviewId) => {
@@ -271,8 +271,8 @@ const PendingReviewsSection = () => {
                           {review.student?.name || review.studentName || 'Anonymous Student'}
                         </h4>
                         <div className="flex items-center space-x-2 text-sm text-gray-600">
-                          <School size={14} />
-                          <span>{schoolNames[review.schoolId] || 'Loading school name...'}</span>
+                          <college size={14} />
+                          <span>{collegeNames[review.collegeId] || 'Loading college name...'}</span>
                         </div>
                         <p className="text-sm text-gray-500">
                           {formatDate(review.createdAt)}

@@ -1,6 +1,6 @@
-# Smart School Finder
+# Smart college Finder
 
-A modern React application for finding and applying to schools with an integrated PDF generation system.
+A modern React application for finding and applying to colleges with an integrated PDF generation system.
 
 ## Setup
 
@@ -49,7 +49,7 @@ This application is configured for deployment on Render. The `render.yaml` file 
 ## Features
 
 - Student application system
-- School portal for managing applications
+- college portal for managing applications
 - Automatic PDF generation after application submission
 - Application tracking and status updates
 - Responsive design with modern UI

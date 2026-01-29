@@ -79,37 +79,37 @@ export const getCurrentLocation = () => {
 };
 
 /**
- * Extract coordinates from school data
- * @param {Object} school - School object
+ * Extract coordinates from college data
+ * @param {Object} college - college object
  * @returns {Object|null} Coordinates object or null if not found
  */
-export const extractSchoolCoordinates = (school) => {
+export const extractcollegeCoordinates = (college) => {
   // Try different possible coordinate field names
-  if (school.coordinates) {
+  if (college.coordinates) {
     return {
-      latitude: school.coordinates.latitude || school.coordinates.lat,
-      longitude: school.coordinates.longitude || school.coordinates.lng || school.coordinates.lon
+      latitude: college.coordinates.latitude || college.coordinates.lat,
+      longitude: college.coordinates.longitude || college.coordinates.lng || college.coordinates.lon
     };
   }
   
-  if (school.location && typeof school.location === 'object') {
+  if (college.location && typeof college.location === 'object') {
     return {
-      latitude: school.location.latitude || school.location.lat,
-      longitude: school.location.longitude || school.location.lng || school.location.lon
+      latitude: college.location.latitude || college.location.lat,
+      longitude: college.location.longitude || college.location.lng || college.location.lon
     };
   }
   
-  if (school.lat && school.lng) {
+  if (college.lat && college.lng) {
     return {
-      latitude: school.lat,
-      longitude: school.lng
+      latitude: college.lat,
+      longitude: college.lng
     };
   }
   
-  if (school.latitude && school.longitude) {
+  if (college.latitude && college.longitude) {
     return {
-      latitude: school.latitude,
-      longitude: school.longitude
+      latitude: college.latitude,
+      longitude: college.longitude
     };
   }
   
@@ -117,35 +117,35 @@ export const extractSchoolCoordinates = (school) => {
 };
 
 /**
- * Calculate and add distance to schools array
- * @param {Array} schools - Array of school objects
+ * Calculate and add distance to colleges array
+ * @param {Array} colleges - Array of college objects
  * @param {Object} userLocation - User's location {latitude, longitude}
- * @returns {Array} Schools array with distance added
+ * @returns {Array} colleges array with distance added
  */
-export const addDistanceToSchools = (schools, userLocation) => {
-  if (!userLocation || !Array.isArray(schools)) {
-    return schools;
+export const addDistanceTocolleges = (colleges, userLocation) => {
+  if (!userLocation || !Array.isArray(colleges)) {
+    return colleges;
   }
 
-  return schools.map(school => {
-    const schoolCoords = extractSchoolCoordinates(school);
+  return colleges.map(college => {
+    const collegeCoords = extractcollegeCoordinates(college);
     
-    if (schoolCoords && schoolCoords.latitude && schoolCoords.longitude) {
+    if (collegeCoords && collegeCoords.latitude && collegeCoords.longitude) {
       const distance = calculateDistance(
         userLocation.latitude,
         userLocation.longitude,
-        schoolCoords.latitude,
-        schoolCoords.longitude
+        collegeCoords.latitude,
+        collegeCoords.longitude
       );
       
       return {
-        ...school,
+        ...college,
         distance: formatDistance(distance),
         distanceValue: distance // Keep numeric value for sorting
       };
     }
     
-    return school;
+    return college;
   });
 };
 
@@ -153,6 +153,6 @@ export default {
   calculateDistance,
   formatDistance,
   getCurrentLocation,
-  extractSchoolCoordinates,
-  addDistanceToSchools
+  extractcollegeCoordinates,
+  addDistanceTocolleges
 };

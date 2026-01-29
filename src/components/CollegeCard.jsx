@@ -1,8 +1,8 @@
 import React from 'react';
 import { MapPin, PlusCircle, CheckCircle, Heart, Navigation } from 'lucide-react';
 
-const SchoolCard = ({ school, onCardClick, onCompareToggle, isCompared, currentUser, onShortlistToggle, isShortlisted, onApply }) => {
-  if (!school) {
+const collegeCard = ({ college, onCardClick, onCompareToggle, isCompared, currentUser, onShortlistToggle, isShortlisted, onApply }) => {
+  if (!college) {
     return null;
   }
 
@@ -15,31 +15,31 @@ const SchoolCard = ({ school, onCardClick, onCompareToggle, isCompared, currentU
       )}
       
       <div className="p-6 cursor-pointer flex-grow">
-        {/* School Logo */}
-        {school.logo && (
+        {/* college Logo */}
+        {college.logo && (
           <div className="flex justify-center mb-4">
             <img 
-              src={typeof school.logo === 'object' ? school.logo.url : school.logo} 
-              alt={`${school.name} logo`} 
+              src={typeof college.logo === 'object' ? college.logo.url : college.logo} 
+              alt={`${college.name} logo`} 
               className="h-16 w-16 object-contain rounded-lg"
               onError={(e) => { e.target.style.display = 'none'; }}
             />
           </div>
         )}
 
-        <h3 className="text-xl font-bold text-gray-900 mb-2">{school.name || 'School Name Not Available'}</h3>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">{college.name || 'college Name Not Available'}</h3>
         
         <div className="flex items-center text-gray-600 mb-4 flex-wrap gap-x-4">
           <div className="flex items-center">
             <MapPin size={16} className="mr-2 text-blue-500" />
-            <span>{school.location || `${school.city || 'N/A'}${school.state ? ', ' + school.state : ''}`}</span>
+            <span>{college.location || `${college.city || 'N/A'}${college.state ? ', ' + college.state : ''}`}</span>
           </div>
           
           {/* Distance Display beside location */}
-          {school.distance && (
+          {college.distance && (
             <div className="flex items-center text-gray-600">
               <Navigation size={14} className="mr-1 text-green-500" />
-              <span className="text-sm font-medium">{school.distance}</span>
+              <span className="text-sm font-medium">{college.distance}</span>
             </div>
           )}
         </div>
@@ -49,51 +49,51 @@ const SchoolCard = ({ school, onCardClick, onCompareToggle, isCompared, currentU
           <div>
             <div className="text-sm text-gray-600 mb-1">Fee Range</div>
             <div className="font-semibold text-gray-800">
-              {school.feeRange || school.minFee && school.maxFee 
-                ? `${school.feeRange || `${school.minFee}L - ${school.maxFee}L`}`
-                : 'Contact School'}
+              {college.feeRange || college.minFee && college.maxFee 
+                ? `${college.feeRange || `${college.minFee}L - ${college.maxFee}L`}`
+                : 'Contact college'}
             </div>
           </div>
           <div className="text-right">
             <div className="text-sm text-gray-600 mb-1">Score</div>
             <div className="flex items-center justify-end">
-              <span className={`font-bold text-lg ${school.scoreColorClass || 'text-gray-800'}`}>
-                {school.scoreDisplay || school.score || school.rating || 'N/A'}
+              <span className={`font-bold text-lg ${college.scoreColorClass || 'text-gray-800'}`}>
+                {college.scoreDisplay || college.score || college.rating || 'N/A'}
               </span>
             </div>
           </div>
         </div>
         
-        {/* School Type Badges */}
+        {/* college Type Badges */}
         <div className="flex flex-wrap gap-2 mb-3">
-          {school.board && (
+          {college.board && (
             <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
-              {school.board}
+              {college.board}
             </span>
           )}
-          {school.schoolType && (
+          {college.collegeType && (
             <span className="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
-              {school.schoolType}
+              {college.collegeType}
             </span>
           )}
-          {school.genderType && (
+          {college.genderType && (
             <span className="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
-              {school.genderType}
+              {college.genderType}
             </span>
           )}
         </div>
 
         {/* Facilities Tags */}
-        {(school.facilities || school.amenities) && (
+        {(college.facilities || college.amenities) && (
           <div className="flex flex-wrap gap-1 mb-3">
-            {(school.facilities || school.amenities || []).slice(0, 3).map((facility, index) => (
+            {(college.facilities || college.amenities || []).slice(0, 3).map((facility, index) => (
               <span key={index} className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
                 {typeof facility === 'string' ? facility : facility.name || facility.type}
               </span>
             ))}
-            {(school.facilities || school.amenities || []).length > 3 && (
+            {(college.facilities || college.amenities || []).length > 3 && (
               <span className="text-xs text-gray-500">
-                +{(school.facilities || school.amenities || []).length - 3} more
+                +{(college.facilities || college.amenities || []).length - 3} more
               </span>
             )}
           </div>
@@ -101,7 +101,7 @@ const SchoolCard = ({ school, onCardClick, onCompareToggle, isCompared, currentU
         
 
         {/* Technology Adoption Display */}
-        {school.smartClassroomsPercentage && (
+        {college.smartClassroomsPercentage && (
           <div className="mt-3 space-y-2">
             <div className="flex items-center justify-between">
               <span 
@@ -111,20 +111,20 @@ const SchoolCard = ({ school, onCardClick, onCompareToggle, isCompared, currentU
                 📽️ Smart Classrooms
               </span>
               <span className="text-xs font-medium text-blue-600">
-                {school.smartClassroomsPercentage}%
+                {college.smartClassroomsPercentage}%
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-1.5">
               <div 
                 className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
-                style={{ width: `${school.smartClassroomsPercentage}%` }}
+                style={{ width: `${college.smartClassroomsPercentage}%` }}
               ></div>
             </div>
           </div>
         )}
 
         {/* International Exposure Display */}
-        {(school.exchangePrograms && school.exchangePrograms.length > 0) || (school.globalTieups && school.globalTieups.length > 0) || school.studentsBenefitingPercentage ? (
+        {(college.exchangePrograms && college.exchangePrograms.length > 0) || (college.globalTieups && college.globalTieups.length > 0) || college.studentsBenefitingPercentage ? (
           <div className="mt-3 space-y-2">
             <div className="flex items-center justify-between">
               <span 
@@ -133,26 +133,26 @@ const SchoolCard = ({ school, onCardClick, onCompareToggle, isCompared, currentU
               >
                 🌍 Global Programs
               </span>
-              {school.studentsBenefitingPercentage && (
+              {college.studentsBenefitingPercentage && (
                 <span className="text-xs font-medium text-purple-600">
-                  {school.studentsBenefitingPercentage}% students
+                  {college.studentsBenefitingPercentage}% students
                 </span>
               )}
             </div>
             <div className="flex flex-wrap gap-1">
-              {school.exchangePrograms && school.exchangePrograms.slice(0, 2).map((program, index) => (
+              {college.exchangePrograms && college.exchangePrograms.slice(0, 2).map((program, index) => (
                 <span key={index} className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
                   {program.type}
                 </span>
               ))}
-              {school.globalTieups && school.globalTieups.slice(0, 2).map((tieup, index) => (
+              {college.globalTieups && college.globalTieups.slice(0, 2).map((tieup, index) => (
                 <span key={index} className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
                   {tieup.nature}
                 </span>
               ))}
-              {((school.exchangePrograms && school.exchangePrograms.length > 2) || (school.globalTieups && school.globalTieups.length > 2)) && (
+              {((college.exchangePrograms && college.exchangePrograms.length > 2) || (college.globalTieups && college.globalTieups.length > 2)) && (
                 <span className="text-xs text-gray-500">
-                  +{((school.exchangePrograms?.length || 0) + (school.globalTieups?.length || 0)) - 2} more
+                  +{((college.exchangePrograms?.length || 0) + (college.globalTieups?.length || 0)) - 2} more
                 </span>
               )}
             </div>
@@ -186,4 +186,4 @@ const SchoolCard = ({ school, onCardClick, onCompareToggle, isCompared, currentU
   );
 };
 
-export default SchoolCard;
+export default collegeCard;

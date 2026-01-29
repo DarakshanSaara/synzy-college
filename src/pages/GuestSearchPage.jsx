@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronDown, User, MapPin, Building, Navigation, ArrowLeft, DollarSign, Languages, Bus, School, Heart } from 'lucide-react';
+import { ChevronDown, User, MapPin, Building, Navigation, ArrowLeft, DollarSign, Languages, Bus, college, Heart } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const GuestSearchPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [formData, setFormData] = useState({
-    schoolType: '',
+    collegeType: '',
     preferredShifts: '',
     gender: '',
     state: '',
@@ -135,15 +135,15 @@ const GuestSearchPage = () => {
     if (validateForm()) {
       // Map frontend field names to backend field names
       const backendData = {
-        schoolMode: formData.schoolType === 'Convent School' ? 'convent' :
-                   formData.schoolType === 'Private School' ? 'private' :
-                   formData.schoolType === 'Government School' ? 'government' : formData.schoolType,
+        collegeMode: formData.collegeType === 'Convent college' ? 'convent' :
+                   formData.collegeType === 'Private college' ? 'private' :
+                   formData.collegeType === 'Government college' ? 'government' : formData.collegeType,
         genderType: formData.gender === 'Male' ? 'boy' :
                    formData.gender === 'Female' ? 'girl' :
                    formData.gender === 'Co-educational' ? 'co-ed' : formData.gender,
         shifts: formData.preferredShifts === 'Morning Shift' ? 'morning' :
                 formData.preferredShifts === 'Afternoon Shift' ? 'afternoon' :
-                formData.preferredShifts === 'Evening Shift' ? 'night school' : formData.preferredShifts,
+                formData.preferredShifts === 'Evening Shift' ? 'night college' : formData.preferredShifts,
         state: formData.state,
         city: formData.city,
         area: formData.area,
@@ -159,13 +159,13 @@ const GuestSearchPage = () => {
   };
 
   const dropdownOptions = {
-    schoolType: [
-      'Day School', 'Boarding School', 'Day-cum-Boarding', 'International School',
-      'Convent School', 'Private School', 'Government School'
+    collegeType: [
+      'Day college', 'Boarding college', 'Day-cum-Boarding', 'International college',
+      'Convent college', 'Private college', 'Government college'
     ],
     preferredShifts: [
       'Morning Shift', 'Afternoon Shift', 'Evening Shift', 'Full Day',
-      'morning', 'afternoon', 'night school'
+      'morning', 'afternoon', 'night college'
     ],
     gender: [
       'Male', 'Female', 'Co-educational', 'boy', 'girl', 'co-ed'
@@ -218,7 +218,7 @@ const GuestSearchPage = () => {
           } ${errors[field] ? 'border-red-500' : ''}`}
         >
           <option value="">
-            {field === 'schoolType' ? 'Select School Type' :
+            {field === 'collegeType' ? 'Select college Type' :
              field === 'preferredShifts' ? 'Select Shift' :
              field === 'gender' ? 'Select' :
              field === 'state' ? 'Select' :
@@ -246,17 +246,17 @@ const GuestSearchPage = () => {
         <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
           <div className="text-center mb-6 sm:mb-8">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
-              Find Your Perfect School
+              Find Your Perfect college
             </h1>
             <p className="text-sm sm:text-base text-gray-600">
-              Fill in your preferences to discover schools that match your needs.
+              Fill in your preferences to discover colleges that match your needs.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <DropdownField
-              label="Select School Type"
-              field="schoolType"
+              label="Select college Type"
+              field="collegeType"
             />
             
             <DropdownField
@@ -315,7 +315,7 @@ const GuestSearchPage = () => {
                     <Navigation className="inline-block w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                     <span className="block sm:inline">Fetch from Google Location</span>
                     <br className="hidden sm:block" />
-                    <span className="text-xs sm:text-sm opacity-90 block sm:inline">(to see schools near you)</span>
+                    <span className="text-xs sm:text-sm opacity-90 block sm:inline">(to see colleges near you)</span>
                   </>
                 )}
               </button>

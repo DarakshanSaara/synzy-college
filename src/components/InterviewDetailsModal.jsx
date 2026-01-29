@@ -237,7 +237,7 @@ const InterviewDetailsModal = ({ isOpen, onClose, application }) => {
                   <AlertCircle className="w-5 h-5 text-yellow-600 mr-2" />
                   <p className="text-yellow-800">
                     Interview has been scheduled, but detailed information is not available yet. 
-                    Please contact the school for more details.
+                    Please contact the college for more details.
                   </p>
                 </div>
               </div>

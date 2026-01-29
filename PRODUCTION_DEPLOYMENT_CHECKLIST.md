@@ -10,10 +10,10 @@ All 11 issues have been resolved with production-safe implementations:
 3. ✅ **UI cleanup** - Digital Learning, Library, Performance sections removed
 4. ✅ **Routes display** - Properly counts transport routes
 5. ✅ **Shortlist functionality** - API paths corrected
-6. ✅ **GPS mandatory** - Required for school registration
+6. ✅ **GPS mandatory** - Required for college registration
 7. ✅ **Predictor options** - No duplicates, clean UI
 8. ✅ **Predictor stability** - Enhanced form handling
-9. ✅ **Login clarity** - User/Parent and School logins clearly separated
+9. ✅ **Login clarity** - User/Parent and college logins clearly separated
 
 ---
 
@@ -109,23 +109,23 @@ After deployment, verify the following:
 
 ### Critical Functionality
 - [ ] **User/Parent Login** - Test login flow works
-- [ ] **School Login** - Test school authentication
-- [ ] **School Search** - Verify schools load correctly
-- [ ] **School Details** - Check all sections display properly
+- [ ] **college Login** - Test college authentication
+- [ ] **college Search** - Verify colleges load correctly
+- [ ] **college Details** - Check all sections display properly
 - [ ] **Shortlist** - Test add/remove from shortlist
 - [ ] **Application Form** - Test form submission
 - [ ] **PDF Viewing** - Verify admin can view student PDFs
-- [ ] **School Predictor** - Test predictor with all fields
+- [ ] **college Predictor** - Test predictor with all fields
 - [ ] **GPS Location** - Verify mandatory fields work
 - [ ] **Routes Display** - Check transport routes show count
 
 ### API Endpoints Test
 Test these critical endpoints on production:
-- `GET /api/schools` - School listing
+- `GET /api/colleges` - college listing
 - `POST /api/users/shortlist` - Add to shortlist
 - `GET /api/users/pdf/view/:id` - PDF viewing
 - `POST /api/applications` - Application submission
-- `POST /api/predict` - School predictor
+- `POST /api/predict` - college predictor
 
 ### Performance Checks
 - [ ] Initial page load < 3 seconds
@@ -250,14 +250,14 @@ The build output will be in the `dist/` directory.
 ### If You Need to Make Changes Later
 All critical files are well-documented:
 - `src/api/axios.js` - API configuration
-- `src/pages/SchoolPortalPage.jsx` - PDF viewing
+- `src/pages/CollegePortalPage.jsx` - PDF viewing
 - `src/pages/StudentApplicationPage.jsx` - Application forms
 - `src/components/Header.jsx` - Login UI
 - `vite.config.js` - Build configuration
 
 ### Quick Reference: Modified Files
-1. `src/pages/SchoolDetailsPage.jsx` - UI sections removed
-2. `src/pages/SchoolPortalPage.jsx` - PDF viewing fixed
+1. `src/pages/collegeDetailsPage.jsx` - UI sections removed
+2. `src/pages/CollegePortalPage.jsx` - PDF viewing fixed
 3. `src/pages/StudentApplicationTrackingPage.jsx` - PDF viewing fixed
 4. `src/pages/StudentApplicationPage.jsx` - Form loading improved
 5. `src/pages/RegistrationPage.jsx` - GPS made mandatory

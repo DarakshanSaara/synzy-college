@@ -3,13 +3,13 @@ import apiClient from './axios';
 
 /* ----------------- Student Reviews ----------------- */
 
-// Get all accepted reviews for a school
-export const getSchoolReviews = async (schoolId) => {
+// Get all accepted reviews for a college
+export const getcollegeReviews = async (collegeId) => {
   try {
-    const response = await apiClient.get(`/reviews/${schoolId}`);
+    const response = await apiClient.get(`/reviews/${collegeId}`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching school reviews:', error);
+    console.error('Error fetching college reviews:', error);
     throw error;
   }
 };
@@ -33,7 +33,7 @@ export const submitReview = async (reviewData) => {
   // DON'T send status - let the schema default handle it
   const backendData = {
     studentId: reviewData.studentId,
-    schoolId: reviewData.schoolId,
+    collegeId: reviewData.collegeId,
     text: reviewData.comment,
     ratings: reviewData.rating,
     student: {
@@ -60,17 +60,17 @@ export const submitReview = async (reviewData) => {
   }
 };
 
-export const updateReview = async (schoolId, studentId, reviewData) => {
+export const updateReview = async (collegeId, studentId, reviewData) => {
   const backendData = {
     text: reviewData.comment, // Backend expects 'text'
     ratings: reviewData.rating, // Backend expects 'ratings'
     status: 'Pending' // ✅ Set status back to Pending for re-approval
   };
 
-  console.log('Updating review to /reviews/', schoolId, studentId, backendData);
+  console.log('Updating review to /reviews/', collegeId, studentId, backendData);
 
   try {
-    const response = await apiClient.put(`/reviews/${schoolId}/${studentId}`, backendData);
+    const response = await apiClient.put(`/reviews/${collegeId}/${studentId}`, backendData);
     return response.data;
   } catch (error) {
     console.error('Error updating review:', error);
@@ -212,25 +212,25 @@ export const rejectReview = async (reviewId) => {
   };
 };
 
-// Get school name by ID
-export const getSchoolName = async (schoolId) => {
+// Get college name by ID
+export const getcollegeName = async (collegeId) => {
   const endpoints = [
-    `/admin/schools/${schoolId}`,
-    `/schools/${schoolId}`,
-    `/api/schools/${schoolId}`
+    `/admin/colleges/${collegeId}`,
+    `/colleges/${collegeId}`,
+    `/api/colleges/${collegeId}`
   ];
 
   let lastError;
   for (const endpoint of endpoints) {
     try {
-      console.log(`🔄 Trying school endpoint: ${endpoint}`);
+      console.log(`🔄 Trying college endpoint: ${endpoint}`);
       const response = await apiClient.get(endpoint);
-      const schoolData = response.data?.data || response.data;
-      const schoolName = schoolData?.name || schoolData?.schoolName;
+      const collegeData = response.data?.data || response.data;
+      const collegeName = collegeData?.name || collegeData?.collegeName;
       
-      if (schoolName) {
-        console.log(`✅ Found school name: ${schoolName}`);
-        return schoolName;
+      if (collegeName) {
+        console.log(`✅ Found college name: ${collegeName}`);
+        return collegeName;
       }
     } catch (error) {
       console.log(`❌ Failed with endpoint: ${endpoint} - ${error.response?.status}`);
@@ -239,6 +239,6 @@ export const getSchoolName = async (schoolId) => {
   }
   
   // If all endpoints failed, return fallback
-  console.warn('⚠️ All school name endpoints failed, using fallback');
-  return `School ID: ${schoolId}`;
+  console.warn('⚠️ All college name endpoints failed, using fallback');
+  return `college ID: ${collegeId}`;
 };

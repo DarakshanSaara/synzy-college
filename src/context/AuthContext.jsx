@@ -114,9 +114,9 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem('authToken', token);
           setUser(adminUser);
           localStorage.setItem('userData', JSON.stringify(adminUser));
-          // Keep lastCreatedSchoolId for admin/school users, but remove for other account types
+          // Keep lastCreatedcollegeId for admin/college users, but remove for other account types
           if (adminUser.userType !== 'college' && !adminUser.isAdmin) {
-            try { localStorage.removeItem('lastCreatedSchoolId'); } catch (_) {}
+            try { localStorage.removeItem('lastCreatedcollegeId'); } catch (_) {}
           }
           
           toast.success('Admin login successful!');
@@ -143,25 +143,25 @@ export const AuthProvider = ({ children }) => {
         
         // For college accounts, we don't fetch the college profile here
         // because college accounts don't have permission to use admin endpoints
-        // The RegistrationPage will handle finding the school profile
-        const schoolUserData = {
+        // The RegistrationPage will handle finding the college profile
+        const collegeUserData = {
           ...basicAuthData,
           userType: 'college',
-          // authId is already in basicAuthData, which will be used to match the school
+          // authId is already in basicAuthData, which will be used to match the college
         };
         
-        setUser(schoolUserData);
-        localStorage.setItem('userData', JSON.stringify(schoolUserData));
-        toast.success('School login successful!');
+        setUser(collegeUserData);
+        localStorage.setItem('userData', JSON.stringify(collegeUserData));
+        toast.success('college login successful!');
         return;
       }
       
       if (!userId) {
         setUser(basicAuthData);
         localStorage.setItem('userData', JSON.stringify(basicAuthData));
-        // If this is not a school account, clear any last-created-school id to avoid leaking another user's school
+        // If this is not a college account, clear any last-created-college id to avoid leaking another user's college
         if (basicAuthData.userType !== 'college') {
-          try { localStorage.removeItem('lastCreatedSchoolId'); } catch (_) {}
+          try { localStorage.removeItem('lastCreatedcollegeId'); } catch (_) {}
         }
         toast.success('Login successful!');
         return;
@@ -204,9 +204,9 @@ export const AuthProvider = ({ children }) => {
 
       setUser(fullUserData);
       localStorage.setItem('userData', JSON.stringify(fullUserData));
-      // Clear lastCreatedSchoolId for non-school/non-admin users to prevent stale school visibility
+      // Clear lastCreatedcollegeId for non-college/non-admin users to prevent stale college visibility
       if (fullUserData.userType !== 'college' && !fullUserData.isAdmin) {
-        try { localStorage.removeItem('lastCreatedSchoolId'); } catch (_) {}
+        try { localStorage.removeItem('lastCreatedcollegeId'); } catch (_) {}
       }
       toast.success('Login successful!');
     } catch (error) {
@@ -232,15 +232,15 @@ export const AuthProvider = ({ children }) => {
     const keysToRemove = [
       'authToken',
       'userData',
-      'lastCreatedSchoolId',
+      'lastCreatedcollegeId',
       'comparisonList',
-      'schoolRegDraft', // Contains userType and school data
-      'lastAppliedSchoolId', // Navigation - from ApplicationStatusPage
+      'collegeRegDraft', // Contains userType and college data
+      'lastAppliedcollegeId', // Navigation - from ApplicationStatusPage
       'redirectPath', // Navigation
       'lastInterviewNotification', // Features
       'guestSearchCriteria', // Features
       'shortlist', // User data
-      'schoolName', // Dynamic school entries (base key)
+      'collegeName', // Dynamic college entries (base key)
       'adminRedirectPath', // Admin navigation
     ];
 
@@ -258,8 +258,8 @@ export const AuthProvider = ({ children }) => {
       const allKeys = Object.keys(localStorage);
       allKeys.forEach(key => {
         if (
-          key.startsWith('schoolName:') || // School name cache
-          key.startsWith('schoolInfo:') || // School info cache from ApplicationStatusPage
+          key.startsWith('collegeName:') || // college name cache
+          key.startsWith('collegeInfo:') || // college info cache from ApplicationStatusPage
           key.startsWith('adminRedirectPath') // Admin navigation
         ) {
           localStorage.removeItem(key);

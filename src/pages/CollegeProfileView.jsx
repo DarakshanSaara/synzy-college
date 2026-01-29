@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { getSchoolById } from "../api/adminService";
+import { getcollegeById } from "../api/adminService";
 import { toast } from "react-toastify";
 import {
-  getAmenitiesById,
-  getActivitiesById,
+  getAmenitiesByCollegeId,
+  getActivitiesByCollegeId,
   getInfrastructureById,
   getFeesAndScholarshipsById,
   getTechnologyAdoptionById,
@@ -15,7 +15,7 @@ import {
   getAcademicsById,
   getFacultyById
 } from "../api/adminService";
-import { getAlumniBySchool } from "../api/schoolService";
+import { getAlumniBycollege } from "../api/collegeService";
 
 const Row = ({ label, value }) => (
   <div className="grid grid-cols-3 gap-3 py-2 border-b last:border-b-0">
@@ -31,10 +31,10 @@ const Section = ({ title, children }) => (
   </div>
 );
 
-const SchoolProfileView = () => {
+const collegeProfileView = () => {
   const { user: currentUser } = useAuth();
-  const [school, setSchool] = useState(null);
-  const [resolvedSchoolId, setResolvedSchoolId] = useState("");
+  const [college, setcollege] = useState(null);
+  const [resolvedcollegeId, setResolvedcollegeId] = useState("");
   // Read-only view (edit removed)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -57,65 +57,65 @@ const SchoolProfileView = () => {
       try {
         setLoading(true);
         setError("");
-        // Resolve the school identifier.
-        // Previously we always fell back to a `lastCreatedSchoolId` stored in localStorage which
-        // could leak the last created school's profile into other users' views. For security and
-        // correctness, only use that localStorage fallback for school users or admins.
-        const lastCreatedId = (typeof localStorage !== 'undefined' && localStorage.getItem('lastCreatedSchoolId')) || '';
+        // Resolve the college identifier.
+        // Previously we always fell back to a `lastCreatedcollegeId` stored in localStorage which
+        // could leak the last created college's profile into other users' views. For security and
+        // correctness, only use that localStorage fallback for college users or admins.
+        const lastCreatedId = (typeof localStorage !== 'undefined' && localStorage.getItem('lastCreatedcollegeId')) || '';
         
         // SECURITY FIX: Clear localStorage if it doesn't belong to current user
         if (lastCreatedId && currentUser?._id) {
           try {
-            const testRes = await getSchoolById(lastCreatedId, { headers: { 'X-Silent-Request': '1' } });
-            const testSchool = testRes?.data?.data || testRes?.data;
-            if (testSchool && testSchool.authId !== currentUser._id) {
-              console.log('🧹 Clearing stale school data that belongs to different user');
-              console.log('School authId:', testSchool.authId, 'Current user ID:', currentUser._id);
-              localStorage.removeItem('lastCreatedSchoolId');
+            const testRes = await getcollegeById(lastCreatedId, { headers: { 'X-Silent-Request': '1' } });
+            const testcollege = testRes?.data?.data || testRes?.data;
+            if (testcollege && testcollege.authId !== currentUser._id) {
+              console.log('🧹 Clearing stale college data that belongs to different user');
+              console.log('college authId:', testcollege.authId, 'Current user ID:', currentUser._id);
+              localStorage.removeItem('lastCreatedcollegeId');
               // Force reload to get correct data
               window.location.reload();
               return;
             }
           } catch (e) {
-            console.log('🧹 Clearing invalid school ID from localStorage');
-            localStorage.removeItem('lastCreatedSchoolId');
+            console.log('🧹 Clearing invalid college ID from localStorage');
+            localStorage.removeItem('lastCreatedcollegeId');
           }
         }
         
-        const rawIdCandidate = currentUser?.schoolId || currentUser?._id || '';
+        const rawIdCandidate = currentUser?.collegeId || currentUser?._id || '';
 
-        // Use lastCreatedId only when the signed-in user is a school account or an admin.
+        // Use lastCreatedId only when the signed-in user is a college account or an admin.
         const shouldUseLastCreated = !!lastCreatedId && (currentUser?.userType === 'college' || currentUser?.isAdmin);
 
-        // For school/admin users prefer the lastCreatedId (it represents the school record)
-        // otherwise prefer the user's associated schoolId or user id. This avoids using
-        // the user._id (which is an account id) as a school id for school accounts.
+        // For college/admin users prefer the lastCreatedId (it represents the college record)
+        // otherwise prefer the user's associated collegeId or user id. This avoids using
+        // the user._id (which is an account id) as a college id for college accounts.
         let rawId = '';
         if (shouldUseLastCreated) {
-          rawId = lastCreatedId || currentUser?.schoolId || currentUser?._id || '';
+          rawId = lastCreatedId || currentUser?.collegeId || currentUser?._id || '';
         } else {
-          rawId = currentUser?.schoolId || currentUser?._id || '';
+          rawId = currentUser?.collegeId || currentUser?._id || '';
         }
 
         const id = (typeof rawId === 'string' ? rawId : String(rawId || '')).trim();
         
-        console.log('🔍 SchoolProfileView - Loading profile for ID:', id);
+        console.log('🔍 collegeProfileView - Loading profile for ID:', id);
         console.log('🔍 currentUser:', currentUser);
         
         if (!id) {
-          setError("No school identifier found for current user.");
+          setError("No college identifier found for current user.");
           setLoading(false);
           return;
         }
         
         let res, s = {};
         try {
-          res = await getSchoolById(id, { headers: { 'X-Silent-Request': '1' } });
+          res = await getcollegeById(id, { headers: { 'X-Silent-Request': '1' } });
           s = res?.data?.data || res?.data || {};
         } catch (apiError) {
-          // If school doesn't exist yet (404), treat as new school with empty data
+          // If college doesn't exist yet (404), treat as new college with empty data
           if (apiError?.response?.status === 404 || apiError?.response?.data?.message?.includes('not found')) {
-            console.log('School not found in database, treating as new school');
+            console.log('college not found in database, treating as new college');
             s = { _id: id, authId: currentUser?._id };
           } else {
             // For other errors, re-throw to be handled by outer catch
@@ -123,9 +123,9 @@ const SchoolProfileView = () => {
           }
         }
 
-        // If the fetched school exists but contains no meaningful data (new school),
+        // If the fetched college exists but contains no meaningful data (new college),
         // treat it as "no profile" so the UI shows blank placeholders rather than
-        // pre-filled values from a previously created school.
+        // pre-filled values from a previously created college.
         const hasMeaningfulData = !!(
           (s.name && s.name.toString().trim()) ||
           (s.email && s.email.toString().trim()) ||
@@ -140,9 +140,9 @@ const SchoolProfileView = () => {
 
         if (!hasMeaningfulData) {
           // No meaningful profile data yet — show blank state instead of stale data
-          console.log('SchoolProfileView - fetched school is empty, rendering blank profile');
-          // Create a blank school object with the resolved ID for new schools
-          setSchool({
+          console.log('collegeProfileView - fetched college is empty, rendering blank profile');
+          // Create a blank college object with the resolved ID for new colleges
+          setcollege({
             _id: s?._id || id,
             authId: s?.authId || currentUser?._id,
             name: '',
@@ -159,10 +159,10 @@ const SchoolProfileView = () => {
             status: 'Draft'
           });
         } else {
-          setSchool(s);
+          setcollege(s);
         }
-        // Remember the actual school id we should use for updates
-        setResolvedSchoolId(s?._id || id);
+        // Remember the actual college id we should use for updates
+        setResolvedcollegeId(s?._id || id);
 
         const profileId = (s?._id || id || '').toString().trim();
         if (!profileId) {
@@ -171,8 +171,8 @@ const SchoolProfileView = () => {
         }
         try {
           const [am, ac, inf, fe, te, sa, ine, od, tl, acd, fc, al] = await Promise.all([
-            getAmenitiesById(profileId).catch(() => null),
-            getActivitiesById(profileId).catch(() => null),
+            getAmenitiesByCollegeId(profileId).catch(() => null),
+            getActivitiesByCollegeId(profileId).catch(() => null),
             getInfrastructureById(profileId).catch(() => null),
             getFeesAndScholarshipsById(profileId).catch(() => null),
             getTechnologyAdoptionById(profileId).catch(() => null),
@@ -182,7 +182,7 @@ const SchoolProfileView = () => {
             getAdmissionTimelineById(profileId).catch(() => null),
             getAcademicsById(profileId).catch(() => null),
             getFacultyById(profileId).catch(() => null),
-            getAlumniBySchool(profileId).catch(() => null)
+            getAlumniBycollege(profileId).catch(() => null)
           ]);
           setAmenities(am?.data?.data || am?.data || null);
           setActivities(ac?.data?.data || ac?.data || null);
@@ -200,7 +200,7 @@ const SchoolProfileView = () => {
           // Non-fatal: show what we have
         }
       } catch (e) {
-        setError(e?.response?.data?.message || "Failed to load school profile");
+        setError(e?.response?.data?.message || "Failed to load college profile");
       } finally {
         setLoading(false);
       }
@@ -209,7 +209,7 @@ const SchoolProfileView = () => {
   }, [currentUser]);
 
   if (loading) {
-    return <div className="p-8 text-center">Loading school profile...</div>;
+    return <div className="p-8 text-center">Loading college profile...</div>;
   }
 
   if (error) {
@@ -217,34 +217,34 @@ const SchoolProfileView = () => {
   }
 
   // Safety check - should not happen with our new logic, but just in case
-  if (!school) {
-    return <div className="p-8 text-center text-gray-600">Loading school profile...</div>;
+  if (!college) {
+    return <div className="p-8 text-center text-gray-600">Loading college profile...</div>;
   }
 
-  const languageMedium = Array.isArray(school.languageMedium)
-    ? school.languageMedium.join(", ")
-    : school.languageMedium;
-  const shifts = Array.isArray(school.shifts) ? school.shifts.join(", ") : school.shifts;
+  const languageMedium = Array.isArray(college.languageMedium)
+    ? college.languageMedium.join(", ")
+    : college.languageMedium;
+  const shifts = Array.isArray(college.shifts) ? college.shifts.join(", ") : college.shifts;
   const teacherStudentRatio = 
-    school.TeacherToStudentRatio 
-    || school.teacherStudentRatio 
-    || school.teacherToStudentRatio 
-    || (school.studentsPerTeacher != null && school.studentsPerTeacher !== '' ? `1:${school.studentsPerTeacher}` : '')
+    college.TeacherToStudentRatio 
+    || college.teacherStudentRatio 
+    || college.teacherToStudentRatio 
+    || (college.studentsPerTeacher != null && college.studentsPerTeacher !== '' ? `1:${college.studentsPerTeacher}` : '')
     || (academics && (academics.teacherStudentRatio || academics.TeacherToStudentRatio))
     || '';
 
   // Infrastructure fallbacks (ensure section renders even if subresource missing)
   const infraLabs = Array.isArray(infrastructure?.labs)
     ? infrastructure.labs
-    : (Array.isArray(school?.labs) ? school.labs : []);
+    : (Array.isArray(college?.labs) ? college.labs : []);
   const infraSports = Array.isArray(infrastructure?.sportsGrounds)
     ? infrastructure.sportsGrounds
-    : (Array.isArray(school?.sportsGrounds) ? school.sportsGrounds : []);
+    : (Array.isArray(college?.sportsGrounds) ? college.sportsGrounds : []);
   const infraLibraryBooks = (infrastructure && (infrastructure.libraryBooks ?? infrastructure.books))
-    ?? (school && (school.libraryBooks ?? school.books))
+    ?? (college && (college.libraryBooks ?? college.books))
     ?? '';
   const infraSmartClassrooms = (infrastructure && (infrastructure.smartClassrooms ?? infrastructure.smartRooms))
-    ?? (school && (school.smartClassrooms ?? school.smartRooms))
+    ?? (college && (college.smartClassrooms ?? college.smartRooms))
     ?? '';
 
   // Read-only; no edit/save handlers
@@ -254,39 +254,39 @@ const SchoolProfileView = () => {
       <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-6 ring-1 ring-indigo-100">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">{school.name || 'School Profile'}</h2>
+            <h2 className="text-2xl font-bold text-gray-800">{college.name || 'college Profile'}</h2>
             <p className="text-sm text-gray-600">Comprehensive profile overview</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs px-2 py-1 rounded-full bg-white ring-1 ring-gray-200 text-gray-700">Status: {(school.status || "—").toString()}</span>
-            {school.city && <span className="text-xs px-2 py-1 rounded-full bg-white ring-1 ring-gray-200 text-gray-700">{school.city}</span>}
-            {school.board && <span className="text-xs px-2 py-1 rounded-full bg-white ring-1 ring-gray-200 text-gray-700">{school.board}</span>}
+            <span className="text-xs px-2 py-1 rounded-full bg-white ring-1 ring-gray-200 text-gray-700">Status: {(college.status || "—").toString()}</span>
+            {college.city && <span className="text-xs px-2 py-1 rounded-full bg-white ring-1 ring-gray-200 text-gray-700">{college.city}</span>}
+            {college.board && <span className="text-xs px-2 py-1 rounded-full bg-white ring-1 ring-gray-200 text-gray-700">{college.board}</span>}
           </div>
         </div>
       </div>
 
       <Section title="Basic Information">
         <div className="divide-y">
-          <Row label="School Name" value={school.name} />
-          <Row label="Email" value={school.email} />
-          <Row label="Phone Number" value={school.mobileNo || school.phoneNo} />
-          <Row label="Website" value={school.website} />
-          <Row label="Address" value={school.address} />
-          <Row label="Area" value={school.area} />
-          <Row label="Description" value={school.description} />
-          <Row label="Rank" value={school.rank} />
-          <Row label="Specialist" value={(school.specialist || []).join(', ')} />
-          <Row label="Tags" value={(school.tags || []).join(', ')} />
+          <Row label="college Name" value={college.name} />
+          <Row label="Email" value={college.email} />
+          <Row label="Phone Number" value={college.mobileNo || college.phoneNo} />
+          <Row label="Website" value={college.website} />
+          <Row label="Address" value={college.address} />
+          <Row label="Area" value={college.area} />
+          <Row label="Description" value={college.description} />
+          <Row label="Rank" value={college.rank} />
+          <Row label="Specialist" value={(college.specialist || []).join(', ')} />
+          <Row label="Tags" value={(college.tags || []).join(', ')} />
         </div>
       </Section>
 
       <Section title="Academics">
         <div className="divide-y">
-          <Row label="Board" value={school.board} />
-          <Row label="Upto Class" value={school.upto} />
-          <Row label="Fee Range" value={school.feeRange} />
-          <Row label="Gender Type" value={school.genderType} />
-          <Row label="School Mode" value={school.schoolMode} />
+          <Row label="Board" value={college.board} />
+          <Row label="Upto Class" value={college.upto} />
+          <Row label="Fee Range" value={college.feeRange} />
+          <Row label="Gender Type" value={college.genderType} />
+          <Row label="college Mode" value={college.collegeMode} />
           <Row label="Shifts" value={shifts} />
           <Row label="Language Medium" value={languageMedium} />
           <Row label="Teacher:Student Ratio" value={teacherStudentRatio} />
@@ -294,7 +294,7 @@ const SchoolProfileView = () => {
             <>
               <Row label="Average Class 10 Result" value={academics.averageClass10Result} />
               <Row label="Average Class 12 Result" value={academics.averageClass12Result} />
-              <Row label="Average School Marks" value={academics.averageSchoolMarks} />
+              <Row label="Average college Marks" value={academics.averagecollegeMarks} />
               <Row label="Special Exams Training" value={(academics.specialExamsTraining || []).join(', ')} />
               <Row label="Extra Curricular Activities" value={(academics.extraCurricularActivities || []).join(', ')} />
             </>
@@ -461,7 +461,7 @@ const SchoolProfileView = () => {
               <div className="space-y-2">
                 {intl.exchangePrograms.map((p, idx) => (
                   <div key={idx} className="text-sm">
-                    <span className="font-medium">{p.partnerSchool || p.school}</span>
+                    <span className="font-medium">{p.partnercollege || p.college}</span>
                     {(p.programType || p.type) && <span className="text-gray-600"> - {p.programType || p.type}</span>}
                     {p.duration && <span className="text-gray-500"> ({p.duration})</span>}
                     {p.country && <span className="text-gray-500"> • {p.country}</span>}
@@ -612,18 +612,18 @@ const SchoolProfileView = () => {
 
       <Section title="Location">
         <div className="divide-y">
-          <Row label="City" value={school.city} />
-          <Row label="State" value={school.state} />
-          <Row label="Pin Code" value={school.pinCode || school.pincode} />
-          <Row label="Transport Available" value={school.transportAvailable} />
-          <Row label="Latitude" value={school.latitude} />
-          <Row label="Longitude" value={school.longitude} />
+          <Row label="City" value={college.city} />
+          <Row label="State" value={college.state} />
+          <Row label="Pin Code" value={college.pinCode || college.pincode} />
+          <Row label="Transport Available" value={college.transportAvailable} />
+          <Row label="Latitude" value={college.latitude} />
+          <Row label="Longitude" value={college.longitude} />
         </div>
       </Section>
     </div>
   );
 };
 
-export default SchoolProfileView;
+export default collegeProfileView;
 
 

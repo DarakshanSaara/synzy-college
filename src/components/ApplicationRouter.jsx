@@ -6,15 +6,15 @@ import { Loader2 } from 'lucide-react';
 
 const ApplicationRouter = () => {
   const navigate = useNavigate();
-  const { schoolId } = useParams();
+  const { collegeId } = useParams();
   const { user: currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (currentUser?._id && schoolId) {
+    if (currentUser?._id && collegeId) {
       determineFlow();
     }
-  }, [currentUser, schoolId]);
+  }, [currentUser, collegeId]);
 
   const determineFlow = async () => {
     try {
@@ -22,15 +22,15 @@ const ApplicationRouter = () => {
       
       if (existingApplication) {
         // Application exists - go to flow handler
-        navigate(`/application-flow/${schoolId}`);
+        navigate(`/application-flow/${collegeId}`);
       } else {
         // No application - go directly to form
-        navigate(`/student-application?schoolId=${schoolId}`);
+        navigate(`/student-application?collegeId=${collegeId}`);
       }
     } catch (error) {
       console.error('Error determining flow:', error);
       // Default to form if there's an error
-      navigate(`/student-application?schoolId=${schoolId}`);
+      navigate(`/student-application?collegeId=${collegeId}`);
     } finally {
       setLoading(false);
     }

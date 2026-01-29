@@ -37,7 +37,7 @@ const LoginPage = () => {
   });
 
   useEffect(() => {
-    const savedCreds = localStorage.getItem("school-finder-rememberMe");
+    const savedCreds = localStorage.getItem("college-finder-rememberMe");
     if (savedCreds) {
       const { email, password } = JSON.parse(savedCreds);
       setValue("email", email);
@@ -60,15 +60,15 @@ const onSubmit = async (data) => {
     const user = await login(data); 
 
     if (rememberMe) {
-      localStorage.setItem("school-finder-rememberMe", JSON.stringify(data));
+      localStorage.setItem("college-finder-rememberMe", JSON.stringify(data));
     } else {
-      localStorage.removeItem("school-finder-rememberMe");
+      localStorage.removeItem("college-finder-rememberMe");
     }
 
     // 2. ✅ DYNAMIC REDIRECTION
-    // Check if the logged-in user is a school or a student
+    // Check if the logged-in user is a college or a student
     if (user?.userType === 'college') {
-      navigate("/school-portal/register"); // Or wherever your school home is
+      navigate("/college-portal/register"); // Or wherever your college home is
     } else {
       navigate("/dashboard"); // Standard student dashboard
     }
@@ -113,9 +113,9 @@ const onSubmit = async (data) => {
         toast.success('Logged in successfully!');
 
         // REDIRECTION LOGIC:
-        // If it's a school user, send to portal. Otherwise, send to dashboard.
+        // If it's a college user, send to portal. Otherwise, send to dashboard.
         if (auth.userType === 'college') {
-          navigate('/school-portal/register');
+          navigate('/college-portal/register');
         } else {
           navigate('/dashboard');
         }

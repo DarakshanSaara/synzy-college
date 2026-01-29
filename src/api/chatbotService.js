@@ -10,7 +10,7 @@ export const getChatbotQuestionsByCategory = async (category) => {
 	return data;
 };
 
-export const chatbotSearchSchoolsByName = async (name) => {
+export const chatbotSearchcollegesByName = async (name) => {
 	const { data } = await apiClient.get('/chatbot/search', { params: { name } });
 	return data;
 };

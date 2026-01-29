@@ -125,8 +125,8 @@ const NotificationIcon = () => {
     return date.toLocaleDateString();
   };
 
-  // Don't show notification icon for school users
-  if (!currentUser || currentUser.userType === 'school') {
+  // Don't show notification icon for college users
+  if (!currentUser || currentUser.userType === 'college') {
     return null;
   }
 

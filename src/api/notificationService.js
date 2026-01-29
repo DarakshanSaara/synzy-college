@@ -19,7 +19,7 @@ export const getStudentNotifications = async (studId) => {
     // Generate notifications based on form status changes
     const notifications = forms.map(form => {
       const status = form.status || 'Pending';
-      const schoolName = form.schoolId?.name || form.schoolName || 'Unknown School';
+      const collegeName = form.collegeId?.name || form.collegeName || 'Unknown college';
       const createdAt = form.createdAt || form.updatedAt || new Date();
       
       let message = '';
@@ -27,23 +27,23 @@ export const getStudentNotifications = async (studId) => {
       
       switch (status.toLowerCase()) {
         case 'reviewed':
-          message = `Your application to ${schoolName} has been reviewed`;
+          message = `Your application to ${collegeName} has been reviewed`;
           type = 'info';
           break;
         case 'interview':
-          message = `Interview scheduled for ${schoolName}`;
+          message = `Interview scheduled for ${collegeName}`;
           type = 'warning';
           break;
         case 'accepted':
-          message = `Congratulations! You've been accepted to ${schoolName}`;
+          message = `Congratulations! You've been accepted to ${collegeName}`;
           type = 'success';
           break;
         case 'rejected':
-          message = `Application to ${schoolName} was not successful`;
+          message = `Application to ${collegeName} was not successful`;
           type = 'error';
           break;
         default:
-          message = `Application to ${schoolName} is ${status}`;
+          message = `Application to ${collegeName} is ${status}`;
           type = 'info';
       }
       
@@ -51,12 +51,12 @@ export const getStudentNotifications = async (studId) => {
         id: form._id || form.id,
         message,
         type,
-        schoolName,
+        collegeName,
         status,
         createdAt: new Date(createdAt),
         isRead: false, // For now, all notifications are unread
         formId: form._id,
-        schoolId: form.schoolId?._id || form.schoolId
+        collegeId: form.collegeId?._id || form.collegeId
       };
     });
     

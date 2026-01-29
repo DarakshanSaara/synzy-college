@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, X, MapPin, DollarSign, Award, Users, Building, BookOpen, Calendar, CheckCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
-import SchoolCard from '../components/SchoolCard';
-import { searchSchools as searchSchoolsApi } from '../api/searchService';
+import collegeCard from '../components/collegeCard';
+import { searchcolleges as searchcollegesApi } from '../api/searchService';
 import { useNavigate } from 'react-router-dom';
 
 const AdvancedSearchPage = () => {
@@ -12,7 +12,7 @@ const AdvancedSearchPage = () => {
     feeRange: [],
     board: [],
     facilities: [],
-    schoolType: [],
+    collegeType: [],
     ownership: [],
     coEdStatus: [],
     language: [],
@@ -22,7 +22,7 @@ const AdvancedSearchPage = () => {
     location: []
   });
   const [filterOptions, setFilterOptions] = useState({});
-  const [schools, setSchools] = useState([]);
+  const [colleges, setcolleges] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [pagination, setPagination] = useState({});
@@ -37,7 +37,7 @@ const AdvancedSearchPage = () => {
         '1 Lakh - 2 Lakh','2 Lakh - 3 Lakh','3 Lakh - 4 Lakh','4 Lakh - 5 Lakh','More than 5 Lakh'
       ],
       boards: ['CBSE','ICSE','CISCE','NIOS','SSC','IGCSE','IB','KVS','JNV','DBSE','MSBSHSE','UPMSP','KSEEB','WBBSE','GSEB','RBSE','BSEB','PSEB','BSE','SEBA','MPBSE','STATE','OTHER'],
-      schoolTypes: ['convent','private','government'],
+      collegeTypes: ['convent','private','government'],
       ownerships: ['Private','Government','Trust'],
       coEdStatuses: ['boy','girl','co-ed'],
       languages: ['English','Hindi','Marathi','Kannada','Tamil','Telugu','Gujarati','Bengali'],
@@ -46,49 +46,49 @@ const AdvancedSearchPage = () => {
       admissionProcesses: ['Entrance Test','Interview','Merit','Lottery'],
       cities: ['Mumbai','Pune','Nagpur','Bengaluru','Chennai','Delhi','Hyderabad','Ahmedabad','Kolkata','Jaipur']
     });
-    searchSchools();
+    searchcolleges();
   }, [currentPage]);
 
   // Auto search on filter/search changes (debounced)
   useEffect(() => {
-    const t = setTimeout(() => searchSchools(), 400);
+    const t = setTimeout(() => searchcolleges(), 400);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, filters]);
 
-  const searchSchools = async () => {
+  const searchcolleges = async () => {
     setLoading(true);
     try {
       const boards = filters.board;
       const cities = filters.location;
       const states = [];
-      const schoolMode = filters.schoolType; // already in backend format
+      const collegeMode = filters.collegeType; // already in backend format
       const genderType = filters.coEdStatus; // boy | girl | co-ed
       const feeRange = filters.feeRange;
 
-      const resp = await searchSchoolsApi({
+      const resp = await searchcollegesApi({
         search: searchQuery,
         boards,
         cities,
         states,
-        schoolMode,
+        collegeMode,
         genderType,
         feeRange,
         page: currentPage,
         limit: 12
       });
       const { data, pagination: pg } = resp || {};
-      setSchools(Array.isArray(data) ? data : []);
+      setcolleges(Array.isArray(data) ? data : []);
       setPagination(pg || {});
     } catch (error) {
       console.error('Search error:', error);
       // Handle 404 as "no results found" instead of error
       if (error.response?.status === 404) {
-        setSchools([]);
+        setcolleges([]);
         setPagination({});
-        toast.info('No schools found matching your criteria');
+        toast.info('No colleges found matching your criteria');
       } else {
-        toast.error('Error searching schools');
+        toast.error('Error searching colleges');
       }
     } finally {
       setLoading(false);
@@ -110,7 +110,7 @@ const AdvancedSearchPage = () => {
       feeRange: [],
       board: [],
       facilities: [],
-      schoolType: [],
+      collegeType: [],
       ownership: [],
       coEdStatus: [],
       language: [],
@@ -150,8 +150,8 @@ const AdvancedSearchPage = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Find Your Perfect School</h1>
-          <p className="text-gray-600">Search and filter schools based on your preferences</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Find Your Perfect college</h1>
+          <p className="text-gray-600">Search and filter colleges based on your preferences</p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
@@ -164,15 +164,15 @@ const AdvancedSearchPage = () => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                   <input
                     type="text"
-                    placeholder="Search schools, cities..."
+                    placeholder="Search colleges, cities..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && searchSchools()}
+                    onKeyPress={(e) => e.key === 'Enter' && searchcolleges()}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
                 <button
-                  onClick={searchSchools}
+                  onClick={searchcolleges}
                   className="w-full mt-2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Search
@@ -210,10 +210,10 @@ const AdvancedSearchPage = () => {
                 />
 
                 <FilterSection
-                  title="School Type"
+                  title="college Type"
                   icon={<Building size={16} className="text-blue-600" />}
-                  options={filterOptions.schoolTypes}
-                  filterType="schoolType"
+                  options={filterOptions.collegeTypes}
+                  filterType="collegeType"
                 />
 
                 <FilterSection
@@ -282,7 +282,7 @@ const AdvancedSearchPage = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-800">
-                    {(pagination.total || schools.length) || 0} Schools Found
+                    {(pagination.total || colleges.length) || 0} colleges Found
                   </h2>
                   <p className="text-gray-600">
                     {filters.feeRange.length > 0 && `Fee Range: ${filters.feeRange.join(', ')}`}
@@ -308,32 +308,32 @@ const AdvancedSearchPage = () => {
               </div>
             )}
 
-            {/* Schools Grid */}
-            {!loading && schools.length > 0 && (
+            {/* colleges Grid */}
+            {!loading && colleges.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {schools.map((school) => (
-                  <SchoolCard
-                    key={school._id || school.id || school.schoolId}
-                    school={school}
-                    onCardClick={() => navigate(`/school/${school._id || school.id || school.schoolId}`)}
+                {colleges.map((college) => (
+                  <collegeCard
+                    key={college._id || college.id || college.collegeId}
+                    college={college}
+                    onCardClick={() => navigate(`/college/${college._id || college.id || college.collegeId}`)}
                     onCompareToggle={() => {}}
                     isCompared={false}
                     currentUser={null}
                     onShortlistToggle={() => {}}
                     isShortlisted={false}
-                    onApply={() => navigate(`/apply/${school._id || school.id || school.schoolId}`)}
+                    onApply={() => navigate(`/apply/${college._id || college.id || college.collegeId}`)}
                   />
                 ))}
               </div>
             )}
 
             {/* No Results */}
-            {!loading && schools.length === 0 && (
+            {!loading && colleges.length === 0 && (
               <div className="text-center py-12">
                 <div className="text-gray-400 mb-4">
                   <Search size={64} className="mx-auto" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">No schools found</h3>
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">No colleges found</h3>
                 <p className="text-gray-500">Try adjusting your search criteria or filters</p>
               </div>
             )}

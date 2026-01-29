@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, User, MapPin, Building, Navigation, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { predictSchools } from '../api/predictorService';
-import SchoolCard from '../components/SchoolCard';
+import { predictcolleges } from '../api/predictorService';
+import collegeCard from '../components/collegeCard';
 import { toast } from 'react-toastify';
 
-const schoolTypes = [
+const collegeTypes = [
   'Government',
   'Private',
   'Convent'
@@ -14,11 +14,11 @@ const schoolTypes = [
 const shiftOptions = [
   'Morning',
   'Afternoon',
-  'Night School'
+  'Night college'
 ];
 
 const standardOptions = [
-  'Playschool',
+  'Playcollege',
   'Pre-Primary',
   'Primary',
   'Secondary'
@@ -65,7 +65,7 @@ const interestsOptions = [
 const PredictorPage = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    schoolType: '',
+    collegeType: '',
     preferredShifts: '',
     preferredStandard: '',
     gender: '',
@@ -180,7 +180,7 @@ const PredictorPage = () => {
 };
 
 
-  const handleGetSchools = async (e) => {
+  const handleGetcolleges = async (e) => {
     // Prevent any default form behavior
     if (e) {
       e.preventDefault();
@@ -198,15 +198,15 @@ const PredictorPage = () => {
     try {
       // Map frontend field names to backend field names
       const payload = {
-        schoolMode: formData.schoolType === 'Convent' ? 'convent' :
-                   formData.schoolType === 'Private' ? 'private' :
-                   formData.schoolType === 'Government' ? 'government' : formData.schoolType,
+        collegeMode: formData.collegeType === 'Convent' ? 'convent' :
+                   formData.collegeType === 'Private' ? 'private' :
+                   formData.collegeType === 'Government' ? 'government' : formData.collegeType,
         genderType: formData.gender === 'Male' ? 'boy' :
                    formData.gender === 'Female' ? 'girl' :
                    formData.gender === 'Co-educational' ? 'co-ed' : formData.gender,
         shifts: formData.preferredShifts === 'Morning' ? 'morning' :
                 formData.preferredShifts === 'Afternoon' ? 'afternoon' :
-                formData.preferredShifts === 'Night School' ? 'night school' : formData.preferredShifts,
+                formData.preferredShifts === 'Night college' ? 'night college' : formData.preferredShifts,
         standard: formData.preferredStandard ? formData.preferredStandard.toLowerCase() : undefined,
         state: formData.state,
         city: formData.city,
@@ -214,18 +214,18 @@ const PredictorPage = () => {
         activities: formData.interests ? [formData.interests] : []
       };
 
-      console.log('🔍 School Predictor - Searching with payload:', payload);
-      const resp = await predictSchools(payload);
+      console.log('🔍 college Predictor - Searching with payload:', payload);
+      const resp = await predictcolleges(payload);
       const list = Array.isArray(resp?.data) ? resp.data : Array.isArray(resp) ? resp : [];
-      console.log('✅ School Predictor - Found', list.length, 'schools');
+      console.log('✅ college Predictor - Found', list.length, 'colleges');
       setSearchResults(list);
       
       if (list.length === 0) {
-        toast.info('No schools found matching your criteria. Try adjusting your preferences.');
+        toast.info('No colleges found matching your criteria. Try adjusting your preferences.');
       }
     } catch (error) {
       console.error('❌ Prediction error:', error);
-      toast.error('Failed to fetch school predictions. Please try again.');
+      toast.error('Failed to fetch college predictions. Please try again.');
       setSearchResults([]);
     } finally {
       setIsLoading(false);
@@ -234,7 +234,7 @@ const PredictorPage = () => {
 
   const clearAll = () => {
     setFormData({
-      schoolType: '',
+      collegeType: '',
       preferredShifts: '',
       preferredStandard: '',
       gender: '',
@@ -250,7 +250,7 @@ const PredictorPage = () => {
 
   const DropdownField = ({ label, field, icon, required = false }) => {
     const options = 
-      field === 'schoolType' ? schoolTypes :
+      field === 'collegeType' ? collegeTypes :
       field === 'preferredShifts' ? shiftOptions :
       field === 'preferredStandard' ? standardOptions :
       field === 'gender' ? genderOptions :
@@ -260,7 +260,7 @@ const PredictorPage = () => {
       field === 'interests' ? interestsOptions : [];
     
     const placeholder = 
-      field === 'schoolType' ? 'Select School Type' :
+      field === 'collegeType' ? 'Select college Type' :
       field === 'preferredShifts' ? 'Select Shift' :
       field === 'preferredStandard' ? 'Select Standard' :
       field === 'gender' ? 'Select' :
@@ -316,21 +316,21 @@ const PredictorPage = () => {
         <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
           <div className="text-center mb-6 sm:mb-8">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
-              Find Your Perfect School
+              Find Your Perfect college
             </h1>
             <p className="text-sm sm:text-base text-gray-600">
-              Fill in your preferences to discover schools that match your needs.
+              Fill in your preferences to discover colleges that match your needs.
             </p>
           </div>
 
-          <form onSubmit={handleGetSchools}>
+          <form onSubmit={handleGetcolleges}>
             {/* Two Column Layout */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-6">
               {/* Left Column */}
               <div className="space-y-6">
                 <DropdownField
-                  label="Select School Type"
-                  field="schoolType"
+                  label="Select college Type"
+                  field="collegeType"
                 />
                 
                 <DropdownField
@@ -399,7 +399,7 @@ const PredictorPage = () => {
                     <Navigation className="inline-block w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                     <span className="block sm:inline">Fetch from Google Location</span>
                     <br className="hidden sm:block" />
-                    <span className="text-xs sm:text-sm opacity-90 block sm:inline">(to see schools near you)</span>
+                    <span className="text-xs sm:text-sm opacity-90 block sm:inline">(to see colleges near you)</span>
                   </>
                 )}
               </button>
@@ -411,7 +411,7 @@ const PredictorPage = () => {
                 disabled={isLoading}
                 className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm sm:text-base disabled:opacity-50"
               >
-                {isLoading ? 'Finding Schools...' : 'Submit'}
+                {isLoading ? 'Finding colleges...' : 'Submit'}
               </button>
             </div>
           </form>
@@ -433,7 +433,7 @@ const PredictorPage = () => {
         {hasSearched && (
           <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 lg:p-8 mt-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Predicted Schools ({searchResults.length} schools found)
+              Predicted colleges ({searchResults.length} colleges found)
             </h2>
             
             {isLoading ? (
@@ -443,23 +443,23 @@ const PredictorPage = () => {
               </div>
             ) : searchResults.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {searchResults.map((school, index) => (
-                  <SchoolCard
-                    key={school._id || school.id || school.schoolId || `school-${index}`}
-                    school={school}
-                    onCardClick={() => navigate(`/school/${school._id || school.id || school.schoolId}`)}
+                {searchResults.map((college, index) => (
+                  <collegeCard
+                    key={college._id || college.id || college.collegeId || `college-${index}`}
+                    college={college}
+                    onCardClick={() => navigate(`/college/${college._id || college.id || college.collegeId}`)}
                     onCompareToggle={() => {}}
                     isCompared={false}
                     currentUser={null}
                     onShortlistToggle={() => {}}
                     isShortlisted={false}
-                    onApply={() => navigate(`/apply/${school._id || school.id || school.schoolId}`)}
+                    onApply={() => navigate(`/apply/${college._id || college.id || college.collegeId}`)}
                   />
                 ))}
               </div>
             ) : (
               <div className="text-center py-8">
-                <div className="text-gray-500 mb-4">No schools found matching your preferences.</div>
+                <div className="text-gray-500 mb-4">No colleges found matching your preferences.</div>
                 <button
                   onClick={clearAll}
                   className="px-4 py-2 text-blue-600 hover:text-blue-700 font-medium"

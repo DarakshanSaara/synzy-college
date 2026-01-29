@@ -13,7 +13,7 @@ import {
   RefreshCw,
   AlertCircle,
   User,
-  School,
+  
   Calendar as CalendarIcon,
   X
 } from 'lucide-react';
@@ -41,7 +41,7 @@ const StatusBadge = ({ status }) => {
 };
 
 const ApplicationCard = ({ application, onViewDetails }) => {
-  debugger;
+  
   const formatDate = (dateString) => {
     if (!dateString) return 'Not available';
     
@@ -62,14 +62,14 @@ const ApplicationCard = ({ application, onViewDetails }) => {
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-blue-100 rounded-lg">
-            <School className="w-5 h-5 text-blue-600" />
+            <college className="w-5 h-5 text-blue-600" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              {application.schoolId?.name || application.schoolName || 'Unknown School'}
+              {application.collegeId?.name || application.collegeName || 'Unknown college'}
             </h3>
             <p className="text-sm text-gray-600">
-              School Application
+              college Application
             </p>
           </div>
         </div>
@@ -120,11 +120,11 @@ const ApplicationCard = ({ application, onViewDetails }) => {
                 
                 // Display tracking information
                 const trackingData = result.data || result;
-                const schoolName = trackingData.schoolId?.name || 'Unknown School';
+                const collegeName = trackingData.collegeId?.name || 'Unknown college';
                 const currentStatus = trackingData.status || 'Unknown';
                 const lastUpdated = trackingData.updatedAt || trackingData.createdAt;
                 
-                toast.success(`Status: ${currentStatus} at ${schoolName}`, {
+                toast.success(`Status: ${currentStatus} at ${collegeName}`, {
                   autoClose: 5000,
                   hideProgressBar: false,
                 });
@@ -132,7 +132,7 @@ const ApplicationCard = ({ application, onViewDetails }) => {
                 // Log detailed tracking info for debugging
                 console.log('📋 Detailed tracking info:', {
                   formId: trackingData._id,
-                  school: schoolName,
+                  college: collegeName,
                   status: currentStatus,
                   lastUpdated: lastUpdated,
                   studentPdf: trackingData.studId?.pdfFile ? 'Available' : 'Not available'
@@ -415,7 +415,7 @@ else if (typeof application?._id === 'string') {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">My Applications</h1>
-              <p className="text-gray-600">Track the status of your school applications</p>
+              <p className="text-gray-600">Track the status of your college applications</p>
             </div>
             <button
               onClick={handleRefresh}
@@ -466,11 +466,11 @@ else if (typeof application?._id === 'string') {
               }
             </p>
             <a
-              href="/schools"
+              href="/colleges"
               className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              <School className="w-4 h-4 mr-2" />
-              Browse Schools
+              <college className="w-4 h-4 mr-2" />
+              Browse colleges
             </a>
           </div>
         ) : (
@@ -512,7 +512,7 @@ else if (typeof application?._id === 'string') {
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">Interview Details</h2>
                   <p className="text-sm text-gray-600">
-                    {selectedInterviewApplication?.schoolId?.name || selectedInterviewApplication?.schoolName || 'School'} - Interview Scheduled
+                    {selectedInterviewApplication?.collegeId?.name || selectedInterviewApplication?.collegeName || 'college'} - Interview Scheduled
                   </p>
                 </div>
               </div>
@@ -529,7 +529,7 @@ else if (typeof application?._id === 'string') {
               <div className="bg-purple-50 rounded-lg p-4 mb-4">
                 <h3 className="font-medium text-purple-900 mb-2">Interview Information:</h3>
                 <div className="text-sm text-purple-800 space-y-1">
-                  <p><strong>School:</strong> {selectedInterviewApplication?.schoolId?.name || selectedInterviewApplication?.schoolName || 'N/A'}</p>
+                  <p><strong>college:</strong> {selectedInterviewApplication?.collegeId?.name || selectedInterviewApplication?.collegeName || 'N/A'}</p>
                   <p><strong>Application ID:</strong> {selectedInterviewApplication?.formId || selectedInterviewApplication?._id || 'N/A'}</p>
                   <p><strong>Status:</strong> Interview Scheduled</p>
                 </div>

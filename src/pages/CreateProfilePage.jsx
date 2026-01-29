@@ -10,11 +10,11 @@ const CreateProfilePage = () => {
     const { user, updateUserContext } = useAuth();
     const navigate = useNavigate();
 
-    // Block school users from accessing student profile creation
+    // Block college users from accessing student profile creation
     useEffect(() => {
-        if (user?.userType === 'school') {
-            toast.info('School accounts do not need a student profile.');
-            navigate('/school-portal');
+        if (user?.userType === 'college') {
+            toast.info('college accounts do not need a student profile.');
+            navigate('/college-portal');
         }
     }, [user?.userType, navigate]);
 
@@ -48,7 +48,7 @@ const CreateProfilePage = () => {
                     boards: formData.boards,
                     preferredStandard: formData.preferredStandard,
                     interests: formData.interests,
-                    schoolType: formData.schoolType,
+                    collegeType: formData.collegeType,
                     shift: formData.shift
                 }
             };
@@ -83,7 +83,7 @@ const CreateProfilePage = () => {
                     boards: formData.boards || 'CBSE', // Default to CBSE if not provided
                     preferredStandard: formData.preferredStandard || 'primary', // Default to primary
                     interests: formData.interests || 'Focusing on Academics', // Default interest
-                    schoolType: formData.schoolType || 'private', // Default to private
+                    collegeType: formData.collegeType || 'private', // Default to private
                     shift: formData.shift || 'morning' // Default to morning
                 };
                 
@@ -98,7 +98,7 @@ const CreateProfilePage = () => {
                 boards: formData.boards,
                 preferredStandard: formData.preferredStandard,
                 interests: formData.interests,
-                schoolType: formData.schoolType,
+                collegeType: formData.collegeType,
                 shift: formData.shift,
             }};
             updateUserContext(fullProfile);

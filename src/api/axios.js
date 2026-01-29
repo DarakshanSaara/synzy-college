@@ -58,24 +58,24 @@ apiClient.interceptors.response.use(
     const isSearch404 = url.includes('/search') && status === 404;
     const isApplicationCheck404 = url.includes('/applications/') && status === 404;
 
-    // Suppress expected 404s for missing school sub-resources on profile view
-    const isSchoolSubResource404 = status === 404 && (
-      url.includes('/schools/amenities/') ||
-      url.includes('/schools/activities/') ||
-      url.includes('/schools/infrastructure/') ||
-      url.includes('/schools/fees-scholarships/') ||
-      url.includes('/schools/technology-adoption/') ||
-      url.includes('/schools/safety-security/') ||
-      url.includes('/schools/international-exposure/') ||
-      url.includes('/schools/other-details/') ||
-      url.includes('/schools/admission-timeline/') ||
-      url.includes('/schools/academics/') ||
-      url.includes('/schools/faculty/')
+    // Suppress expected 404s for missing college sub-resources on profile view
+    const iscollegeSubResource404 = status === 404 && (
+      url.includes('/colleges/amenities/') ||
+      url.includes('/colleges/activities/') ||
+      url.includes('/colleges/infrastructure/') ||
+      url.includes('/colleges/fees-scholarships/') ||
+      url.includes('/colleges/technology-adoption/') ||
+      url.includes('/colleges/safety-security/') ||
+      url.includes('/colleges/international-exposure/') ||
+      url.includes('/colleges/other-details/') ||
+      url.includes('/colleges/admission-timeline/') ||
+      url.includes('/colleges/academics/') ||
+      url.includes('/colleges/faculty/')
     );
 
     const isSilent = error.config?.headers && (error.config.headers['X-Silent-Request'] === '1');
     
-    if (!isSearch404 && !isApplicationCheck404 && !isSchoolSubResource404 && !isSilent) {
+    if (!isSearch404 && !isApplicationCheck404 && !iscollegeSubResource404 && !isSilent) {
       console.error('❌ API Error:', error.config?.url, error.response?.status, error.response?.data);
     }
     

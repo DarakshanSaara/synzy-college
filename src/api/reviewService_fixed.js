@@ -4,12 +4,12 @@ import apiClient from './axios';
 /* ----------------- Student Reviews ----------------- */
 
 /**
- * Fetch all accepted reviews for a school
- * @param {string} schoolId
+ * Fetch all accepted reviews for a college
+ * @param {string} collegeId
  */
-export const getSchoolReviews = async (schoolId) => {
+export const getcollegeReviews = async (collegeId) => {
   try {
-    const response = await apiClient.get(`/reviews/${schoolId}`);
+    const response = await apiClient.get(`/reviews/${collegeId}`);
     return response.data;
   } catch (error) {
     throw error;
@@ -25,7 +25,7 @@ export const submitReview = async (reviewData) => {
     // Transform frontend data to match backend schema
     const backendData = {
       studentId: reviewData.studentId,
-      schoolId: reviewData.schoolId,
+      collegeId: reviewData.collegeId,
       text: reviewData.comment, // frontend uses 'comment', backend uses 'text'
       ratings: reviewData.rating, // frontend uses 'rating', backend uses 'ratings'
       student: {
@@ -70,11 +70,11 @@ export const getStudentReviews = async (studentId) => {
 
 /**
  * Update an existing review
- * @param {string} schoolId
+ * @param {string} collegeId
  * @param {string} studentId
  * @param {object} reviewData
  */
-export const updateReview = async (schoolId, studentId, reviewData) => {
+export const updateReview = async (collegeId, studentId, reviewData) => {
   try {
     // Transform frontend data to match backend schema
     const backendData = {
@@ -82,7 +82,7 @@ export const updateReview = async (schoolId, studentId, reviewData) => {
       ratings: reviewData.rating, // frontend uses 'rating', backend uses 'ratings'
       status: 'Pending' // Set status back to Pending for re-approval
     };
-    const response = await apiClient.put(`/reviews/${schoolId}/${studentId}`, backendData);
+    const response = await apiClient.put(`/reviews/${collegeId}/${studentId}`, backendData);
     return response.data;
   } catch (error) {
     throw error;
@@ -143,15 +143,15 @@ export const rejectReview = async (reviewId) => {
 };
 
 /**
- * Get school name by ID (for displaying in pending reviews)
- * @param {string} schoolId
+ * Get college name by ID (for displaying in pending reviews)
+ * @param {string} collegeId
  */
-export const getSchoolName = async (schoolId) => {
+export const getcollegeName = async (collegeId) => {
   try {
-    const response = await apiClient.get(`/schools/${schoolId}`);
-    return response.data.name || 'Unknown School';
+    const response = await apiClient.get(`/colleges/${collegeId}`);
+    return response.data.name || 'Unknown college';
   } catch (error) {
-    console.error('Error fetching school name:', error);
-    return 'Unknown School';
+    console.error('Error fetching college name:', error);
+    return 'Unknown college';
   }
 };

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: smart-school-finder
+    name: smart-college-finder
     env: node
     buildCommand: npm install && npm run build
     startCommand: npm start

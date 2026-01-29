@@ -2,17 +2,17 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Users, 
-  School, 
+   
   LogOut, 
   UserCheck
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import apiClient from "../api/axios";
-import PendingSchoolsSection from "../components/PendingSchoolsSection";
+import PendingcollegesSection from "../components/PendingcollegesSection";
 import PendingReviewsSection from "../components/PendingReviewsSection";
 import DebugAPI from "../components/DebugAPI";
-import SchoolDebugger from "../components/SchoolDebugger";
+import collegeDebugger from "../components/collegeDebugger";
 import Logo from "../components/Logo";
 
 const AdminDashboardPage = () => {
@@ -20,7 +20,7 @@ const AdminDashboardPage = () => {
   const { user, logout } = useAuth();
   const [stats, setStats] = useState({
     totalUsers: 0,
-    totalSchools: 0,
+    totalcolleges: 0,
     activeUsers: 0
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -36,21 +36,21 @@ const AdminDashboardPage = () => {
     const loadStats = async () => {
       try {
         // Call the new endpoints using configured apiClient
-        const [schoolsRes, studentsRes] = await Promise.all([
-          apiClient.get('/admin/count/all'),      // Total Schools
+        const [collegesRes, studentsRes] = await Promise.all([
+          apiClient.get('/admin/count/all'),      // Total colleges
           apiClient.get('/admin/count')           // Total Users/Students
         ]);
 
-        console.log('📊 Schools Response:', schoolsRes.data);
+        console.log('📊 colleges Response:', collegesRes.data);
         console.log('📊 Students Response:', studentsRes.data);
 
         // Extract count from responses
-        const totalSchools = schoolsRes.data?.totalSchools || 0;
+        const totalcolleges = collegesRes.data?.totalcolleges || 0;
         const totalUsers = studentsRes.data?.totalStudents || 0;
 
         setStats({
           totalUsers: totalUsers,
-          totalSchools: totalSchools,
+          totalcolleges: totalcolleges,
           activeUsers: totalUsers  // Using total users as active users (adjust if you have different logic)
         });
       } catch (error) {
@@ -59,7 +59,7 @@ const AdminDashboardPage = () => {
         // Set to 0 if API fails
         setStats({
           totalUsers: 0,
-          totalSchools: 0,
+          totalcolleges: 0,
           activeUsers: 0
         });
       } finally {
@@ -134,11 +134,11 @@ const AdminDashboardPage = () => {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <School className="h-8 w-8 text-green-600" />
+                <college className="h-8 w-8 text-green-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Total Schools</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.totalSchools}</p>
+                <p className="text-sm font-medium text-gray-500">Total colleges</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats.totalcolleges}</p>
               </div>
             </div>
           </div>
@@ -161,14 +161,14 @@ const AdminDashboardPage = () => {
           <DebugAPI />
         </div>
 
-        {/* School Debugger - Remove this after fixing duplicates */}
+        {/* college Debugger - Remove this after fixing duplicates */}
         <div className="mb-8">
-          <SchoolDebugger />
+          <collegeDebugger />
         </div>
 
-        {/* Pending Schools Section */}
+        {/* Pending colleges Section */}
         <div className="mb-8">
-          <PendingSchoolsSection />
+          <PendingcollegesSection />
         </div>
 
         {/* Pending Reviews Section */}

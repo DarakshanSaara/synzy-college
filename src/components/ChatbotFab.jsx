@@ -6,8 +6,8 @@ const ChatbotFab = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const hiddenOn = ['/login', '/signup', '/signup-school', '/forgot-password'];
-  const isHidden = hiddenOn.includes(location.pathname) || location.pathname.startsWith('/school-portal') || location.pathname === '/chatbot';
+  const hiddenOn = ['/login', '/signup', '/signup-college', '/forgot-password'];
+  const isHidden = hiddenOn.includes(location.pathname) || location.pathname.startsWith('/college-portal') || location.pathname === '/chatbot';
 
   if (isHidden) return null;
 

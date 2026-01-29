@@ -3,28 +3,28 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { checkSchoolProfileExists } from "../api/adminService";
+import { checkcollegeProfileExists } from "../api/adminService";
 
 import UserDashboard from "../components/UserDashboard.jsx"; 
 
-const SchoolRedirect = () => {
+const CollegeRedirect = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   useEffect(() => {
     const checkProfile = async () => {
       if (!currentUser?._id) return;
       try {
-        await checkSchoolProfileExists(currentUser._id);
-        navigate("/school-portal/register");
+        await checkcollegeProfileExists(currentUser._id);
+        navigate("/college-portal/register");
       } catch (error) {
-        navigate("/school-registration");
+        navigate("/college-registration");
       }
     };
     checkProfile();
   }, [currentUser?._id, navigate]);
   return (
     <div className="flex justify-center items-center h-screen">
-      <p>Loading your school dashboard...</p>
+      <p>Loading your college dashboard...</p>
     </div>
   );
 };
@@ -57,7 +57,7 @@ const DashboardPage = ({
       case "parent": 
         return <UserDashboard {...props} />;
       case "college":
-        return <SchoolRedirect />;
+        return <CollegeRedirect />;
       default:
         
         if (currentUser._id) {

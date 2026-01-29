@@ -59,7 +59,7 @@ export const checkForInterviewNotifications = async (studentId) => {
 
     return {
       application: latestInterview,
-      schoolName: latestInterview.schoolId?.name || latestInterview.schoolName || 'Unknown School',
+      collegeName: latestInterview.collegeId?.name || latestInterview.collegeName || 'Unknown college',
       interviewData: latestInterview,
       notificationType
     };

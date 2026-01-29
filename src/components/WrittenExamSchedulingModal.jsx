@@ -85,7 +85,7 @@ ${formData.additionalNotes ? `Additional Notes: ${formData.additionalNotes}` : '
             <Calendar className="w-6 h-6 text-blue-600 mr-3" />
             <div>
               <h2 className="text-xl font-semibold text-gray-900">Schedule Written Exam</h2>
-              <p className="text-sm text-gray-600">{application?.studentName} - {application?.schoolName}</p>
+              <p className="text-sm text-gray-600">{application?.studentName} - {application?.collegeName}</p>
             </div>
           </div>
           <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 transition-colors">

@@ -13,45 +13,45 @@ export const isValidObjectId = (id) => {
 };
 
 /**
- * Validates school ID and throws error if invalid
- * @param {string} schoolId - The school ID to validate
+ * Validates college ID and throws error if invalid
+ * @param {string} collegeId - The college ID to validate
  * @throws {Error} - If ID is invalid
  */
-export const validateSchoolId = (schoolId) => {
-  if (!schoolId) {
-    throw new Error('School ID is required');
+export const validatecollegeId = (collegeId) => {
+  if (!collegeId) {
+    throw new Error('college ID is required');
   }
   
-  if (!isValidObjectId(schoolId)) {
-    throw new Error(`Invalid school ID format: ${schoolId}. Expected MongoDB ObjectId format (24-character hexadecimal string).`);
+  if (!isValidObjectId(collegeId)) {
+    throw new Error(`Invalid college ID format: ${collegeId}. Expected MongoDB ObjectId format (24-character hexadecimal string).`);
   }
   
   return true;
 };
 
 /**
- * Safely extracts and validates school ID from URL parameters
- * @param {string} schoolId - The school ID from URL params
- * @returns {string|null} - Valid school ID or null if invalid
+ * Safely extracts and validates college ID from URL parameters
+ * @param {string} collegeId - The college ID from URL params
+ * @returns {string|null} - Valid college ID or null if invalid
  */
-export const getValidSchoolId = (schoolId) => {
+export const getValidcollegeId = (collegeId) => {
   try {
-    validateSchoolId(schoolId);
-    return schoolId;
+    validatecollegeId(collegeId);
+    return collegeId;
   } catch (error) {
-    console.error('School ID validation failed:', error.message);
+    console.error('college ID validation failed:', error.message);
     return null;
   }
 };
 
 /**
- * Common error handler for invalid school IDs
- * @param {string} schoolId - The invalid school ID
+ * Common error handler for invalid college IDs
+ * @param {string} collegeId - The invalid college ID
  * @param {Function} navigate - Navigation function
  * @param {string} fallbackRoute - Route to navigate to on error
  */
-export const handleInvalidSchoolId = (schoolId, navigate, fallbackRoute = '/schools') => {
-  console.error(`Invalid school ID format: ${schoolId}. Expected MongoDB ObjectId format.`);
+export const handleInvalidcollegeId = (collegeId, navigate, fallbackRoute = '/colleges') => {
+  console.error(`Invalid college ID format: ${collegeId}. Expected MongoDB ObjectId format.`);
   navigate(fallbackRoute);
 };
 

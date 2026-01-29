@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getSchoolReviews, getStudentReviews, submitReview, updateReview, likeReview } from '../api/reviewService_fixed';
+import { getcollegeReviews, getStudentReviews, submitReview, updateReview, likeReview } from '../api/reviewService_fixed';
 import { toast } from 'react-toastify';
 import { Star, Heart, MessageCircle, User } from 'lucide-react';
 
-const ReviewSection_fixed = ({ schoolId }) => {
+const ReviewSection_fixed = ({ collegeId }) => {
   const { user: currentUser } = useAuth();
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,19 +14,19 @@ const ReviewSection_fixed = ({ schoolId }) => {
   const [existingReview, setExistingReview] = useState(null);
 
   useEffect(() => {
-    if (schoolId && currentUser) {
+    if (collegeId && currentUser) {
       fetchReviews();
-    } else if (schoolId) {
+    } else if (collegeId) {
       fetchReviews();
     }
-  }, [schoolId, currentUser]);
+  }, [collegeId, currentUser]);
 
   const fetchReviews = async () => {
     try {
       setLoading(true);
       
-      // Fetch accepted reviews for the school (public display)
-      const response = await getSchoolReviews(schoolId);
+      // Fetch accepted reviews for the college (public display)
+      const response = await getcollegeReviews(collegeId);
       const data = response.data || [];
       
       // Format reviews for display (backend uses 'text' and 'ratings')
@@ -47,9 +47,9 @@ const ReviewSection_fixed = ({ schoolId }) => {
           const studentReviewsResponse = await getStudentReviews(currentUser.authId);
           const studentReviews = studentReviewsResponse.data || [];
           
-          // Find if user has a review for this specific school
+          // Find if user has a review for this specific college
           const userReview = studentReviews.find(
-            (r) => r.schoolId === schoolId || r.schoolId?._id === schoolId
+            (r) => r.collegeId === collegeId || r.collegeId?._id === collegeId
           );
           
           if (userReview) {
@@ -88,7 +88,7 @@ const ReviewSection_fixed = ({ schoolId }) => {
     e.preventDefault();
 
     if (!currentUser) return toast.info('Please log in to submit a review');
-    if (['school', 'admin'].includes(currentUser.userType))
+    if (['college', 'admin'].includes(currentUser.userType))
       return toast.error('Only students can submit reviews');
     if (newReview.rating === 0) return toast.error('Please select a rating');
     if (!newReview.comment.trim())
@@ -98,7 +98,7 @@ const ReviewSection_fixed = ({ schoolId }) => {
       setSubmitting(true);
 
       const reviewData = {
-        schoolId,
+        collegeId,
         studentId: currentUser._id,
         studentName: currentUser.name || currentUser.username || 'Anonymous Student',
         studentEmail: currentUser.email || 'student@example.com',
@@ -108,7 +108,7 @@ const ReviewSection_fixed = ({ schoolId }) => {
 
       if (existingReview) {
         // Update existing review
-        await updateReview(schoolId, currentUser.authId, reviewData);
+        await updateReview(collegeId, currentUser.authId, reviewData);
         toast.success('Review updated successfully!');
       } else {
         // Submit new review
@@ -129,7 +129,7 @@ const ReviewSection_fixed = ({ schoolId }) => {
 
   const handleLikeReview = async (reviewId) => {
     if (!currentUser) return toast.info('Please log in to like reviews');
-    if (['school', 'admin'].includes(currentUser.userType))
+    if (['college', 'admin'].includes(currentUser.userType))
       return toast.error('Only students can like reviews');
 
     const studentId = currentUser.authId || currentUser._id;
@@ -202,7 +202,7 @@ const ReviewSection_fixed = ({ schoolId }) => {
         <div className="text-center py-8">
           <MessageCircle size={48} className="mx-auto text-gray-400 mb-4" />
           <p className="text-gray-600 text-lg">
-            No reviews yet. Be the first to review this school!
+            No reviews yet. Be the first to review this college!
           </p>
         </div>
       ) : (
@@ -295,7 +295,7 @@ const ReviewSection_fixed = ({ schoolId }) => {
                   id="comment"
                   value={newReview.comment}
                   onChange={handleCommentChange}
-                  placeholder="Share your experience with this school..."
+                  placeholder="Share your experience with this college..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
                   rows={4}
                   maxLength={500}

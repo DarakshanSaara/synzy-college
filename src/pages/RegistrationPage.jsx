@@ -6,7 +6,7 @@ import { PlusCircle, Trash2, Info, Building2, Users2, ShieldCheck, HeartHandshak
 import { toast } from "react-toastify";
 import apiClient from "../api/axios";
 import { 
-  addSchool, 
+  addcollege, 
   addAmenities, 
   addActivities,
   addAlumni,  
@@ -19,11 +19,11 @@ import {
   addSafetyAndSecurity,
   addInternationalExposure,
   addAcademics,
-  getSchoolById,
-  getSchoolsByStatus,
-  updateSchoolInfo,
-  getAmenitiesById,
-  getActivitiesById,
+  getcollegeById,
+  getcollegesByStatus,
+  updatecollegeInfo,
+  getAmenitiesByCollegeId,
+  getActivitiesByCollegeId,
   getInfrastructureById,
   getFeesAndScholarshipsById,
   getAcademicsById,
@@ -36,20 +36,20 @@ import {
   updateAmenities,
   updateActivities,
   updateInfrastructure,
-  updateFeesAndScholarshipsById,
-  updateOtherDetailsById,
-  updateTechnologyAdoption,
+  
+  updateOtherDetails,
+  
   updateSafetyAndSecurity,
   updateInternationalExposure,
   updateFaculty,
   updateAdmissionTimeline,
-  updateAcademics
-  , getSchoolByAuthId
+  
+  getcollegeByAuthId
 } from "../api/adminService";
 import { 
-  getAlumniBySchool,
-  updateAlumniBySchool, 
-} from "../api/schoolService";
+  getAlumniBycollege,
+  updateAlumniBycollege, 
+} from "../api/collegeService";
 import { minimum } from "zod/v4-mini";
 
 
@@ -518,14 +518,14 @@ const videoInputRef = useRef(null);
   const { user: currentUser, updateUserContext } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [editingSchoolId, setEditingSchoolId] = useState("");
-  const [hasExistingSchool, setHasExistingSchool] = useState(false);
+  const [editingcollegeId, setEditingcollegeId] = useState("");
+  const [hasExistingcollege, setHasExistingcollege] = useState(false);
   const [isLoadingExistingData, setIsLoadingExistingData] = useState(true);
-  const hasCheckedForSchool = React.useRef(false); // Prevent multiple checks
+  const hasCheckedForcollege = React.useRef(false); // Prevent multiple checks
 
   // State with all the fields required by the backend schema
   const [formData, setFormData] = useState({
-    // Core School Fields (matching backend School model)
+    // Core college Fields (matching backend college model)
     name: "",
     description: "",
     address: "",
@@ -542,7 +542,7 @@ const videoInputRef = useRef(null);
     phoneNo: "",
     genderType: "co-ed",
     streamsOffered: [], // Updated: matches backend
-    schoolMode: "convent", // Updated: matches backend enum ['convent', 'private', 'government']
+    collegeMode: "convent", // Updated: matches backend enum ['convent', 'private', 'government']
     shifts: ["morning"], // Updated: array to match backend
     languageMedium: ["English"], // Updated: array to match backend
     transportAvailable: "no",
@@ -619,7 +619,7 @@ const videoInputRef = useRef(null);
     // Academics Fields (matching backend Academics model)
     averageClass10Result: "",
     averageClass12Result: "",
-    averageSchoolMarks: "",
+    averagecollegeMarks: "",
     specialExamsTraining: [], // Matches backend enum ['NEET', 'IIT-JEE', 'Olympiads', 'UPSC', 'CLAT', 'SAT/ACT', 'NTSE', 'KVPY']
     extraCurricularActivities: [] // Matches backend field
   });
@@ -699,7 +699,7 @@ const handleUseCurrentLocation = () => {
           {
             headers: {
               'Accept': 'application/json',
-              'User-Agent': 'https://smart-school-finder-beta.vercel.app/' // REQUIRED
+              'User-Agent': 'https://smart-college-finder-beta.vercel.app/' // REQUIRED
             }
           }
         );
@@ -834,12 +834,12 @@ const handleUseCurrentLocation = () => {
   };
 
   // Helper function to handle update/add with fallback
-  const updateOrAdd = async (updateFn, addFn, schoolId, payload) => {
+  const updateOrAdd = async (updateFn, addFn, collegeId, payload) => {
     try {
       if (isEditMode) {
-        // Remove schoolId from payload for update (it's only needed in URL)
-        const { schoolId: _, ...updatePayload } = payload;
-        await updateFn(schoolId, updatePayload);
+        // Remove collegeId from payload for update (it's only needed in URL)
+        const { collegeId: _, ...updatePayload } = payload;
+        await updateFn(collegeId, updatePayload);
       } else {
         await addFn(payload);
       }
@@ -861,9 +861,9 @@ const handleUseCurrentLocation = () => {
 
     try {
       // Normalize to backend schema
-      const allowedSchoolModes = ['convent', 'private', 'government'];
-      const normalizedSchoolMode = allowedSchoolModes.includes((formData.schoolMode || '').toLowerCase())
-        ? (formData.schoolMode || '').toLowerCase()
+      const allowedcollegeModes = ['convent', 'private', 'government'];
+      const normalizedcollegeMode = allowedcollegeModes.includes((formData.collegeMode || '').toLowerCase())
+        ? (formData.collegeMode || '').toLowerCase()
         : 'private';
 
       const rawGender = (formData.genderType || '').toLowerCase();
@@ -877,7 +877,7 @@ const handleUseCurrentLocation = () => {
 
       // Client-side validation to prevent backend 500s
       const requiredErrors = [];
-      const allowedShifts = ['morning','afternoon','night school'];
+      const allowedShifts = ['morning','afternoon','night college'];
       const allowedBoards = [
         'CBSE','ICSE','CISCE','NIOS','SSC','IGCSE','IB','KVS','JNV','DBSE','MSBSHSE','UPMSP','KSEEB','WBBSE','GSEB','RBSE','BSEB','PSEB','BSE','SEBA','MPBSE','STATE','OTHER'
       ];
@@ -885,12 +885,12 @@ const handleUseCurrentLocation = () => {
         "1000 - 10000","10000 - 25000","25000 - 50000","50000 - 75000","75000 - 100000","1 Lakh - 2 Lakh","2 Lakh - 3 Lakh","3 Lakh - 4 Lakh","4 Lakh - 5 Lakh","More than 5 Lakh"
       ];
 
-      if (!formData.name?.trim()) requiredErrors.push('School Name');
+      if (!formData.name?.trim()) requiredErrors.push('college Name');
       //if (!formData.description?.trim()) requiredErrors.push('Description');
       if (!formData.state?.trim()) requiredErrors.push('State');
       if (!formData.city?.trim()) requiredErrors.push('City');
      
-      if (!allowedSchoolModes.includes(normalizedSchoolMode)) requiredErrors.push('School Mode');
+      if (!allowedcollegeModes.includes(normalizedcollegeMode)) requiredErrors.push('college Mode');
       if (!['boy','girl','co-ed'].includes(normalizedGender)) requiredErrors.push('Gender Type');
       if (!Array.isArray(formData.shifts) || formData.shifts.length === 0 || formData.shifts.some(s => !allowedShifts.includes(String(s).toLowerCase()))) {
         requiredErrors.push('Shifts');
@@ -922,16 +922,18 @@ const handleUseCurrentLocation = () => {
         setIsSubmitting(false);
         return;
       }
-      debugger;
+      
 
       const payload = {
-        // Core School Fields (matching backend School model)
+        // Core college Fields (matching backend college model)
         name: formData.name,
+        
         description: formData.description,
         address: formData.address,
         area: formData.area,
         city: formData.city,
         state: formData.state,
+        country: "India", // Default country
         pinCode: formData.pincode ? Number(formData.pincode) : undefined,
         establishedYear: formData.establishedYear ? Number(formData.establishedYear) : undefined,
         
@@ -940,7 +942,7 @@ const handleUseCurrentLocation = () => {
         email: formData.email,
         website: formData.website,
         mobileNo: formData.phoneNo,
-        schoolMode: normalizedSchoolMode,
+        collegeMode: normalizedcollegeMode,
         genderType: normalizedGender,
         
         shifts: (Array.isArray(formData.shifts) ? formData.shifts : [formData.shifts].filter(Boolean)).map(s => String(s).toLowerCase()),
@@ -962,55 +964,84 @@ const handleUseCurrentLocation = () => {
   linkedinHandle: socialLinks.linkedinHandle,
 
       };
+      // =====================
+// Backend Schema Mappings (REQUIRED)
+// =====================
 
-      // Always include authId to ensure it's set (for both new and existing schools)
-      // This is crucial for deduplication and tracking which user owns which school
+
+payload.estYear = Number(
+  formData.establishedYear || formData.estYear
+);
+
+payload.lat = Number(
+  formData.latitude || formData.lat
+);
+
+payload.long = Number(
+  formData.longitude || formData.long
+);
+
+payload.acceptanceRate = Number(formData.acceptanceRate);
+
+payload.collegeInfo = 
+  formData.collegeInfo || 
+  formData.description || 
+  "";
+
+payload.stream = 
+  (Array.isArray(formData.streamsOffered) && formData.streamsOffered[0]) ||
+  formData.stream ||
+  "";
+
+
+      // Always include authId to ensure it's set (for both new and existing colleges)
+      // This is crucial for deduplication and tracking which user owns which college
       if (currentUser?._id) {
         payload.authId = currentUser._id;
       }
 
-      // Create or update school and resolve schoolId
-      let schoolId = editingSchoolId;
-      if (isEditMode && editingSchoolId) {
+      // Create or update college and resolve collegeId
+      let collegeId = editingcollegeId;
+      if (isEditMode && editingcollegeId) {
         try {
-          await updateSchoolInfo(editingSchoolId, payload);
+          await updatecollegeInfo(editingcollegeId, payload);
         } catch (err) {
-          console.warn('⚠️ Core school update failed, proceeding with subresource saves:', err?.response?.data || err?.message || err);
+          console.warn('⚠️ Core college update failed, proceeding with subresource saves:', err?.response?.data || err?.message || err);
         }
       } else {
-        // Safety check: Verify existing school by authId to avoid duplicates
-        // School accounts skip admin endpoints, so they proceed as-is
-        if (currentUser?.userType !== 'school') {
+        // Safety check: Verify existing college by authId to avoid duplicates
+        // college accounts skip admin endpoints, so they proceed as-is
+        if (currentUser?.userType !== 'college') {
           try {
-            console.log('🔍 Safety check: Checking existing school via authId...');
-            const res = await getSchoolByAuthId(currentUser._id);
+            console.log('🔍 Safety check: Checking existing college via authId...');
+            const res = await getcollegeByAuthId(currentUser._id);
             const existing = res?.data?.data;
-            const existingSchool = Array.isArray(existing) ? existing[0] : existing;
-            if (existingSchool && existingSchool._id) {
-              console.log('✅ Existing school found, updating instead of creating');
-              schoolId = existingSchool._id;
-              await updateSchoolInfo(schoolId, payload);
+            const existingcollege = Array.isArray(existing) ? existing[0] : existing;
+            if (existingcollege && existingcollege._id) {
+              console.log('✅ Existing college found, updating instead of creating');
+              collegeId = existingcollege._id;
+              await updatecollegeInfo(collegeId, payload);
               setIsEditMode(true);
-              setEditingSchoolId(schoolId);
-              setHasExistingSchool(true);
+              setEditingcollegeId(collegeId);
+              setHasExistingcollege(true);
             } else {
-              console.log('✅ No existing school found, creating new one');
-              const schoolResponse = await addSchool(payload);
-              schoolId = schoolResponse.data.data._id;
-              try { localStorage.setItem('lastCreatedSchoolId', String(schoolId)); } catch (_) {}
+              console.log('✅ No existing college found, creating new one');
+              const collegeResponse = await addcollege(payload);
+              collegeId = collegeResponse.data.data._id;
+              try { localStorage.setItem('lastCreatedcollegeId', String(collegeId)); } catch (_) {}
             }
           } catch (err) {
             console.error('Safety check failed, proceeding with creation:', err);
-            const schoolResponse = await addSchool(payload);
-            schoolId = schoolResponse.data.data._id;
-            try { localStorage.setItem('lastCreatedSchoolId', String(schoolId)); } catch (_) {}
+            const collegeResponse = await addcollege(payload);
+            collegeId = collegeResponse.data.data._id;
+            try { localStorage.setItem('lastCreatedcollegeId', String(collegeId)); } catch (_) {}
           }
         } else {
-          // For school accounts, directly create or update
-          console.log('🏫 School account - skipping duplicate check, proceeding with registration');
-          const schoolResponse = await addSchool(payload);
-          schoolId = schoolResponse.data.data._id;
-          try { localStorage.setItem('lastCreatedSchoolId', String(schoolId)); } catch (_) {}
+          // For college accounts, directly create or update
+          console.log('🏫 college account - skipping duplicate check, proceeding with registration');
+          const collegeResponse = await addcollege(payload);
+          collegeId = collegeResponse.data.data._id;
+          try { localStorage.setItem('lastCreatedcollegeId', String(collegeId)); } catch (_) {}
         }
       }
 
@@ -1020,21 +1051,21 @@ const handleUseCurrentLocation = () => {
       // Add/Update amenities
       if (formData.predefinedAmenities?.length > 0 || customAmenities?.length > 0) {
         const payloadAmenities = {
-          schoolId,
+          collegeId,
           predefinedAmenities: formData.predefinedAmenities || [],
           customAmenities: customAmenities || []
         };
-        promises.push(updateOrAdd(updateAmenities, addAmenities, schoolId, payloadAmenities));
+        promises.push(updateOrAdd(updateAmenities, addAmenities, collegeId, payloadAmenities));
       }
 
       // Add/Update activities
       if (formData.activities?.length > 0 || customActivities?.length > 0) {
         const payloadActivities = {
-          schoolId,
+          collegeId,
           activities: formData.activities || [],
           customActivities: customActivities || []
         };
-        promises.push(updateOrAdd(updateActivities, addActivities, schoolId, payloadActivities));
+        promises.push(updateOrAdd(updateActivities, addActivities, collegeId, payloadActivities));
       }
 
       // Add alumni if any (skip for now as there's no alumni UI)
@@ -1043,7 +1074,7 @@ const handleUseCurrentLocation = () => {
       if (famousAlumnies.length > 0 || topAlumnies.length > 0 || otherAlumnies.length > 0) {
         
         const alumniPayload = {
-          schoolId,
+          collegeId,
           famousAlumnies: famousAlumnies, 
           // ⚠️ KEY FIX: Map frontend 'topAlumnies' -> backend 'topAlumnis'
           topAlumnis: topAlumnies,        
@@ -1053,7 +1084,7 @@ const handleUseCurrentLocation = () => {
 
         // Use updateOrAdd to Handle PUT (Update) or POST (Create)
         promises.push(
-           updateOrAdd(updateAlumniBySchool, addAlumni, schoolId, alumniPayload)
+           updateOrAdd(updateAlumniBycollege, addAlumni, collegeId, alumniPayload)
         );
       }
       
@@ -1061,7 +1092,7 @@ const handleUseCurrentLocation = () => {
       // Add/Update infrastructure
       if (formData.infraLabTypes?.length > 0 || formData.infraSportsTypes?.length > 0 || formData.infraLibraryBooks || formData.infraSmartClassrooms) {
         const payloadInfra = {
-          schoolId,
+          collegeId,
           labs: formData.infraLabTypes || [],
           sportsGrounds: formData.infraSportsTypes || [],
           libraryBooks: formData.infraLibraryBooks ? Number(formData.infraLibraryBooks) : undefined,
@@ -1070,7 +1101,7 @@ const handleUseCurrentLocation = () => {
         if (isEditMode) {
           // Try update; if not found or not created yet, fall back to create
           promises.push(
-            updateInfrastructure(schoolId, payloadInfra).catch(() => addInfrastructure(payloadInfra))
+            updateInfrastructure(collegeId, payloadInfra).catch(() => addInfrastructure(payloadInfra))
           );
         } else {
           promises.push(addInfrastructure(payloadInfra));
@@ -1122,13 +1153,13 @@ const handleUseCurrentLocation = () => {
           }
           
           const payloadFees = {
-            schoolId,
+            collegeId,
             feesTransparency: transparencyValue,
             classFees: validClassFees,
             scholarships: validScholarships
           };
           console.log('💰 Sending Fees & Scholarships:', payloadFees);
-          promises.push(updateOrAdd(updateFeesAndScholarshipsById, addFeesAndScholarships, schoolId, payloadFees));
+         
         }
       }
 
@@ -1145,8 +1176,8 @@ const handleUseCurrentLocation = () => {
           .filter(f => f.name && f.qualification && f.experience !== undefined);
         
         if (cleanFaculty.length > 0) {
-          const payloadFaculty = { schoolId, facultyMembers: cleanFaculty };
-          promises.push(updateOrAdd(updateFaculty, addFaculty, schoolId, payloadFaculty));
+          const payloadFaculty = { collegeId, facultyMembers: cleanFaculty };
+          promises.push(updateOrAdd(updateFaculty, addFaculty, collegeId, payloadFaculty));
         }
       }
 
@@ -1183,19 +1214,19 @@ const handleUseCurrentLocation = () => {
 
         
         if (cleanTimelines.length > 0) {
-          const payloadTimeline = { schoolId, timelines: cleanTimelines };
-          promises.push(updateOrAdd(updateAdmissionTimeline, addAdmissionTimeline, schoolId, payloadTimeline));
+          const payloadTimeline = { collegeId, timelines: cleanTimelines };
+          promises.push(updateOrAdd(updateAdmissionTimeline, addAdmissionTimeline, collegeId, payloadTimeline));
         }
       }
 
       // Add/Update Technology Adoption
       if ((formData.smartClassroomsPercentage !== '' && formData.smartClassroomsPercentage != null) || (formData.eLearningPlatforms?.length > 0)) {
         const payloadTech = {
-          schoolId,
+          collegeId,
           smartClassroomsPercentage: (formData.smartClassroomsPercentage === '' || formData.smartClassroomsPercentage == null) ? undefined : Number(formData.smartClassroomsPercentage),
           eLearningPlatforms: formData.eLearningPlatforms || []
         };
-        promises.push(updateOrAdd(updateTechnologyAdoption, addTechnologyAdoption, schoolId, payloadTech));
+        promises.push(updateOrAdd(addTechnologyAdoption, collegeId, payloadTech));
       }
 
       // Add/Update Safety & Security
@@ -1204,7 +1235,7 @@ const handleUseCurrentLocation = () => {
           formData.transportSafety?.gpsTrackerAvailable || formData.transportSafety?.driversVerified ||
           formData.fireSafetyMeasures?.length > 0 || formData.visitorManagementSystem) {
         const payloadSafety = {
-          schoolId,
+          collegeId,
           cctvCoveragePercentage: (formData.cctvCoveragePercentage === '' || formData.cctvCoveragePercentage == null) ? undefined : Number(formData.cctvCoveragePercentage),
           medicalFacility: {
             doctorAvailability: formData.medicalFacility?.doctorAvailability || undefined,
@@ -1218,7 +1249,7 @@ const handleUseCurrentLocation = () => {
           fireSafetyMeasures: formData.fireSafetyMeasures || [],
           visitorManagementSystem: formData.visitorManagementSystem || false
         };
-        promises.push(updateOrAdd(updateSafetyAndSecurity, addSafetyAndSecurity, schoolId, payloadSafety));
+        promises.push(updateOrAdd(updateSafetyAndSecurity, addSafetyAndSecurity, collegeId, payloadSafety));
       }
 
       // Add International Exposure if any (matching backend InternationalExposure model)
@@ -1232,7 +1263,7 @@ const handleUseCurrentLocation = () => {
       const validDurations = ['2 Weeks', '1 Month', '3 Months', '6 Months', '1 Year'];
       
       const validExchangePrograms = (formData.exchangePrograms || []).filter(program => 
-        program.partnerSchool && program.partnerSchool.trim()
+        program.partnercollege && program.partnercollege.trim()
       ).map(program => {
         // Validate and set programType
         let programType = 'Student Exchange'; // Default
@@ -1249,7 +1280,7 @@ const handleUseCurrentLocation = () => {
         }
         
         return {
-          partnerSchool: program.partnerSchool.trim(),
+          partnercollege: program.partnercollege.trim(),
           programType: programType,
           duration: duration,
           studentsParticipated: program.studentsParticipated ? Number(program.studentsParticipated) : 0,
@@ -1282,30 +1313,30 @@ const handleUseCurrentLocation = () => {
       // Only proceed if we have valid data
       if (validExchangePrograms.length > 0 || validGlobalTieUps.length > 0) {
         console.log('Sending international exposure data:', {
-          schoolId,
+          collegeId,
           exchangePrograms: validExchangePrograms,
           globalTieUps: validGlobalTieUps
         });
         
-        const payloadIntl = { schoolId, exchangePrograms: validExchangePrograms, globalTieUps: validGlobalTieUps };
-        promises.push(updateOrAdd(updateInternationalExposure, addInternationalExposure, schoolId, payloadIntl));
+        const payloadIntl = { collegeId, exchangePrograms: validExchangePrograms, globalTieUps: validGlobalTieUps };
+        promises.push(updateOrAdd(updateInternationalExposure, addInternationalExposure, collegeId, payloadIntl));
       } else {
         console.log('No valid international exposure data to send');
       }
 
       // Add/Update Academics (simplified - only summary fields)
-      if ((formData.averageClass10Result !== '' && formData.averageClass10Result != null) || (formData.averageClass12Result !== '' && formData.averageClass12Result != null) || (formData.averageSchoolMarks !== '' && formData.averageSchoolMarks != null) || 
+      if ((formData.averageClass10Result !== '' && formData.averageClass10Result != null) || (formData.averageClass12Result !== '' && formData.averageClass12Result != null) || (formData.averagecollegeMarks !== '' && formData.averagecollegeMarks != null) || 
           formData.specialExamsTraining?.length > 0 || formData.extraCurricularActivities?.length > 0) {
         const payloadAcademics = {
-          schoolId,
+          collegeId,
           averageClass10Result: (formData.averageClass10Result === '' || formData.averageClass10Result == null) ? undefined : Number(formData.averageClass10Result),
           averageClass12Result: (formData.averageClass12Result === '' || formData.averageClass12Result == null) ? undefined : Number(formData.averageClass12Result),
-          averageSchoolMarks: (formData.averageSchoolMarks === '' || formData.averageSchoolMarks == null) ? 75 : Number(formData.averageSchoolMarks), // Required field, default to 75
+          averagecollegeMarks: (formData.averagecollegeMarks === '' || formData.averagecollegeMarks == null) ? 75 : Number(formData.averagecollegeMarks), // Required field, default to 75
           specialExamsTraining: formData.specialExamsTraining || [],
           extraCurricularActivities: formData.extraCurricularActivities || []
         };
         console.log('📚 Sending Academics payload:', payloadAcademics);
-        promises.push(updateOrAdd(updateAcademics, addAcademics, schoolId, payloadAcademics));
+       
       }
 
       // Add/Update other details (matching backend OtherDetails model)
@@ -1320,7 +1351,7 @@ const handleUseCurrentLocation = () => {
         const othersRatio = formData.genderRatioOthers ? Math.max(0, Number(formData.genderRatioOthers)) : 0;
         
         const payloadOther = {
-          schoolId,
+          collegeId,
           genderRatio: {
             male: maleRatio,
             female: femaleRatio,
@@ -1336,7 +1367,7 @@ const handleUseCurrentLocation = () => {
             facilitiesAvailable: formData.specialNeedsFacilities || []
           }
         };
-        promises.push(updateOrAdd(updateOtherDetailsById, addOtherDetails, schoolId, payloadOther));
+        promises.push(updateOrAdd(updateOtherDetails, addOtherDetails, collegeId, payloadOther));
       }
 
       // Wait for all related data to be created
@@ -1346,7 +1377,7 @@ const handleUseCurrentLocation = () => {
       if (logoFile) {
         const logoFormData = new FormData();
         logoFormData.append('logo', logoFile);
-        await apiClient.post(`/admin/${schoolId}/upload/logo`, logoFormData, {
+        await apiClient.post(`/admin/${collegeId}/upload/logo`, logoFormData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       }
@@ -1355,7 +1386,7 @@ const handleUseCurrentLocation = () => {
       if (selectedPhotos.length > 0) {
         const photoFormData = new FormData();
         selectedPhotos.forEach(photo => photoFormData.append('files', photo));
-        await apiClient.post(`/admin/${schoolId}/upload/photos`, photoFormData, {
+        await apiClient.post(`/admin/${collegeId}/upload/photos`, photoFormData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       }
@@ -1364,35 +1395,35 @@ const handleUseCurrentLocation = () => {
       if (selectedVideo) {
         const videoFormData = new FormData();
         videoFormData.append('file', selectedVideo);
-        await apiClient.post(`/admin/${schoolId}/upload/video`, videoFormData, {
+        await apiClient.post(`/admin/${collegeId}/upload/video`, videoFormData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
       }
 
       toast.success(
         isEditMode 
-          ? "School profile updated successfully!"
-          : "School Registration Successful! Your profile is pending approval."
+          ? "college profile updated successfully!"
+          : "college Registration Successful! Your profile is pending approval."
       );
 
-      // Update user context to reflect school user type
+      // Update user context to reflect college user type
       if (currentUser && currentUser._id) {
-        updateUserContext({ userType: 'school', schoolId: schoolId });
+        updateUserContext({ userType: 'college', collegeId: collegeId });
       }
 
-      // Update state to reflect that school now exists
+      // Update state to reflect that college now exists
       if (!isEditMode) {
-        console.log('🎉 School registration successful! Switching to edit mode:', {
-          schoolId,
-          previousState: { hasExistingSchool, isEditMode },
-          newState: { hasExistingSchool: true, isEditMode: true }
+        console.log('🎉 college registration successful! Switching to edit mode:', {
+          collegeId,
+          previousState: { hasExistingcollege, isEditMode },
+          newState: { hasExistingcollege: true, isEditMode: true }
         });
-        setHasExistingSchool(true);
+        setHasExistingcollege(true);
         setIsEditMode(true);
-        setEditingSchoolId(schoolId);
-        // Clear any draft data since we now have a real school profile
+        setEditingcollegeId(collegeId);
+        // Clear any draft data since we now have a real college profile
         try {
-          localStorage.removeItem("schoolRegDraft");
+          localStorage.removeItem("collegeRegDraft");
         } catch (error) {
           console.error("Could not clear draft:", error);
         }
@@ -1400,7 +1431,7 @@ const handleUseCurrentLocation = () => {
 
       // Stay on the same page instead of navigating away
       // This allows the user to continue editing their profile
-      // navigate("/school-portal/profile-view");
+      // navigate("/college-portal/profile-view");
     } catch (error) {
       console.error('Submission error:', error);
       console.error('Error response:', error.response);
@@ -1490,15 +1521,15 @@ const handleUseCurrentLocation = () => {
       customAmenities,
       facultyQuality,
       activeSection,
-      editingSchoolId, // Include schoolId for existing schools
-      hasExistingSchool, // Include state to know if this was an existing school
+      editingcollegeId, // Include collegeId for existing colleges
+      hasExistingcollege, // Include state to know if this was an existing college
       isEditMode, // Include edit mode state
       logoPreview, // Include logo preview
       socialLinks, // Include social media links
       admissionSteps, // Include admission timeline
     };
     try {
-      localStorage.setItem("schoolRegDraft", JSON.stringify(draft));
+      localStorage.setItem("collegeRegDraft", JSON.stringify(draft));
       toast.success("Draft saved");
     } catch {
       toast.error("Could not save draft");
@@ -1507,7 +1538,7 @@ const handleUseCurrentLocation = () => {
 
   const loadDraft = () => {
     try {
-      const savedDraft = localStorage.getItem("schoolRegDraft");
+      const savedDraft = localStorage.getItem("collegeRegDraft");
       if (savedDraft) {
         const draft = JSON.parse(savedDraft);
 
@@ -1546,12 +1577,12 @@ const handleUseCurrentLocation = () => {
           setActiveSection(draft.activeSection);
         }
 
-        // Restore edit mode states for existing schools
-        if (draft.editingSchoolId) {
-          setEditingSchoolId(draft.editingSchoolId);
+        // Restore edit mode states for existing colleges
+        if (draft.editingcollegeId) {
+          setEditingcollegeId(draft.editingcollegeId);
         }
-        if (draft.hasExistingSchool !== undefined) {
-          setHasExistingSchool(draft.hasExistingSchool);
+        if (draft.hasExistingcollege !== undefined) {
+          setHasExistingcollege(draft.hasExistingcollege);
         }
         if (draft.isEditMode !== undefined) {
           setIsEditMode(draft.isEditMode);
@@ -1581,34 +1612,34 @@ const handleUseCurrentLocation = () => {
 
   const clearDraft = () => {
     try {
-      localStorage.removeItem("schoolRegDraft");
+      localStorage.removeItem("collegeRegDraft");
       toast.success("Draft cleared");
     } catch (error) {
       toast.error("Could not clear draft");
     }
   };
 
-  // Check for existing school data on mount and when currentUser becomes available
+  // Check for existing college data on mount and when currentUser becomes available
   useEffect(() => {
-    if (currentUser?._id && !hasCheckedForSchool.current) {
-      hasCheckedForSchool.current = true;
-      checkForExistingSchool();
+    if (currentUser?._id && !hasCheckedForcollege.current) {
+      hasCheckedForcollege.current = true;
+      checkForExistingcollege();
     }
   }, [currentUser?._id]); // Re-run when currentUser becomes available
 
   // Debug: Log state changes (remove this in production)
   useEffect(() => {
     console.log('🔍 State update:', {
-      hasExistingSchool,
+      hasExistingcollege,
       isLoadingExistingData,
       isEditMode,
       hasCurrentUser: !!currentUser?._id
     });
-  }, [hasExistingSchool, isLoadingExistingData, isEditMode, currentUser?._id]);
+  }, [hasExistingcollege, isLoadingExistingData, isEditMode, currentUser?._id]);
 
   // Auto-fill user details when currentUser becomes available
   useEffect(() => {
-    if (currentUser && !hasExistingSchool && !isLoadingExistingData) {
+    if (currentUser && !hasExistingcollege && !isLoadingExistingData) {
       console.log('🔍 Auto-filling user details:', {
         email: currentUser.email,
         availableFields: Object.keys(currentUser)
@@ -1619,17 +1650,17 @@ const handleUseCurrentLocation = () => {
         email: currentUser.email || prev.email
       }));
     }
-  }, [currentUser, hasExistingSchool, isLoadingExistingData]);
+  }, [currentUser, hasExistingcollege, isLoadingExistingData]);
 
-  // Check for existing school data automatically
+  // Check for existing college data automatically
 
-  const checkForExistingSchool = async () => {
-    console.log('🔍 Starting checkForExistingSchool...');
+  const checkForExistingcollege = async () => {
+    console.log('🔍 Starting checkForExistingcollege...');
     
     // 1. Security Check
     if (!currentUser?._id) {
-      console.log('❌ No current user, treating as new school');
-      setHasExistingSchool(false);
+      console.log('❌ No current user, treating as new college');
+      setHasExistingcollege(false);
       setIsEditMode(false);
       setIsLoadingExistingData(false);
       loadDraft();
@@ -1638,59 +1669,59 @@ const handleUseCurrentLocation = () => {
     
     try {
       setIsLoadingExistingData(true);
-      let school = null;
+      let college = null;
       
       // 2. Try LocalStorage (Fastest check)
-      const cachedSchoolId = typeof localStorage !== 'undefined' && localStorage.getItem('lastCreatedSchoolId');
-      if (cachedSchoolId) {
+      const cachedcollegeId = typeof localStorage !== 'undefined' && localStorage.getItem('lastCreatedcollegeId');
+      if (cachedcollegeId) {
         try {
-          const res = await getSchoolById(cachedSchoolId, { headers: { 'X-Silent-Request': '1' } });
+          const res = await getcollegeById(cachedcollegeId, { headers: { 'X-Silent-Request': '1' } });
           const found = res?.data?.data || res?.data;
           // Verify ownership
           if (found && found.authId === currentUser._id) {
-             school = found;
-             console.log('✅ Found existing school from localStorage');
+             college = found;
+             console.log('✅ Found existing college from localStorage');
           }
         } catch (e) {
-          localStorage.removeItem('lastCreatedSchoolId');
+          localStorage.removeItem('lastCreatedcollegeId');
         }
       }
       
       // 3. Try Direct Database Lookup via Auth ID (The Fix for Logout/Login)
-      if (!school) {
+      if (!college) {
         try {
           console.log('🔍 Fetching directly via Auth ID:', currentUser._id);
-          // This calls the API: GET /schools/auth/:authId
-          const res = await getSchoolById(currentUser._id);
+          // This calls the API: GET /colleges/auth/:authId
+          const res = await getcollegeById(currentUser._id);
           
           const foundData = res?.data?.data || res?.data;
           
-          // Handle if backend returns an Array [school] or Object {school}
+          // Handle if backend returns an Array [college] or Object {college}
           if (Array.isArray(foundData) && foundData.length > 0) {
-            school = foundData[0];
+            college = foundData[0];
           } else if (foundData && foundData._id) {
-             school = foundData;
+             college = foundData;
           }
 
-          if (school) {
-             console.log('✅ Found school via Database Lookup');
-             localStorage.setItem('lastCreatedSchoolId', school._id);
+          if (college) {
+             console.log('✅ Found college via Database Lookup');
+             localStorage.setItem('lastCreatedcollegeId', college._id);
           }
         } catch (e) {
-          console.log('❌ No school found for this user in DB.');
+          console.log('❌ No college found for this user in DB.');
         }
       }
       
       // 4. Final Decision: Load Data or Start Fresh
-      if (school && school._id) {
-        console.log('🎉 School found! Loading data...');
-        setHasExistingSchool(true);
-        setEditingSchoolId(school._id);
+      if (college && college._id) {
+        console.log('🎉 college found! Loading data...');
+        setHasExistingcollege(true);
+        setEditingcollegeId(college._id);
         setIsEditMode(true);
-        await loadExistingSchoolData(school); // <--- This fills your form fields
+        await loadExistingcollegeData(college); // <--- This fills your form fields
       } else {
-        console.log('❌ No existing school found. Starting fresh.');
-        setHasExistingSchool(false);
+        console.log('❌ No existing college found. Starting fresh.');
+        setHasExistingcollege(false);
         setIsEditMode(false);
         
         // Auto-fill email for new users
@@ -1699,79 +1730,80 @@ const handleUseCurrentLocation = () => {
           email: currentUser.email || prev.email
         }));
         
-        // Only load draft if no real school exists
+        // Only load draft if no real college exists
         loadDraft();
       }
     } catch (error) {
       console.error('Error in check process:', error);
-      setHasExistingSchool(false);
+      setHasExistingcollege(false);
     } finally {
       setIsLoadingExistingData(false);
     }
   };
 
-  // Load existing school data into form
-  const loadExistingSchoolData = async (school) => {
-    console.log('📥 loadExistingSchoolData called with school:', {
-      id: school._id,
-      name: school.name,
-      email: school.email,
-      city: school.city
+  // Load existing college data into form
+  const loadExistingcollegeData = async (college) => {
+    console.log('📥 loadExistingcollegeData called with college:', {
+      id: college._id,
+      name: college.name,
+      email: college.email,
+      city: college.city
     });
     
-    // Clear any existing draft since we're loading real school data
+    // Clear any existing draft since we're loading real college data
     try {
-      localStorage.removeItem("schoolRegDraft");
+      localStorage.removeItem("collegeRegDraft");
     } catch (error) {
       console.error("Could not clear draft:", error);
     }
     
     // Load existing logo if available
-    if (school.logo) {
+    if (college.logo) {
       // Backend returns logo as object with url property
-      const logoUrl = typeof school.logo === 'object' ? school.logo.url : school.logo;
+      const logoUrl = typeof college.logo === 'object' ? college.logo.url : college.logo;
       if (logoUrl) {
         setLogoPreview(logoUrl);
       }
     }
-    debugger;
+    
     console.log('📝 Setting basic form data...');
     setFormData(prev => ({
       ...prev,
-      name: school.name || "",
-      description: school.description || "",
-      address: school.address || "",
-      area: school.area || "",
-      city: school.city || "",
-      state: school.state || "",
-      pincode: school.pinCode ? String(school.pinCode) : "",
-      establishedYear: school.establishedYear ? String(school.establishedYear) : "",
-      board: school.board || "",
-      feeRange: school.feeRange || "",
-      upto: school.upto || "",
-      email: school.email || "",
-      website: school.website || "",
-      phoneNo: school.mobileNo || "",
-      schoolMode: school.schoolMode || "convent",
-      genderType: school.genderType === 'boy' ? 'boys' : school.genderType === 'girl' ? 'girls' : (school.genderType || 'co-ed'),
-      shifts: Array.isArray(school.shifts) ? school.shifts : [],
-      languageMedium: Array.isArray(school.languageMedium) ? school.languageMedium : [],
-      transportAvailable: school.transportAvailable || "no",
-      latitude: school.latitude != null ? String(school.latitude) : "",
-      longitude: school.longitude != null ? String(school.longitude) : "",
-      TeacherToStudentRatio: school.TeacherToStudentRatio || "",
-      rank: school.rank || "",
+      name: college.name || "",
+      description: college.description || "",
+      address: college.address || "",
+      area: college.area || "",
+      city: college.city || "",
+      state: college.state || "",
+      country: college.country || "",
+      pincode: college.pinCode ? String(college.pinCode) : "",
+      establishedYear: college.establishedYear ? String(college.establishedYear) : "",
+      board: college.board || "",
+      feeRange: college.feeRange || "",
+      upto: college.upto || "",
+      email: college.email || "",
+      website: college.website || "",
+      phoneNo: college.mobileNo || "",
+      collegeMode: college.collegeMode || "convent",
+      genderType: college.genderType === 'boy' ? 'boys' : college.genderType === 'girl' ? 'girls' : (college.genderType || 'co-ed'),
+      shifts: Array.isArray(college.shifts) ? college.shifts : [],
+      languageMedium: Array.isArray(college.languageMedium) ? college.languageMedium : [],
+      transportAvailable: college.transportAvailable || "no",
+      latitude: college.latitude != null ? String(college.latitude) : "",
+      longitude: college.longitude != null ? String(college.longitude) : "",
+      TeacherToStudentRatio: college.TeacherToStudentRatio || "",
+      rank: college.rank || "",
       streamsOffered: Array.isArray(formData.streamsOffered) ? formData.streamsOffered : [],
-      specialist: Array.isArray(school.specialist) ? school.specialist : [],
-      tags: Array.isArray(school.tags) ? school.tags : [],
+      specialist: Array.isArray(college.specialist) ? college.specialist : [],
+      tags: Array.isArray(college.tags) ? college.tags : [],
       
       
     }));
     setSocialLinks({
   
-  instagramHandle: school.instagramHandle || "",
-  twitterHandle: school.twitterHandle || "",
-  linkedinHandle: school.linkedinHandle || ""
+  instagramHandle: college.instagramHandle || "",
+  twitterHandle: college.twitterHandle || "",
+  linkedinHandle: college.linkedinHandle || ""
 });
     debugger;
     // Load sub-resources in parallel and prefill form controls
@@ -1790,18 +1822,18 @@ const handleUseCurrentLocation = () => {
         timelineRes,
         alumniRes
       ] = await Promise.allSettled([
-        getAmenitiesById(school._id),
-        getActivitiesById(school._id),
-        getInfrastructureById(school._id),
-        getFeesAndScholarshipsById(school._id),
-        getAcademicsById(school._id),
-        getOtherDetailsById(school._id),
-        getSafetyAndSecurityById(school._id),
-        getTechnologyAdoptionById(school._id),
-        getInternationalExposureById(school._id),
-        getFacultyById(school._id),
-        getAdmissionTimelineById(school._id),
-        getAlumniBySchool(school._id)
+        getAmenitiesByCollegeId(college._id),
+        getActivitiesByCollegeId(college._id),
+        getInfrastructureById(college._id),
+        getFeesAndScholarshipsById(college._id),
+        getAcademicsById(college._id),
+        getOtherDetailsById(college._id),
+        getSafetyAndSecurityById(college._id),
+        getTechnologyAdoptionById(college._id),
+        getInternationalExposureById(college._id),
+        getFacultyById(college._id),
+        getAdmissionTimelineById(college._id),
+        getAlumniBycollege(college._id)
       ]);
 
       const val = (s) => (s && s.status === 'fulfilled') ? (s.value?.data?.data ?? s.value?.data) : null;
@@ -1846,7 +1878,7 @@ const handleUseCurrentLocation = () => {
         eLearningPlatforms: Array.isArray(tech.eLearningPlatforms) ? tech.eLearningPlatforms : prev.eLearningPlatforms,
         // International Exposure
         exchangePrograms: Array.isArray(intl.exchangePrograms) ? intl.exchangePrograms.map(prog => ({
-          partnerSchool: prog.partnerSchool ?? '',
+          partnercollege: prog.partnercollege ?? '',
           type: prog.type ?? prog.programType ?? '',
           duration: prog.duration ?? '',
           studentsParticipated: prog.studentsParticipated ?? '',
@@ -1876,7 +1908,7 @@ const handleUseCurrentLocation = () => {
         // Academics summary fields
         averageClass10Result: academics.averageClass10Result ?? prev.averageClass10Result,
         averageClass12Result: academics.averageClass12Result ?? prev.averageClass12Result,
-        averageSchoolMarks: academics.averageSchoolMarks ?? prev.averageSchoolMarks,
+        averagecollegeMarks: academics.averagecollegeMarks ?? prev.averagecollegeMarks,
         specialExamsTraining: Array.isArray(academics.specialExamsTraining) ? academics.specialExamsTraining : prev.specialExamsTraining,
         extraCurricularActivities: Array.isArray(academics.extraCurricularActivities) ? academics.extraCurricularActivities : prev.extraCurricularActivities,
         // Fees & Scholarships
@@ -1941,12 +1973,12 @@ const handleUseCurrentLocation = () => {
   );
 }
 
-      console.log('✅ Successfully loaded existing school data');
-      console.log('📋 School data loaded:', {
-        name: school.name,
-        email: school.email,
-        city: school.city,
-        board: school.board,
+      console.log('✅ Successfully loaded existing college data');
+      console.log('📋 college data loaded:', {
+        name: college.name,
+        email: college.email,
+        city: college.city,
+        board: college.board,
         hasAmenities: !!amenities,
         hasActivities: !!activities,
         hasInfrastructure: !!infra,
@@ -1957,11 +1989,11 @@ const handleUseCurrentLocation = () => {
     } catch (error) {
       console.error('❌ Error loading sub-resources:', error);
       console.error('Error details:', error.message, error.response?.data);
-      toast.error('Some school details could not be loaded. Please check and fill any missing information.');
+      toast.error('Some college details could not be loaded. Please check and fill any missing information.');
     }
   };
 
-  // Auto-save draft when form data changes (debounced) - works for both new and existing schools
+  // Auto-save draft when form data changes (debounced) - works for both new and existing colleges
   useEffect(() => {
     // Only auto-save if user has started filling the form and we're not currently loading existing data
     if (isLoadingExistingData || !currentUser) return;
@@ -1978,15 +2010,15 @@ const handleUseCurrentLocation = () => {
           customAmenities,
           facultyQuality,
           activeSection,
-          editingSchoolId, // Include schoolId for existing schools
-          hasExistingSchool, // Include state to know if this was an existing school
+          editingcollegeId, // Include collegeId for existing colleges
+          hasExistingcollege, // Include state to know if this was an existing college
           isEditMode, // Include edit mode state
           logoPreview, // Include logo preview
           socialLinks, // Include social media links
           admissionSteps, // Include admission timeline
         };
         try {
-          localStorage.setItem("schoolRegDraft", JSON.stringify(draft));
+          localStorage.setItem("collegeRegDraft", JSON.stringify(draft));
           // Don't show toast for auto-save to avoid spam
           console.log('💾 Auto-saved draft');
         } catch (error) {
@@ -1996,7 +2028,7 @@ const handleUseCurrentLocation = () => {
     }, 2000); // Auto-save after 2 seconds of inactivity
 
     return () => clearTimeout(autoSaveTimer);
-  }, [formData, famousAlumnies, topAlumnies, otherAlumnies, customActivities, customAmenities, facultyQuality, activeSection, editingSchoolId, hasExistingSchool, isEditMode, logoPreview, socialLinks, admissionSteps, isLoadingExistingData, currentUser]);
+  }, [formData, famousAlumnies, topAlumnies, otherAlumnies, customActivities, customAmenities, facultyQuality, activeSection, editingcollegeId, hasExistingcollege, isEditMode, logoPreview, socialLinks, admissionSteps, isLoadingExistingData, currentUser]);
 
   const goPrev = () => {
     if (isFirst) return;
@@ -2057,132 +2089,133 @@ const handleUseCurrentLocation = () => {
     try {
       setIsSubmitting(true);
       
-      let school;
+      let college;
       
       // Method 1: Try localStorage (works if same session)
-      const cachedSchoolId = typeof localStorage !== 'undefined' && localStorage.getItem('lastCreatedSchoolId');
-      if (cachedSchoolId) {
+      const cachedcollegeId = typeof localStorage !== 'undefined' && localStorage.getItem('lastCreatedcollegeId');
+      if (cachedcollegeId) {
         try {
-          const res = await getSchoolById(cachedSchoolId, { headers: { 'X-Silent-Request': '1' } });
-          school = res?.data?.data;
-          console.log('✅ Found school from localStorage');
+          const res = await getcollegeById(cachedcollegeId, { headers: { 'X-Silent-Request': '1' } });
+          college = res?.data?.data;
+          console.log('✅ Found college from localStorage');
         } catch (e) {
-          console.log('❌ localStorage schoolId not valid, trying other methods...');
+          console.log('❌ localStorage collegeId not valid, trying other methods...');
         }
       }
       
-      // Method 2: Try currentUser.schoolId (works if backend returns it)
-      if (!school && currentUser?.schoolId) {
+      // Method 2: Try currentUser.collegeId (works if backend returns it)
+      if (!college && currentUser?.collegeId) {
         try {
-          const res = await getSchoolById(currentUser.schoolId, { headers: { 'X-Silent-Request': '1' } });
-          school = res?.data?.data;
-          console.log('✅ Found school from currentUser.schoolId');
+          const res = await getcollegeById(currentUser.collegeId, { headers: { 'X-Silent-Request': '1' } });
+          college = res?.data?.data;
+          console.log('✅ Found college from currentUser.collegeId');
         } catch (e) {
-          console.log('❌ currentUser.schoolId not valid, trying other methods...');
+          console.log('❌ currentUser.collegeId not valid, trying other methods...');
         }
       }
       
-      // Method 3: Fetch schools and filter by authId (frontend-only solution)
-      if (!school) {
+      // Method 3: Fetch colleges and filter by authId (frontend-only solution)
+      if (!college) {
         try {
-          console.log('🔍 Fetching schools to find match by authId...');
+          console.log('🔍 Fetching colleges to find match by authId...');
           
           // Try multiple status endpoints since 'all' doesn't work
-          let schools = [];
+          let colleges = [];
           const statuses = ['accepted', 'pending', 'rejected'];
           
           for (const status of statuses) {
             try {
-              const res = await getSchoolsByStatus(status);
-              const statusSchools = res?.data?.data || res?.data || [];
-              schools = schools.concat(statusSchools);
+              const res = await getcollegesByStatus(status);
+              const statuscolleges = res?.data?.data || res?.data || [];
+              colleges = colleges.concat(statuscolleges);
             } catch (statusErr) {
-              console.log(`Could not fetch ${status} schools:`, statusErr.message);
+              console.log(`Could not fetch ${status} colleges:`, statusErr.message);
             }
           }
           
-          console.log(`Found ${schools.length} total schools across all statuses`);
+          console.log(`Found ${colleges.length} total colleges across all statuses`);
           
-          // Find school where authId matches current user's _id
-          school = schools.find(s => s.authId === currentUser._id);
+          // Find college where authId matches current user's _id
+          college = colleges.find(s => s.authId === currentUser._id);
           
-          if (school) {
-            console.log('✅ Found school by authId match');
-            localStorage.setItem('lastCreatedSchoolId', school._id);
+          if (college) {
+            console.log('✅ Found college by authId match');
+            localStorage.setItem('lastCreatedcollegeId', college._id);
           } else {
-            console.log('⚠️ No school found with authId, trying email match...');
+            console.log('⚠️ No college found with authId, trying email match...');
             
-            // Fallback: Try to match by email (for schools created before authId was added)
+            // Fallback: Try to match by email (for colleges created before authId was added)
             if (currentUser.email) {
-              school = schools.find(s => s.email && s.email.toLowerCase() === currentUser.email.toLowerCase());
+              college = colleges.find(s => s.email && s.email.toLowerCase() === currentUser.email.toLowerCase());
               
-              if (school) {
-                console.log('✅ Found school by email match');
-                localStorage.setItem('lastCreatedSchoolId', school._id);
+              if (college) {
+                console.log('✅ Found college by email match');
+                localStorage.setItem('lastCreatedcollegeId', college._id);
               } else {
-                console.log('❌ No school found with authId or email');
+                console.log('❌ No college found with authId or email');
                 console.log('Your authId:', currentUser._id);
                 console.log('Your email:', currentUser.email);
-                console.log('Sample school data:', schools[0]);
+                console.log('Sample college data:', colleges[0]);
               }
             }
           }
         } catch (e) {
-          console.log('❌ Could not fetch schools:', e.message);
+          console.log('❌ Could not fetch colleges:', e.message);
         }
       }
       
-      if (!school) {
-        toast.error("No linked school profile found for this account. Please create a school profile first.");
+      if (!college) {
+        toast.error("No linked college profile found for this account. Please create a college profile first.");
         return;
       }
       
-      // Clear any existing draft since we're loading real school data
+      // Clear any existing draft since we're loading real college data
       try {
-        localStorage.removeItem("schoolRegDraft");
+        localStorage.removeItem("collegeRegDraft");
       } catch (error) {
         console.error("Could not clear draft:", error);
       }
       
-      setEditingSchoolId(school._id);
+      setEditingcollegeId(college._id);
       setIsEditMode(true);
-      setHasExistingSchool(true);
+      setHasExistingcollege(true);
 
       setFormData(prev => ({
         ...prev,
-        name: school.name || "",
-        description: school.description || "",
-        address: school.address || "",
-        area: school.area || "",
-        city: school.city || "",
-        state: school.state || "",
-        pincode: school.pinCode ? String(school.pinCode) : "",
-        establishedYear: school.establishedYear ? String(school.establishedYear) : "",
-        board: school.board || "",
-        feeRange: school.feeRange || "",
-        upto: school.upto || "",
-        email: school.email || "",
-        website: school.website || "",
-        phoneNo: school.mobileNo || "",
-        schoolMode: school.schoolMode || "convent",
-        genderType: school.genderType === 'boy' ? 'boys' : school.genderType === 'girl' ? 'girls' : (school.genderType || 'co-ed'),
-        shifts: Array.isArray(school.shifts) ? school.shifts : [],
-        languageMedium: Array.isArray(school.languageMedium) ? school.languageMedium : [],
-        transportAvailable: school.transportAvailable || "no",
-        latitude: school.latitude != null ? String(school.latitude) : "",
-        longitude: school.longitude != null ? String(school.longitude) : "",
-        TeacherToStudentRatio: school.TeacherToStudentRatio || "",
-        rank: school.rank || "",
+        name: college.name || "",
+        description: college.description || "",
+        address: college.address || "",
+        area: college.area || "",
+        city: college.city || "",
+        state: college.state || "",
+        country: college.country || "",
+        pincode: college.pinCode ? String(college.pinCode) : "",
+        establishedYear: college.establishedYear ? String(college.establishedYear) : "",
+        board: college.board || "",
+        feeRange: college.feeRange || "",
+        upto: college.upto || "",
+        email: college.email || "",
+        website: college.website || "",
+        phoneNo: college.mobileNo || "",
+        collegeMode: college.collegeMode || "convent",
+        genderType: college.genderType === 'boy' ? 'boys' : college.genderType === 'girl' ? 'girls' : (college.genderType || 'co-ed'),
+        shifts: Array.isArray(college.shifts) ? college.shifts : [],
+        languageMedium: Array.isArray(college.languageMedium) ? college.languageMedium : [],
+        transportAvailable: college.transportAvailable || "no",
+        latitude: college.latitude != null ? String(college.latitude) : "",
+        longitude: college.longitude != null ? String(college.longitude) : "",
+        TeacherToStudentRatio: college.TeacherToStudentRatio || "",
+        rank: college.rank || "",
          streamsOffered: Array.isArray(formData.streamsOffered) ? formData.streamsOffered : [],
-        specialist: Array.isArray(school.specialist) ? school.specialist : [],
-        tags: Array.isArray(school.tags) ? school.tags : []
+        specialist: Array.isArray(college.specialist) ? college.specialist : [],
+        tags: Array.isArray(college.tags) ? college.tags : []
       }));
       
      setSocialLinks({
    // Note: Ensure this exists in your backend schema
-  instagramHandle: school.instagramHandle || "", 
-  twitterHandle: school.twitterHandle || "", 
-  linkedinHandle: school.linkedinHandle || ""
+  instagramHandle: college.instagramHandle || "", 
+  twitterHandle: college.twitterHandle || "", 
+  linkedinHandle: college.linkedinHandle || ""
 });
 
       
@@ -2200,17 +2233,17 @@ const handleUseCurrentLocation = () => {
         facultyRes,
         timelineRes
       ] = await Promise.allSettled([
-        getAmenitiesById(school._id),
-        getActivitiesById(school._id),
-        getInfrastructureById(school._id),
-        getFeesAndScholarshipsById(school._id),
-        getAcademicsById(school._id),
-        getOtherDetailsById(school._id),
-        getSafetyAndSecurityById(school._id),
-        getTechnologyAdoptionById(school._id),
-        getInternationalExposureById(school._id),
-        getFacultyById(school._id),
-        getAdmissionTimelineById(school._id)
+        getAmenitiesByCollegeId(college._id),
+        getActivitiesByCollegeId(college._id),
+        getInfrastructureById(college._id),
+        getFeesAndScholarshipsById(college._id),
+        getAcademicsById(college._id),
+        getOtherDetailsById(college._id),
+        getSafetyAndSecurityById(college._id),
+        getTechnologyAdoptionById(college._id),
+        getInternationalExposureById(college._id),
+        getFacultyById(college._id),
+        getAdmissionTimelineById(college._id)
       ]);
 
       const val = (s) => (s && s.status === 'fulfilled') ? (s.value?.data?.data ?? s.value?.data) : null;
@@ -2248,7 +2281,7 @@ const handleUseCurrentLocation = () => {
         scholarships: Array.isArray(fees.scholarships) ? fees.scholarships : prev.scholarships,
         averageClass10Result: academics.averageClass10Result ?? prev.averageClass10Result,
         averageClass12Result: academics.averageClass12Result ?? prev.averageClass12Result,
-        averageSchoolMarks: academics.averageSchoolMarks ?? prev.averageSchoolMarks,
+        averagecollegeMarks: academics.averagecollegeMarks ?? prev.averagecollegeMarks,
         specialExamsTraining: Array.isArray(academics.specialExamsTraining) ? academics.specialExamsTraining : prev.specialExamsTraining,
         extraCurricularActivities: Array.isArray(academics.extraCurricularActivities) ? academics.extraCurricularActivities : prev.extraCurricularActivities,
         // Safety & Security
@@ -2289,7 +2322,7 @@ const handleUseCurrentLocation = () => {
         specialNeedsStaff: other.specialNeedsSupport ? !!other.specialNeedsSupport.dedicatedStaff : prev.specialNeedsStaff,
         // International Exposure
         exchangePrograms: Array.isArray(intl.exchangePrograms) ? intl.exchangePrograms.map(prog => ({
-          partnerSchool: prog.partnerSchool ?? '',
+          partnercollege: prog.partnercollege ?? '',
           type: prog.type ?? prog.programType ?? '',
           duration: prog.duration ?? '',
           studentsParticipated: prog.studentsParticipated ?? '',
@@ -2324,9 +2357,9 @@ const handleUseCurrentLocation = () => {
       
       // academicResults and examQualifiers removed - not in backend schema
 
-      toast.success("Loaded your existing school details. You can update and save.");
+      toast.success("Loaded your existing college details. You can update and save.");
     } catch (e) {
-      toast.error(e?.response?.data?.message || "Failed to load school details.");
+      toast.error(e?.response?.data?.message || "Failed to load college details.");
     } finally {
       setIsSubmitting(false);
     }
@@ -2349,26 +2382,26 @@ const handleUseCurrentLocation = () => {
           {isLoadingExistingData ? (
             <div className="text-center mb-6">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-4"></div>
-              <p className="text-gray-600">Loading your school information...</p>
+              <p className="text-gray-600">Loading your college information...</p>
             </div>
           ) : (
             <>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent text-center mb-2 animate-fade-in">
-                {hasExistingSchool ? '🏫 School Profile' : '🎓 School Registration Portal'}
+                {hasExistingcollege ? '🏫 college Profile' : '🎓 college Registration Portal'}
               </h1>
               <div className="flex items-center justify-center gap-3 mb-6">
                 <p className="text-center text-gray-600 animate-fade-in-delay">
-                  {hasExistingSchool 
-                    ? 'Update your school profile information'
-                    : 'Complete your school profile with our interactive presentation'
+                  {hasExistingcollege 
+                    ? 'Update your college profile information'
+                    : 'Complete your college profile with our interactive presentation'
                   }
                 </p>
               </div>
               {/* Debug info - remove in production */}
               {process.env.NODE_ENV === 'development' && (
                 <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded text-xs">
-                  <strong>Debug:</strong> hasExistingSchool={String(hasExistingSchool)}, isEditMode={String(isEditMode)}, 
-                  schoolId={editingSchoolId || 'none'}, formData.name={formData.name || 'empty'}
+                  <strong>Debug:</strong> hasExistingcollege={String(hasExistingcollege)}, isEditMode={String(isEditMode)}, 
+                  collegeId={editingcollegeId || 'none'}, formData.name={formData.name || 'empty'}
                 </div>
               )}
             </>
@@ -2455,11 +2488,11 @@ const handleUseCurrentLocation = () => {
                   <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                     📋 Basic Information
                   </h2>
-                  <p className="text-gray-600 mt-1">Essential details about your school</p>
+                  <p className="text-gray-600 mt-1">Essential details about your college</p>
                 </div>
               </div>
 
-             {/* School Identity */}
+             {/* college Identity */}
              <div className="mb-6 bg-white border rounded-lg p-4">
                <div className="flex items-start gap-4">
                  <div>
@@ -2490,21 +2523,21 @@ const handleUseCurrentLocation = () => {
                 
                  <input
                    type="url"
-                   placeholder="https://instagram.com/yourschool"
+                   placeholder="https://instagram.com/yourcollege"
                    value={socialLinks.instagramHandle}
                    onChange={(e) => setSocialLinks((p) => ({ ...p, instagramHandle: e.target.value }))}
                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                  />
                  <input
                    type="url"
-                   placeholder="https://twitter.com/yourschool"
+                   placeholder="https://twitter.com/yourcollege"
                    value={socialLinks.twitterHandle}
                    onChange={(e) => setSocialLinks((p) => ({ ...p, twitterHandle: e.target.value }))}
                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                  />
                  <input
                    type="url"
-                   placeholder="https://linkedin.com/company/yourschool"
+                   placeholder="https://linkedin.com/company/yourcollege"
                    value={socialLinks.linkedinHandle}
                    onChange={(e) => setSocialLinks((p) => ({ ...p, linkedinHandle: e.target.value }))}
                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
@@ -2576,7 +2609,7 @@ const handleUseCurrentLocation = () => {
                   <Info className="w-5 h-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
                   <p className="text-sm text-blue-800">
                     <strong>GPS Location Required:</strong> Latitude and Longitude are mandatory for accurate distance calculation. 
-                    This helps parents find schools near their location. Click "Use Current Location" to automatically fill these fields.
+                    This helps parents find colleges near their location. Click "Use Current Location" to automatically fill these fields.
                   </p>
                 </div>
               </div>
@@ -2591,6 +2624,13 @@ const handleUseCurrentLocation = () => {
                 label="State"
                 name="state"
                 value={formData.state}
+                onChange={handleInputChange}
+                required
+              />
+              <FormField
+                label="Country"
+                name="country"
+                value={formData.country}
                 onChange={handleInputChange}
                 required
               />
@@ -2724,7 +2764,7 @@ const handleUseCurrentLocation = () => {
                   College Shifts <span className="text-red-500">*</span>
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {["morning", "afternoon", "night school","online"].map((shift) => (
+                  {["morning", "afternoon", "night college","online"].map((shift) => (
                     <label key={shift} className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
@@ -2745,7 +2785,7 @@ const handleUseCurrentLocation = () => {
                         className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                       />
                       <span className="text-sm text-gray-700 capitalize">
-                        {shift === "night school" ? "Night School" : shift}
+                        {shift === "night college" ? "Night college" : shift}
                       </span>
                     </label>
                   ))}
@@ -4120,7 +4160,7 @@ const handleUseCurrentLocation = () => {
                   </button>
             </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  List all e-learning platforms used by the school (LMS, video conferencing, etc.)
+                  List all e-learning platforms used by the college (LMS, video conferencing, etc.)
                 </p>
               </div>
             </div>
@@ -4174,7 +4214,7 @@ const handleUseCurrentLocation = () => {
                 type="button"
                 onClick={() => setFormData(prev => ({
                   ...prev,
-                  exchangePrograms: [...(prev.exchangePrograms || []), { partnerSchool: '', type: '', duration: '', studentsParticipated: '', activeSince: '' }]
+                  exchangePrograms: [...(prev.exchangePrograms || []), { partnercollege: '', type: '', duration: '', studentsParticipated: '', activeSince: '' }]
                 }))}
                 className="flex items-center text-sm text-indigo-600"
               >
@@ -4185,12 +4225,12 @@ const handleUseCurrentLocation = () => {
               {(formData.exchangePrograms || []).map((prog, index) => (
                 <div key={index} className="grid grid-cols-1 md:grid-cols-6 gap-4 bg-gray-50 p-4 rounded-md">
                   <FormField
-                    label="Partner School"
+                    label="Partner college"
                     name={`ex-partner-${index}`}
-                    value={prog.partnerSchool}
+                    value={prog.partnercollege}
                     onChange={(e) => {
                       const list = [...(formData.exchangePrograms || [])];
-                      list[index] = { ...list[index], partnerSchool: e.target.value };
+                      list[index] = { ...list[index], partnercollege: e.target.value };
                       setFormData(prev => ({ ...prev, exchangePrograms: list }));
                     }}
                   />
@@ -4718,7 +4758,7 @@ const handleUseCurrentLocation = () => {
       <h2 className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
         📸 Media
       </h2>
-      <p className="text-gray-600 mt-1">Photos and videos showcasing your school</p>
+      <p className="text-gray-600 mt-1">Photos and videos showcasing your college</p>
     </div>
   </div>
 
@@ -4837,10 +4877,10 @@ const handleUseCurrentLocation = () => {
                   {isSubmitting ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      {hasExistingSchool ? 'Updating...' : 'Submitting...'}
+                      {hasExistingcollege ? 'Updating...' : 'Submitting...'}
                     </>
                   ) : (
-                    hasExistingSchool ? 'Update School Profile' : 'Submit Registration'
+                    hasExistingcollege ? 'Update college Profile' : 'Submit Registration'
                   )}
                 </button>
               )}

@@ -7,7 +7,7 @@ import {
   checkApplicationExists,
   updateExistingApplication
 } from '../api/applicationService';
-import { getSchoolById } from '../api/adminService';
+import { getcollegeById } from '../api/adminService';
 import { 
   Loader2, 
   CheckCircle, 
@@ -16,45 +16,45 @@ import {
   Send, 
   Edit3,
   User,
-  School,
+  college,
   ArrowRight,
   ArrowLeft
 } from 'lucide-react';
 
 const ApplicationFlowHandler = () => {
   const navigate = useNavigate();
-  const { schoolId } = useParams();
+  const { collegeId } = useParams();
   const { user: currentUser } = useAuth();
   
   const [loading, setLoading] = useState(false);
   const [scenario, setScenario] = useState(null); // 'first-time', 'returning', 'update'
   const [application, setApplication] = useState(null);
-  const [school, setSchool] = useState(null);
+  const [college, setcollege] = useState(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [showUpdateForm, setShowUpdateForm] = useState(false);
 
-  // Fetch school details
+  // Fetch college details
   useEffect(() => {
-    if (schoolId) {
-      fetchSchoolDetails();
+    if (collegeId) {
+      fetchcollegeDetails();
     }
-  }, [schoolId]);
+  }, [collegeId]);
 
   // Check application status on mount
   useEffect(() => {
-    if (currentUser?._id && schoolId) {
+    if (currentUser?._id && collegeId) {
       checkApplicationStatus();
     }
-  }, [currentUser, schoolId]);
+  }, [currentUser, collegeId]);
 
-  const fetchSchoolDetails = async () => {
+  const fetchcollegeDetails = async () => {
     try {
-      const response = await getSchoolById(schoolId);
-      setSchool(response.data.data);
+      const response = await getcollegeById(collegeId);
+      setcollege(response.data.data);
     } catch (error) {
-      console.error('Error fetching school details:', error);
-      toast.error('Failed to fetch school details');
+      console.error('Error fetching college details:', error);
+      toast.error('Failed to fetch college details');
     }
   };
 
@@ -69,7 +69,7 @@ const ApplicationFlowHandler = () => {
         // Application exists - Scenario B: Returning applicant
         setScenario('returning');
         setApplication(existingApplication.data);
-        toast.info('Application found. You can submit directly to the school or update your information.');
+        toast.info('Application found. You can submit directly to the college or update your information.');
       } else {
         // No application - Scenario A: First-time applicant
         setScenario('first-time');
@@ -86,8 +86,8 @@ const ApplicationFlowHandler = () => {
   };
 
   const handleDirectSubmit = async () => {
-    if (!application || !schoolId) {
-      toast.error('Missing application data or school ID');
+    if (!application || !collegeId) {
+      toast.error('Missing application data or college ID');
       return;
     }
 
@@ -95,11 +95,11 @@ const ApplicationFlowHandler = () => {
     setError('');
     
     try {
-      const result = await handleApplicationFlow(currentUser._id, schoolId);
+      const result = await handleApplicationFlow(currentUser._id, collegeId);
       
       if (result.success) {
         setFormSubmitted(true);
-        toast.success('Application submitted to school successfully!');
+        toast.success('Application submitted to college successfully!');
         
         setTimeout(() => {
           navigate('/application-status');
@@ -133,8 +133,8 @@ const ApplicationFlowHandler = () => {
   };
 
   const handleGoToForm = () => {
-    // Navigate to application form with school context
-    navigate(`/student-application?schoolId=${schoolId}`);
+    // Navigate to application form with college context
+    navigate(`/student-application?collegeId=${collegeId}`);
   };
 
   if (loading && !scenario) {
@@ -173,7 +173,7 @@ const ApplicationFlowHandler = () => {
           <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Success!</h2>
           <p className="text-gray-600 mb-4">
-            Your application has been submitted to {school?.name || 'the school'} successfully.
+            Your application has been submitted to {college?.name || 'the college'} successfully.
           </p>
           <p className="text-sm text-gray-500">
             Redirecting to application status page...
@@ -189,7 +189,7 @@ const ApplicationFlowHandler = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Apply to {school?.name || 'School'}
+            Apply to {college?.name || 'college'}
           </h1>
           <p className="text-gray-600">
             {scenario === 'first-time' 
@@ -296,7 +296,7 @@ const ApplicationFlowHandler = () => {
                 ) : (
                   <>
                     <Send className="h-4 w-4 mr-2" />
-                    Submit to School
+                    Submit to college
                   </>
                 )}
               </button>
@@ -317,7 +317,7 @@ const ApplicationFlowHandler = () => {
                 <button
                   onClick={() => {
                     setShowUpdateForm(false);
-                    navigate(`/student-application?schoolId=${schoolId}&update=true`);
+                    navigate(`/student-application?collegeId=${collegeId}&update=true`);
                   }}
                   className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
@@ -326,7 +326,7 @@ const ApplicationFlowHandler = () => {
                 <button
                   onClick={() => {
                     setShowUpdateForm(false);
-                    navigate(`/student-application?schoolId=${schoolId}&update=true&section=parents`);
+                    navigate(`/student-application?collegeId=${collegeId}&update=true&section=parents`);
                   }}
                   className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
@@ -335,7 +335,7 @@ const ApplicationFlowHandler = () => {
                 <button
                   onClick={() => {
                     setShowUpdateForm(false);
-                    navigate(`/student-application?schoolId=${schoolId}&update=true&section=academic`);
+                    navigate(`/student-application?collegeId=${collegeId}&update=true&section=academic`);
                   }}
                   className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >

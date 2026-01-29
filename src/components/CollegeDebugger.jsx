@@ -1,51 +1,51 @@
 import React, { useState } from 'react';
-import { getSchoolsByStatus } from '../api/adminService';
+import { getcollegesByStatus } from '../api/adminService';
 import { Bug, RefreshCw } from 'lucide-react';
 
 /**
- * Debug component to help identify duplicate schools
+ * Debug component to help identify duplicate colleges
  * Add this to AdminDashboardPage temporarily to diagnose the issue
  */
-const SchoolDebugger = () => {
+const collegeDebugger = () => {
   const [debugData, setDebugData] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const analyzeSchools = async () => {
+  const analyzecolleges = async () => {
     setLoading(true);
     try {
-      const response = await getSchoolsByStatus('pending');
-      const schools = response?.data?.data || response?.data || [];
+      const response = await getcollegesByStatus('pending');
+      const colleges = response?.data?.data || response?.data || [];
       
       // Group by authId
       const byAuthId = {};
       const byId = {};
       const duplicates = [];
       
-      schools.forEach(school => {
+      colleges.forEach(college => {
         // Track by authId
-        if (school.authId) {
-          if (!byAuthId[school.authId]) {
-            byAuthId[school.authId] = [];
+        if (college.authId) {
+          if (!byAuthId[college.authId]) {
+            byAuthId[college.authId] = [];
           }
-          byAuthId[school.authId].push(school);
+          byAuthId[college.authId].push(college);
         }
         
         // Track by _id
-        if (school._id) {
-          if (byId[school._id]) {
-            duplicates.push({ type: '_id', value: school._id, school });
+        if (college._id) {
+          if (byId[college._id]) {
+            duplicates.push({ type: '_id', value: college._id, college });
           }
-          byId[school._id] = school;
+          byId[college._id] = college;
         }
       });
       
-      // Find authIds with multiple schools
+      // Find authIds with multiple colleges
       const authIdDuplicates = Object.entries(byAuthId)
-        .filter(([authId, schools]) => schools.length > 1)
-        .map(([authId, schools]) => ({
+        .filter(([authId, colleges]) => colleges.length > 1)
+        .map(([authId, colleges]) => ({
           authId,
-          count: schools.length,
-          schools: schools.map(s => ({
+          count: colleges.length,
+          colleges: colleges.map(s => ({
             _id: s._id,
             name: s.name,
             email: s.email,
@@ -55,13 +55,13 @@ const SchoolDebugger = () => {
         }));
       
       setDebugData({
-        total: schools.length,
+        total: colleges.length,
         uniqueAuthIds: Object.keys(byAuthId).length,
         uniqueIds: Object.keys(byId).length,
-        schoolsWithoutAuthId: schools.filter(s => !s.authId).length,
+        collegesWithoutAuthId: colleges.filter(s => !s.authId).length,
         authIdDuplicates,
         idDuplicates: duplicates,
-        sampleSchools: schools.slice(0, 3).map(s => ({
+        samplecolleges: colleges.slice(0, 3).map(s => ({
           _id: s._id,
           name: s.name,
           authId: s.authId,
@@ -84,16 +84,16 @@ const SchoolDebugger = () => {
         <div className="flex items-center">
           <Bug className="h-5 w-5 text-yellow-600 mr-2" />
           <h3 className="text-lg font-semibold text-yellow-900">
-            School Duplicate Debugger
+            college Duplicate Debugger
           </h3>
         </div>
         <button
-          onClick={analyzeSchools}
+          onClick={analyzecolleges}
           disabled={loading}
           className="flex items-center px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 disabled:opacity-50"
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          {loading ? 'Analyzing...' : 'Analyze Schools'}
+          {loading ? 'Analyzing...' : 'Analyze colleges'}
         </button>
       </div>
 
@@ -106,7 +106,7 @@ const SchoolDebugger = () => {
               {/* Summary */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-white p-3 rounded border">
-                  <div className="text-sm text-gray-500">Total Schools</div>
+                  <div className="text-sm text-gray-500">Total colleges</div>
                   <div className="text-2xl font-bold">{debugData.total}</div>
                 </div>
                 <div className="bg-white p-3 rounded border">
@@ -119,7 +119,7 @@ const SchoolDebugger = () => {
                 </div>
                 <div className="bg-white p-3 rounded border">
                   <div className="text-sm text-gray-500">Without AuthID</div>
-                  <div className="text-2xl font-bold">{debugData.schoolsWithoutAuthId}</div>
+                  <div className="text-2xl font-bold">{debugData.collegesWithoutAuthId}</div>
                 </div>
               </div>
 
@@ -127,7 +127,7 @@ const SchoolDebugger = () => {
               {debugData.authIdDuplicates.length > 0 && (
                 <div className="bg-red-50 border border-red-200 rounded p-4">
                   <h4 className="font-semibold text-red-900 mb-2">
-                    ⚠️ Found {debugData.authIdDuplicates.length} AuthIDs with Multiple Schools
+                    ⚠️ Found {debugData.authIdDuplicates.length} AuthIDs with Multiple colleges
                   </h4>
                   {debugData.authIdDuplicates.map((dup, idx) => (
                     <div key={idx} className="mb-3 p-3 bg-white rounded border">
@@ -135,16 +135,16 @@ const SchoolDebugger = () => {
                         AuthID: {dup.authId}
                       </div>
                       <div className="text-sm font-semibold mb-1">
-                        {dup.count} schools found:
+                        {dup.count} colleges found:
                       </div>
                       <ul className="space-y-1">
-                        {dup.schools.map((school, sidx) => (
+                        {dup.colleges.map((college, sidx) => (
                           <li key={sidx} className="text-sm pl-4 border-l-2 border-gray-300">
-                            <div><strong>{school.name}</strong></div>
-                            <div className="text-gray-600">ID: {school._id}</div>
-                            <div className="text-gray-600">Email: {school.email}</div>
+                            <div><strong>{college.name}</strong></div>
+                            <div className="text-gray-600">ID: {college._id}</div>
+                            <div className="text-gray-600">Email: {college.email}</div>
                             <div className="text-gray-600">
-                              Created: {new Date(school.createdAt).toLocaleString()}
+                              Created: {new Date(college.createdAt).toLocaleString()}
                             </div>
                           </li>
                         ))}
@@ -154,11 +154,11 @@ const SchoolDebugger = () => {
                 </div>
               )}
 
-              {/* Sample Schools */}
+              {/* Sample colleges */}
               <div className="bg-white border rounded p-4">
-                <h4 className="font-semibold mb-2">Sample Schools (first 3)</h4>
+                <h4 className="font-semibold mb-2">Sample colleges (first 3)</h4>
                 <pre className="text-xs overflow-auto bg-gray-50 p-2 rounded">
-                  {JSON.stringify(debugData.sampleSchools, null, 2)}
+                  {JSON.stringify(debugData.samplecolleges, null, 2)}
                 </pre>
               </div>
 
@@ -167,8 +167,8 @@ const SchoolDebugger = () => {
                 <div className="bg-blue-50 border border-blue-200 rounded p-4">
                   <h4 className="font-semibold text-blue-900 mb-2">💡 Recommendation</h4>
                   <p className="text-sm text-blue-800">
-                    You have {debugData.total} total schools but only {debugData.uniqueAuthIds} unique authIDs.
-                    This means there are duplicate school entries. The deduplication logic should be removing
+                    You have {debugData.total} total colleges but only {debugData.uniqueAuthIds} unique authIDs.
+                    This means there are duplicate college entries. The deduplication logic should be removing
                     these duplicates from the display.
                   </p>
                   <p className="text-sm text-blue-800 mt-2">
@@ -184,4 +184,4 @@ const SchoolDebugger = () => {
   );
 };
 
-export default SchoolDebugger;
+export default collegeDebugger;

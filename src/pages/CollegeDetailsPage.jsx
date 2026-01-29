@@ -1,11 +1,12 @@
-// src/pages/SchoolDetailsPage.jsx
+// src/pages/collegeDetailsPage.jsx
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { getSchoolById,getSchoolById1,getAmenitiesById, getActivitiesById, getInfrastructureById, getFeesAndScholarshipsById, getAcademicsById, getOtherDetailsById, getFacultyById, getAdmissionTimelineById, getTechnologyAdoptionById, getSafetyAndSecurityById, getInternationalExposureById } from "../api/adminService";
+import { getFeesAndScholarshipsById,getInfrastructureById,getActivitiesByCollegeId,getcollegeById,getcollegeById1,getAmenitiesByCollegeId,getAdmissionTimelineById, getTechnologyAdoptionById, getSafetyAndSecurityById, getInternationalExposureById,getFacultyById,getOtherDetailsById} from "../api/adminService";
+
 import { toast } from "react-toastify";
-import { validateSchoolId, handleInvalidSchoolId } from "../utils/objectIdUtils";
+import { validatecollegeId, handleInvalidcollegeId } from "../utils/objectIdUtils";
 import {
   MapPin,
   BookOpen,
@@ -26,7 +27,7 @@ import {
   Check
 } from "lucide-react";
 import ReviewSection_fixed from "../components/ReviewSection_fixed";
-import { getAlumniBySchool } from "../api/schoolService";
+import { getAlumniBycollege } from "../api/collegeService";
 
 const InfoBox = ({ icon, label, value }) => (
   <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
@@ -40,12 +41,12 @@ const InfoBox = ({ icon, label, value }) => (
   </div>
 );
 
-const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
+const collegeDetailsPage = ({ shortlist, onShortlistToggle }) => {
   const navigate = useNavigate();
-  const { id: schoolId } = useParams();
+  const { id: collegeId } = useParams();
   const { user: currentUser } = useAuth();
 
-  const [school, setSchool] = useState(null);
+  const [college, setcollege] = useState(null);
   const [loading, setLoading] = useState(true);
   const [amenities, setAmenities] = useState([]);
   const [activities, setActivities] = useState([]);
@@ -61,12 +62,12 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
   const [internationalExposure, setInternationalExposure] = useState(null);
 
   const handleCompare = () => {
-    if (!school?._id) return;
-    // seed comparison list with current school for convenience
+    if (!college?._id) return;
+    // seed comparison list with current college for convenience
     try {
       const saved = JSON.parse(localStorage.getItem('comparisonList') || '[]');
-      const exists = saved.some((s) => (s.schoolId || s._id) === (school._id));
-      const toSave = exists ? saved : [...saved, { ...school, schoolId: school._id }];
+      const exists = saved.some((s) => (s.collegeId || s._id) === (college._id));
+      const toSave = exists ? saved : [...saved, { ...college, collegeId: college._id }];
       localStorage.setItem('comparisonList', JSON.stringify(toSave));
       window.dispatchEvent(new CustomEvent('comparisonListUpdated', { detail: toSave }));
     } catch (_) {}
@@ -74,38 +75,38 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
   };
 
   useEffect(() => {
-    if (!schoolId) return;
+    if (!collegeId) return;
 
-    // Validate schoolId format
+    // Validate collegeId format
     const isValidObjectId = (id) => {
       return /^[0-9a-fA-F]{24}$/.test(id);
     };
 
-    // If schoolId is not a valid ObjectId, show error
-    if (!isValidObjectId(schoolId)) {
-      console.error(`Invalid school ID format: ${schoolId}. Expected MongoDB ObjectId format.`);
-      toast.error("Invalid school ID format. Please check the URL.");
-      navigate("/schools");
+    // If collegeId is not a valid ObjectId, show error
+    if (!isValidObjectId(collegeId)) {
+      console.error(`Invalid college ID format: ${collegeId}. Expected MongoDB ObjectId format.`);
+      toast.error("Invalid college ID format. Please check the URL.");
+      navigate("/colleges");
       return;
     }
 
-    const fetchSchoolDetails = async () => {
+    const fetchcollegeDetails = async () => {
       try {
         setLoading(true);
-        const response = await getSchoolById1(schoolId);
-        const schoolData = response?.data?.data || response?.data;
+        const response = await getcollegeById1(collegeId);
+        const collegeData = response?.data?.data || response?.data;
 
-        if (schoolData) {
-          setSchool(schoolData);
+        if (collegeData) {
+          setcollege(collegeData);
         } else {
-          console.warn(`No school data returned for ID: ${schoolId}`);
-          toast.error("School not found.");
-          navigate("/schools");
+          console.warn(`No college data returned for ID: ${collegeId}`);
+          toast.error("college not found.");
+          navigate("/colleges");
         }
       } catch (error) {
-        toast.error("Could not load school details.");
-        console.error("Fetch School Error:", error);
-        navigate("/schools");
+        toast.error("Could not load college details.");
+        console.error("Fetch college Error:", error);
+        navigate("/colleges");
       } finally {
         setLoading(false);
       }
@@ -114,8 +115,8 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
     const fetchAmenitiesAndActivities = async () => {
       try {
         const [amenitiesRes, activitiesRes] = await Promise.all([
-          getAmenitiesById(schoolId),
-          getActivitiesById(schoolId),
+          getAmenitiesByCollegeId(collegeId),
+          getActivitiesByCollegeId(collegeId),
         ]);
         
         console.log("Amenities Response:", amenitiesRes?.data);
@@ -150,18 +151,18 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
         const [amenitiesAndActivities, infrastructureAndAcademics, feesAndFaculty] = await Promise.all([
           // Group 1: Amenities & Activities (2 calls)
           Promise.allSettled([
-            getAmenitiesById(schoolId).catch(() => ({ data: null })),
-            getActivitiesById(schoolId).catch(() => ({ data: null }))
+            getAmenitiesByCollegeId(collegeId).catch(() => ({ data: null })),
+            getActivitiesByCollegeId(collegeId).catch(() => ({ data: null }))
           ]),
           // Group 2: Infrastructure & Academics (2 calls)
           Promise.allSettled([
-            getInfrastructureById(schoolId).catch(() => ({ data: null })),
-            getAcademicsById(schoolId).catch(() => ({ data: null }))
+            getInfrastructureById(collegeId).catch(() => ({ data: null })),
+            getAcademicsById(collegeId).catch(() => ({ data: null }))
           ]),
           // Group 3: Fees & Faculty (2 calls)
           Promise.allSettled([
-            getFeesAndScholarshipsById(schoolId).catch(() => ({ data: null })),
-            getFacultyById(schoolId).catch(() => ({ data: null }))
+            getFeesAndScholarshipsById(collegeId).catch(() => ({ data: null })),
+            getFacultyById(collegeId).catch(() => ({ data: null }))
           ])
         ]);
 
@@ -208,12 +209,12 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
         setTimeout(async () => {
           try {
             const remainingDetails = await Promise.allSettled([
-              getOtherDetailsById(schoolId).catch(() => ({ data: null })),
-              getAdmissionTimelineById(schoolId).catch(() => ({ data: null })),
-              getTechnologyAdoptionById(schoolId).catch(() => ({ data: null })),
-              getSafetyAndSecurityById(schoolId).catch(() => ({ data: null })),
-              getInternationalExposureById(schoolId).catch(() => ({ data: null })),
-              getAlumniBySchool(schoolId).catch(() => ({ data: null })) 
+              getOtherDetailsById(collegeId).catch(() => ({ data: null })),
+              getAdmissionTimelineById(collegeId).catch(() => ({ data: null })),
+              getTechnologyAdoptionById(collegeId).catch(() => ({ data: null })),
+              getSafetyAndSecurityById(collegeId).catch(() => ({ data: null })),
+              getInternationalExposureById(collegeId).catch(() => ({ data: null })),
+              getAlumniBycollege(collegeId).catch(() => ({ data: null })) 
             ]);
             
             
@@ -241,10 +242,10 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
       }
     };
 
-    fetchSchoolDetails();
+    fetchcollegeDetails();
     fetchAmenitiesAndActivities();
     fetchAdditionalDetails();
-  }, [schoolId, navigate]);
+  }, [collegeId, navigate]);
 
   const handleApplyNow = () => {
     if (!currentUser) {
@@ -252,12 +253,12 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
       navigate(`/login`);
       return;
     }
-    if (currentUser.userType === "school") {
-      toast.error("School accounts cannot submit student applications.");
-      navigate('/school-portal');
+    if (currentUser.userType === "college") {
+      toast.error("college accounts cannot submit student applications.");
+      navigate('/college-portal');
       return;
     }
-    navigate(`/apply/${school._id}`);
+    navigate(`/apply/${college._id}`);
   };
 
   if (loading) {
@@ -305,21 +306,21 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
     );
   }
 
-  if (!school) {
+  if (!college) {
     return (
       <div className="flex flex-col justify-center items-center h-screen">
-        <p>Could not load school data.</p>
+        <p>Could not load college data.</p>
         <button
-          onClick={() => navigate("/schools")}
+          onClick={() => navigate("/colleges")}
           className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
         >
-          Back to Schools
+          Back to colleges
         </button>
       </div>
     );
   }
 
-  const isShortlisted = shortlist.some((item) => item._id === school._id);
+  const isShortlisted = shortlist.some((item) => item._id === college._id);
 
   return (
     <div className="bg-gray-100">
@@ -337,7 +338,7 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
             (currentUser.userType === "parent" ||
               currentUser.userType === "student") && (
               <button
-                onClick={() => onShortlistToggle(school)}
+                onClick={() => onShortlistToggle(college)}
                 className="absolute top-6 right-6 text-gray-400 hover:text-red-500 z-10"
               >
                 <Heart
@@ -347,33 +348,33 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
               </button>
             )}
           
-          {/* School Header with Profile Photo and Details */}
+          {/* college Header with Profile Photo and Details */}
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-6">
-            {/* School Profile Photo - Optimized */}
+            {/* college Profile Photo - Optimized */}
             <div className="flex-shrink-0">
               <img
                src={(() => {
     // Normalize possible image sources to URL strings
     const logoUrl =
-      typeof school.logo === "object" ? school.logo?.url : school.logo;
+      typeof college.logo === "object" ? college.logo?.url : college.logo;
 
     const firstPhotoUrl =
-      typeof school.photos?.[0] === "object"
-        ? school.photos?.[0]?.url
-        : school.photos?.[0];
+      typeof college.photos?.[0] === "object"
+        ? college.photos?.[0]?.url
+        : college.photos?.[0];
 
     const imageSources = [
       firstPhotoUrl,
-      school.profilePhoto,
-      school.image,
+      college.profilePhoto,
+      college.image,
       logoUrl,
-      school.profileImage,
-      school.schoolLogo
+      college.profileImage,
+      college.collegeLogo
     ].filter(Boolean);
 
     return imageSources[0] || "/api/placeholder/200/200";
   })()}
-  alt={`${school.name} profile`}
+  alt={`${college.name} profile`}
   className="w-32 h-32 md:w-40 md:h-40 rounded-lg object-cover border-4 border-gray-200 shadow-lg"
   loading="lazy"
   onError={(e) => {
@@ -384,64 +385,64 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
               />
             </div>
             
-            {/* School Details */}
+            {/* college Details */}
             <div className="flex-1 min-w-0">
           <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2">
-            {school.name}
+            {college.name}
           </h1>
           <p className="text-lg text-gray-600 flex items-center mb-4">
             <MapPin size={18} className="mr-2" />
                 {(() => {
                   // Try different location field combinations
-                  if (school.location) return school.location;
-                  if (school.city && school.state) {
-                    return `${school.area ? school.area + ', ' : ''}${school.city}, ${school.state}`;
+                  if (college.location) return college.location;
+                  if (college.city && college.state) {
+                    return `${college.area ? college.area + ', ' : ''}${college.city}, ${college.state}`;
                   }
-                  if (school.city) return school.city;
-                  if (school.state) return school.state;
-                  if (school.area) return school.area;
+                  if (college.city) return college.city;
+                  if (college.state) return college.state;
+                  if (college.area) return college.area;
                   return 'Location not specified';
                 })()}
               </p>
-              <p className="text-md text-gray-700 mb-4">{school.description}</p>
+              <p className="text-md text-gray-700 mb-4">{college.description}</p>
               
               {/* Contact Information */}
               <div className="flex flex-wrap gap-4 mb-4">
-                {school.mobileNo && (
+                {college.mobileNo && (
                   <div className="flex items-center text-gray-600 hover:text-indigo-600 transition-colors">
                     <Phone size={16} className="mr-2" />
-                    <span className="text-sm">{school.mobileNo}</span>
+                    <span className="text-sm">{college.mobileNo}</span>
                   </div>
                 )}
-                {school.email && (
+                {college.email && (
                   <div className="flex items-center text-gray-600 hover:text-indigo-600 transition-colors">
                     <Mail size={16} className="mr-2" />
-                    <span className="text-sm">{school.email}</span>
+                    <span className="text-sm">{college.email}</span>
                   </div>
                 )}
-                {school.website && (
+                {college.website && (
                   <div className="flex items-center text-gray-600 hover:text-indigo-600 transition-colors">
                     <Globe size={16} className="mr-2" />
                     <a 
-                      href={school.website} 
+                      href={college.website} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-sm hover:underline"
                     >
-                      {school.website}
+                      {college.website}
                     </a>
                   </div>
                 )}
               </div>
               
               {/* Social Media Links */}
-              {(school.socialLinks || (school.facebook || school.twitter || school.instagram || school.linkedin)) && (
+              {(college.socialLinks || (college.facebook || college.twitter || college.instagram || college.linkedin)) && (
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-gray-500">Follow us:</span>
                   <div className="flex gap-2">
-                    {school.socialLinks?.facebook && (
+                    {college.socialLinks?.facebook && (
                       <a 
-                        href={school.socialLinks.facebook} 
+                        href={college.socialLinks.facebook} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-gray-400 hover:text-blue-600 transition-colors"
@@ -449,9 +450,9 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
                         <Facebook size={20} />
                       </a>
                     )}
-                    {school.socialLinks?.instagram && (
+                    {college.socialLinks?.instagram && (
                       <a 
-                        href={school.socialLinks.instagram} 
+                        href={college.socialLinks.instagram} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-gray-400 hover:text-pink-600 transition-colors"
@@ -459,9 +460,9 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
                         <Instagram size={20} />
                       </a>
                     )}
-                    {school.socialLinks?.twitter && (
+                    {college.socialLinks?.twitter && (
                       <a 
-                        href={school.socialLinks.twitter} 
+                        href={college.socialLinks.twitter} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-gray-400 hover:text-blue-400 transition-colors"
@@ -469,9 +470,9 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
                         <Twitter size={20} />
                       </a>
                     )}
-                    {school.socialLinks?.linkedin && (
+                    {college.socialLinks?.linkedin && (
                       <a 
-                        href={school.socialLinks.linkedin} 
+                        href={college.socialLinks.linkedin} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-gray-400 hover:text-blue-700 transition-colors"
@@ -480,9 +481,9 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
                       </a>
                     )}
                     {/* Fallback for direct social media fields */}
-                    {school.facebook && (
+                    {college.facebook && (
                       <a 
-                        href={school.facebook} 
+                        href={college.facebook} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-gray-400 hover:text-blue-600 transition-colors"
@@ -490,9 +491,9 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
                         <Facebook size={20} />
                       </a>
                     )}
-                    {school.instagram && (
+                    {college.instagram && (
                       <a 
-                        href={school.instagram} 
+                        href={college.instagram} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-gray-400 hover:text-pink-600 transition-colors"
@@ -500,9 +501,9 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
                         <Instagram size={20} />
                       </a>
                     )}
-                    {school.twitter && (
+                    {college.twitter && (
                       <a 
-                        href={school.twitter} 
+                        href={college.twitter} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-gray-400 hover:text-blue-400 transition-colors"
@@ -510,9 +511,9 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
                         <Twitter size={20} />
                       </a>
                     )}
-                    {school.linkedin && (
+                    {college.linkedin && (
                       <a 
-                        href={school.linkedin} 
+                        href={college.linkedin} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-gray-400 hover:text-blue-700 transition-colors"
@@ -528,13 +529,13 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
           
 
           {/* Technology Adoption Display */}
-          {(school.smartClassroomsPercentage || (school.elearningPlatforms && school.elearningPlatforms.length > 0)) && (
+          {(college.smartClassroomsPercentage || (college.elearningPlatforms && college.elearningPlatforms.length > 0)) && (
             <div className="mt-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Technology Adoption</h3>
               
               {/* Donut Charts and Progress Bars */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {school.smartClassroomsPercentage && (
+                {college.smartClassroomsPercentage && (
                   <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center">
@@ -547,7 +548,7 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
                         </div>
                       </div>
                       <span className="text-3xl font-bold text-blue-600">
-                        {school.smartClassroomsPercentage}%
+                        {college.smartClassroomsPercentage}%
                       </span>
                     </div>
                     
@@ -566,43 +567,43 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
                           stroke="currentColor"
                           strokeWidth="3"
                           fill="none"
-                          strokeDasharray={`${school.smartClassroomsPercentage}, 100`}
+                          strokeDasharray={`${college.smartClassroomsPercentage}, 100`}
                           d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                         />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-lg font-bold text-blue-600">{school.smartClassroomsPercentage}%</span>
+                        <span className="text-lg font-bold text-blue-600">{college.smartClassroomsPercentage}%</span>
                       </div>
                     </div>
                     
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div 
                         className="bg-blue-500 h-2 rounded-full transition-all duration-500"
-                        style={{ width: `${school.smartClassroomsPercentage}%` }}
+                        style={{ width: `${college.smartClassroomsPercentage}%` }}
                       ></div>
                     </div>
                     <p className="text-sm text-gray-600 mt-3 text-center">
-                      {school.smartClassroomsPercentage}% of classrooms are smart-enabled
+                      {college.smartClassroomsPercentage}% of classrooms are smart-enabled
                     </p>
                   </div>
                 )}
               </div>
 
               {/* Timeline Section */}
-              {(school.techAdoptionYear || school.lastTechUpgrade) && (
+              {(college.techAdoptionYear || college.lastTechUpgrade) && (
                 <div className="mt-6 bg-gray-50 p-4 rounded-lg">
                   <h4 className="text-sm font-medium text-gray-700 mb-3">Technology Timeline</h4>
                   <div className="space-y-2">
-                    {school.techAdoptionYear && (
+                    {college.techAdoptionYear && (
                       <div className="flex items-center text-sm text-gray-600">
                         <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                        <span>Technology adoption started in {school.techAdoptionYear}</span>
+                        <span>Technology adoption started in {college.techAdoptionYear}</span>
                       </div>
                     )}
-                    {school.lastTechUpgrade && (
+                    {college.lastTechUpgrade && (
                       <div className="flex items-center text-sm text-gray-600">
                         <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
-                        <span>Last major upgrade in {school.lastTechUpgrade}</span>
+                        <span>Last major upgrade in {college.lastTechUpgrade}</span>
                       </div>
                     )}
                   </div>
@@ -612,22 +613,22 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
           )}
 
           {/* International Exposure Display */}
-          {(school.exchangePrograms && school.exchangePrograms.length > 0) || (school.globalTieups && school.globalTieups.length > 0) || school.studentsBenefitingPercentage ? (
+          {(college.exchangePrograms && college.exchangePrograms.length > 0) || (college.globalTieups && college.globalTieups.length > 0) || college.studentsBenefitingPercentage ? (
             <div className="mt-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">International Exposure</h3>
               
               {/* Impact Indicator */}
-              {school.studentsBenefitingPercentage && (
+              {college.studentsBenefitingPercentage && (
                 <div className="mb-6 bg-purple-50 p-4 rounded-lg border border-purple-200">
                   <div className="text-center">
                     <div className="text-sm text-gray-600 mb-1">Students Benefiting from International Exposure</div>
                     <div className="text-3xl font-bold text-purple-600 mb-2">
-                      {school.studentsBenefitingPercentage}%
+                      {college.studentsBenefitingPercentage}%
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-3">
                       <div 
                         className="bg-purple-500 h-3 rounded-full transition-all duration-500"
-                        style={{ width: `${school.studentsBenefitingPercentage}%` }}
+                        style={{ width: `${college.studentsBenefitingPercentage}%` }}
                       ></div>
                     </div>
                     <p className="text-sm text-gray-600 mt-2">
@@ -638,16 +639,16 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
               )}
 
               {/* Exchange Programs Cards */}
-              {school.exchangePrograms && school.exchangePrograms.length > 0 && (
+              {college.exchangePrograms && college.exchangePrograms.length > 0 && (
                 <div className="mb-6">
                   <h4 className="text-md font-medium text-gray-700 mb-4">Exchange Programs</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {school.exchangePrograms.map((program, index) => (
+                    {college.exchangePrograms.map((program, index) => (
                       <div key={index} className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                         <div className="flex items-center mb-3">
                           <span className="text-2xl mr-2">🌍</span>
                           <div>
-                            <h5 className="font-medium text-gray-800">{program.partnerSchool}</h5>
+                            <h5 className="font-medium text-gray-800">{program.partnercollege}</h5>
                             <p className="text-sm text-gray-600">{program.type}</p>
                           </div>
                         </div>
@@ -672,11 +673,11 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
               )}
 
               {/* Global Tie-ups Cards */}
-              {school.globalTieups && school.globalTieups.length > 0 && (
+              {college.globalTieups && college.globalTieups.length > 0 && (
                 <div className="mb-6">
                   <h4 className="text-md font-medium text-gray-700 mb-4">Global Tie-ups</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {school.globalTieups.map((tieup, index) => (
+                    {college.globalTieups.map((tieup, index) => (
                       <div key={index} className="bg-green-50 p-4 rounded-lg border border-green-200">
                         <div className="flex items-center mb-3">
                           <span className="text-2xl mr-2">🤝</span>
@@ -701,11 +702,11 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
               )}
 
               {/* Success Stories */}
-              {school.successStories && school.successStories.length > 0 && (
+              {college.successStories && college.successStories.length > 0 && (
                 <div className="mb-6">
                   <h4 className="text-md font-medium text-gray-700 mb-4">Success Stories</h4>
                   <div className="space-y-4">
-                    {school.successStories.map((story, index) => (
+                    {college.successStories.map((story, index) => (
                       <div key={index} className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -725,15 +726,15 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
               )}
 
               {/* International Photos */}
-              {school.internationalPhotos && school.internationalPhotos.length > 0 && (
+              {college.internationalPhotos && college.internationalPhotos.length > 0 && (
                 <div className="mb-6">
                   <h4 className="text-md font-medium text-gray-700 mb-4">Exchange Photos</h4>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {school.internationalPhotos.map((photo, index) => (
+                    {college.internationalPhotos.map((photo, index) => (
                       <div key={index} className="relative">
                        <img
-  src={school.logo?.url}
-  alt={`${school.name} logo`}
+  src={college.logo?.url}
+  alt={`${college.name} logo`}
   className="w-full h-full object-contain"
 />
 
@@ -759,7 +760,7 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
           
           <div className="mt-6 flex flex-wrap gap-3">
             <a
-              href={school.website}
+              href={college.website}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
@@ -790,27 +791,27 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
               <InfoBox
                 icon={<Award size={16} />}
                 label="Board"
-                value={school.board}
+                value={college.board}
               />
               <InfoBox
                 icon={<Users size={16} />}
                 label="Gender Type"
-                value={school.genderType}
+                value={college.genderType}
               />
               <InfoBox
                 icon={<Building size={16} />}
-                label="School Mode"
-                value={school.schoolMode}
+                label="college Mode"
+                value={college.collegeMode}
               />
               <InfoBox
                 icon={<BookOpen size={16} />}
                 label="Classes Upto"
-                value={school.upto}
+                value={college.upto}
               />
               <InfoBox
                 icon={<Sun size={16} />}
                 label="Shifts"
-                value={school.shifts}
+                value={college.shifts}
               />
             </div>
           </div>
@@ -1178,7 +1179,7 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
                         toast.info("Fee structure is available in the Fees & Affordability section below.");
                       }
                     } else {
-                      toast.info("Fee structure not available for this school.");
+                      toast.info("Fee structure not available for this college.");
                     }
                   }}
                   className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
@@ -1268,7 +1269,7 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
         )}
 
         {/* Technology Adoption Section */}
-        {(technologyAdoption || school.smartClassroomsPercentage || school.elearningPlatforms) && (
+        {(technologyAdoption || college.smartClassroomsPercentage || college.elearningPlatforms) && (
           <div className="bg-white shadow-lg rounded-lg p-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-3">
               💻 Technology Adoption
@@ -1288,7 +1289,7 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
                 
                 <div className="text-center mb-4">
                   <div className="text-4xl font-bold text-blue-600 mb-2">
-                    {school.smartClassroomsPercentage || technologyAdoption?.smartClassroomsPercentage || 'N/A'}%
+                    {college.smartClassroomsPercentage || technologyAdoption?.smartClassroomsPercentage || 'N/A'}%
                   </div>
                   <div className="text-sm text-gray-600 mb-4">Classrooms Digitized</div>
                   
@@ -1296,7 +1297,7 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
                     <div 
                       className="bg-gray-800 h-3 rounded-full transition-all duration-500"
                       style={{ 
-                        width: `${Math.min(100, Math.max(0, school.smartClassroomsPercentage || technologyAdoption?.smartClassroomsPercentage || 0))}%` 
+                        width: `${Math.min(100, Math.max(0, college.smartClassroomsPercentage || technologyAdoption?.smartClassroomsPercentage || 0))}%` 
                       }}
                     ></div>
                   </div>
@@ -1321,7 +1322,7 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
                     <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3">
                       <CheckCircle size={12} className="text-green-600" />
                     </div>
-                    <span className="text-sm text-gray-700">School Management System & Learning Portal</span>
+                    <span className="text-sm text-gray-700">college Management System & Learning Portal</span>
                   </div>
                   
                   <div className="flex items-center">
@@ -1329,17 +1330,17 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
                     <span className="text-sm text-gray-700">Active & Accessible 24/7</span>
                   </div>
                   
-                  {(school.elearningPlatforms && school.elearningPlatforms.length > 0) && (
+                  {(college.elearningPlatforms && college.elearningPlatforms.length > 0) && (
                     <div className="mt-4">
                       <p className="text-xs text-gray-500 mb-2">Available Platforms:</p>
                       <div className="flex flex-wrap gap-1">
-                        {school.elearningPlatforms.slice(0, 3).map((platform, index) => (
+                        {college.elearningPlatforms.slice(0, 3).map((platform, index) => (
                           <span key={index} className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
                             {platform.platform}
                           </span>
                         ))}
-                        {school.elearningPlatforms.length > 3 && (
-                          <span className="text-xs text-gray-500">+{school.elearningPlatforms.length - 3} more</span>
+                        {college.elearningPlatforms.length > 3 && (
+                          <span className="text-xs text-gray-500">+{college.elearningPlatforms.length - 3} more</span>
                         )}
                       </div>
                     </div>
@@ -1382,14 +1383,14 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-gray-600">Pass Percentage</span>
                     <span className="text-lg font-semibold text-gray-800">
-                      {academics.averageClass12Result || academics.averageClass10Result || academics.averageSchoolMarks || 'N/A'}%
+                      {academics.averageClass12Result || academics.averageClass10Result || academics.averagecollegeMarks || 'N/A'}%
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-gray-800 h-2 rounded-full transition-all duration-500"
                       style={{ 
-                        width: `${Math.min(100, Math.max(0, academics.averageClass12Result || academics.averageClass10Result || academics.averageSchoolMarks || 0))}%` 
+                        width: `${Math.min(100, Math.max(0, academics.averageClass12Result || academics.averageClass10Result || academics.averagecollegeMarks || 0))}%` 
                       }}
                     ></div>
                   </div>
@@ -1400,14 +1401,14 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-gray-600">Average Marks</span>
                     <span className="text-lg font-semibold text-gray-800">
-                      {academics.averageClass10Result || academics.averageSchoolMarks || 'N/A'}%
+                      {academics.averageClass10Result || academics.averagecollegeMarks || 'N/A'}%
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-gray-800 h-2 rounded-full transition-all duration-500"
                       style={{ 
-                        width: `${Math.min(100, Math.max(0, academics.averageClass10Result || academics.averageSchoolMarks || 0))}%` 
+                        width: `${Math.min(100, Math.max(0, academics.averageClass10Result || academics.averagecollegeMarks || 0))}%` 
                       }}
                     ></div>
                   </div>
@@ -1417,7 +1418,7 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
             </div>
 
             {/* Board Results by Year */}
-            {school.academicResults && school.academicResults.length > 0 && (
+            {college.academicResults && college.academicResults.length > 0 && (
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-gray-700 mb-4">📊 Board Results by Year</h3>
                 <div className="overflow-x-auto">
@@ -1430,7 +1431,7 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {school.academicResults
+                      {college.academicResults
                         .filter(result => result.year && (result.passPercent || result.averageMarksPercent))
                         .sort((a, b) => Number(b.year) - Number(a.year))
                         .map((result, index) => (
@@ -1451,11 +1452,11 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
             )}
 
             {/* Exam Qualifiers & Participation */}
-            {school.examQualifiers && school.examQualifiers.length > 0 && (
+            {college.examQualifiers && college.examQualifiers.length > 0 && (
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-gray-700 mb-4">🏆 Exam Qualifiers & Participation</h3>
                 <div className="space-y-4">
-                  {school.examQualifiers
+                  {college.examQualifiers
                     .filter(qualifier => qualifier.year && qualifier.exam)
                     .sort((a, b) => Number(b.year) - Number(a.year))
                     .map((qualifier, index) => (
@@ -1496,7 +1497,7 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
                 <div className="space-y-3">
                   {internationalExposure.exchangePrograms.map((program, index) => (
                     <div key={index} className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                      <h4 className="font-semibold text-blue-800">{program.partnerSchool}</h4>
+                      <h4 className="font-semibold text-blue-800">{program.partnercollege}</h4>
                       <p className="text-blue-700">Type: {program.programType}</p>
                       <p className="text-blue-600 text-sm">Duration: {program.duration}</p>
                     </div>
@@ -1745,7 +1746,7 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-800 mb-2">Fee Transparency</h3>
-                    <p className="text-sm text-gray-600">School's commitment to transparent fee structure</p>
+                    <p className="text-sm text-gray-600">college's commitment to transparent fee structure</p>
                   </div>
                   <div className="text-center">
                     <div className={`inline-flex items-center px-6 py-3 rounded-full text-lg font-bold ${
@@ -1887,7 +1888,7 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
         )}
 
         {/* Reviews Section */}
-        <ReviewSection_fixed schoolId={school._id} />
+        <ReviewSection_fixed collegeId={college._id} />
 
         
             
@@ -2007,4 +2008,4 @@ const SchoolDetailsPage = ({ shortlist, onShortlistToggle }) => {
   );
 };
 
-export default SchoolDetailsPage;
+export default collegeDetailsPage;

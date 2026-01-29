@@ -6,46 +6,46 @@ import {
   checkApplicationExists, 
   createApplication, 
   completeApplicationFlow,
-  submitFormToSchool,
+  submitFormTocollege,
   handleApplicationFlow
 } from '../api/applicationService';
-import { getSchoolById } from '../api/adminService';
+import { getcollegeById } from '../api/adminService';
 import { Loader2, CheckCircle, AlertCircle, FileText, Send, ArrowRight, ArrowLeft } from 'lucide-react';
 
 const CompleteApplicationFlow = () => {
   const navigate = useNavigate();
-  const { schoolId } = useParams();
+  const { collegeId } = useParams();
   const { user: currentUser } = useAuth();
   
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [applicationExists, setApplicationExists] = useState(null);
   const [applicationData, setApplicationData] = useState(null);
-  const [school, setSchool] = useState(null);
+  const [college, setcollege] = useState(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [error, setError] = useState('');
 
-  // Fetch school details
+  // Fetch college details
   useEffect(() => {
-    if (schoolId) {
-      fetchSchoolDetails();
+    if (collegeId) {
+      fetchcollegeDetails();
     }
-  }, [schoolId]);
+  }, [collegeId]);
 
   // Step 1: Check if application exists
   useEffect(() => {
-    if (currentUser?._id && schoolId) {
+    if (currentUser?._id && collegeId) {
       checkExistingApplication();
     }
-  }, [currentUser, schoolId]);
+  }, [currentUser, collegeId]);
 
-  const fetchSchoolDetails = async () => {
+  const fetchcollegeDetails = async () => {
     try {
-      const response = await getSchoolById(schoolId);
-      setSchool(response.data.data);
+      const response = await getcollegeById(collegeId);
+      setcollege(response.data.data);
     } catch (error) {
-      console.error('Error fetching school details:', error);
-      toast.error('Failed to fetch school details');
+      console.error('Error fetching college details:', error);
+      toast.error('Failed to fetch college details');
     }
   };
 
@@ -60,7 +60,7 @@ const CompleteApplicationFlow = () => {
         setApplicationExists(true);
         setApplicationData(application.data);
         setStep(2); // Skip to Step 2 if application exists
-        toast.info('Application already exists. Proceeding to submit to school.');
+        toast.info('Application already exists. Proceeding to submit to college.');
       } else {
         setApplicationExists(false);
         setStep(1); // Show application form
@@ -100,9 +100,9 @@ const CompleteApplicationFlow = () => {
     }
   };
 
-  const handleSubmitToSchool = async () => {
-    if (!applicationData || !schoolId) {
-      toast.error('Missing application data or school ID');
+  const handleSubmitTocollege = async () => {
+    if (!applicationData || !collegeId) {
+      toast.error('Missing application data or college ID');
       return;
     }
 
@@ -111,10 +111,10 @@ const CompleteApplicationFlow = () => {
     
     try {
       const formId = applicationData._id || applicationData.id;
-      const result = await submitFormToSchool(schoolId, currentUser._id, formId);
+      const result = await submitFormTocollege(collegeId, currentUser._id, formId);
       
       setFormSubmitted(true);
-      toast.success('Form submitted to school successfully!');
+      toast.success('Form submitted to college successfully!');
       
       // Navigate to application status page after successful submission
       setTimeout(() => {
@@ -122,9 +122,9 @@ const CompleteApplicationFlow = () => {
       }, 2000);
       
     } catch (error) {
-      console.error('Error submitting form to school:', error);
-      setError('Failed to submit form to school. Please try again.');
-      toast.error('Failed to submit form to school.');
+      console.error('Error submitting form to college:', error);
+      setError('Failed to submit form to college. Please try again.');
+      toast.error('Failed to submit form to college.');
     } finally {
       setLoading(false);
     }
@@ -166,7 +166,7 @@ const CompleteApplicationFlow = () => {
           <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Success!</h2>
           <p className="text-gray-600 mb-4">
-            Your application has been submitted to {school?.name || 'the school'} successfully.
+            Your application has been submitted to {college?.name || 'the college'} successfully.
           </p>
           <p className="text-sm text-gray-500">
             Redirecting to application status page...
@@ -182,7 +182,7 @@ const CompleteApplicationFlow = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Application to {school?.name || 'School'}
+            Application to {college?.name || 'college'}
           </h1>
           <p className="text-gray-600">
             Complete your application process in two simple steps
@@ -209,7 +209,7 @@ const CompleteApplicationFlow = () => {
               }`}>
                 2
               </div>
-              <span className="ml-2 font-medium">Submit to School</span>
+              <span className="ml-2 font-medium">Submit to college</span>
             </div>
           </div>
         </div>
@@ -225,7 +225,7 @@ const CompleteApplicationFlow = () => {
               <p className="text-gray-600">
                 {applicationExists === false 
                   ? 'Please fill out the application form to proceed.'
-                  : 'Your application is ready to submit to the school.'
+                  : 'Your application is ready to submit to the college.'
                 }
               </p>
             </div>
@@ -260,14 +260,14 @@ const CompleteApplicationFlow = () => {
           </div>
         )}
 
-        {/* Step 2: Submit to School */}
+        {/* Step 2: Submit to college */}
         {step === 2 && (
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="text-center mb-6">
               <Send className="h-12 w-12 text-indigo-600 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Submit to School</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Submit to college</h2>
               <p className="text-gray-600">
-                Submit your application to {school?.name || 'the selected school'}.
+                Submit your application to {college?.name || 'the selected college'}.
               </p>
             </div>
 
@@ -292,8 +292,8 @@ const CompleteApplicationFlow = () => {
                     <span className="ml-2 text-gray-900">{applicationData.name}</span>
                   </div>
                   <div>
-                    <span className="text-gray-600">School:</span>
-                    <span className="ml-2 text-gray-900">{school?.name}</span>
+                    <span className="text-gray-600">college:</span>
+                    <span className="ml-2 text-gray-900">{college?.name}</span>
                   </div>
                 </div>
               </div>
@@ -308,7 +308,7 @@ const CompleteApplicationFlow = () => {
                 Back
               </button>
               <button
-                onClick={handleSubmitToSchool}
+                onClick={handleSubmitTocollege}
                 disabled={loading}
                 className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               >
@@ -319,7 +319,7 @@ const CompleteApplicationFlow = () => {
                   </>
                 ) : (
                   <>
-                    Submit to School
+                    Submit to college
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </>
                 )}

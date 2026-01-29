@@ -21,8 +21,8 @@ useEffect(() => {
             return;
         }
 
-        // No student profile for school users
-        if (currentUser.userType === 'school') {
+        // No student profile for college users
+        if (currentUser.userType === 'college') {
             return;
         }
 
@@ -50,7 +50,7 @@ useEffect(() => {
                     boards: data.preferences?.boards || "",
                     preferredStandard: data.preferences?.preferredStandard || "",
                     interests: data.preferences?.interests || "",
-                    schoolType: data.preferences?.schoolType || "",
+                    collegeType: data.preferences?.collegeType || "",
                     shift: data.preferences?.shift || "",
                 });
             } else {
@@ -61,7 +61,7 @@ useEffect(() => {
                     userType: "parent",
                     boards: "CBSE", // Default board
                     preferredStandard: "primary", // Default standard
-                    schoolType: "private", // Default school type
+                    collegeType: "private", // Default college type
                     shift: "morning", // Default shift
                     interests: "Focusing on Academics" // Default interest
                 }); 
@@ -92,7 +92,7 @@ useEffect(() => {
       boards: data.boards || 'CBSE',
       preferredStandard: data.preferredStandard || 'primary',
       interests: data.interests || 'Focusing on Academics',
-      schoolType: data.schoolType || 'private',
+      collegeType: data.collegeType || 'private',
       shift: data.shift || 'morning'
     };
     
@@ -344,7 +344,7 @@ useEffect(() => {
               >
                 <option value="morning">Morning</option>
                 <option value="afternoon">Afternoon</option>
-                <option value="night school">Night School</option>
+                <option value="night college">Night college</option>
               </select>
               {errors.shift && (
                 <p className="text-red-500 text-xs mt-1">
@@ -355,15 +355,15 @@ useEffect(() => {
 
             <div>
               <label
-                htmlFor="schoolType"
+                htmlFor="collegeType"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                School Type <span className="text-red-500">*</span>
+                college Type <span className="text-red-500">*</span>
               </label>
               <select
-                id="schoolType"
-                {...register("schoolType", {
-                  required: "School Type is required",
+                id="collegeType"
+                {...register("collegeType", {
+                  required: "college Type is required",
                 })}
                 className="w-full p-2 border border-gray-300 rounded-md"
                 defaultValue="private"
@@ -372,9 +372,9 @@ useEffect(() => {
                 <option value="private">Private</option>
                 <option value="government">Government</option>
               </select>
-              {errors.schoolType && (
+              {errors.collegeType && (
                 <p className="text-red-500 text-xs mt-1">
-                  {errors.schoolType.message}
+                  {errors.collegeType.message}
                 </p>
               )}
             </div>
@@ -394,7 +394,7 @@ useEffect(() => {
                 className="w-full p-2 border border-gray-300 rounded-md"
                 defaultValue="primary"
               >
-                <option value="playSchool">Play School</option>
+                <option value="playcollege">Play college</option>
                 <option value="pre-primary">Pre-Primary</option>
                 <option value="primary">Primary</option>
                 <option value="secondary">Secondary</option>

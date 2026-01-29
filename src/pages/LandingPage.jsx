@@ -9,24 +9,24 @@ const LandingPage = () => (
       <div className="container mx-auto px-6">
         <GraduationCap size={48} className="mx-auto text-blue-600 mb-4" />
         <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
-          Find Your Perfect School
+          Find Your Perfect college
         </h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
-          Discover, compare, and apply to the best schools for your educational
+          Discover, compare, and apply to the best colleges for your educational
           journey.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
-            to="/schools"
+            to="/colleges"
             className="bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-700 shadow-lg w-full sm:w-auto"
           >
-            Browse Schools
+            Browse colleges
           </Link>
           <Link
-            to="/signup-school"
+            to="/signup-college"
             className="bg-white text-gray-700 font-semibold px-8 py-3 rounded-lg hover:bg-gray-100 border border-gray-300 shadow-lg w-full sm:w-auto"
           >
-            Register Your School
+            Register Your college
           </Link>
         </div>
       </div>
@@ -34,7 +34,7 @@ const LandingPage = () => (
     <section className="py-20">
       <div className="container mx-auto px-6">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-4">
-          Why Choose SchoolFinder?
+          Why Choose collegeFinder?
         </h2>
         <p className="text-center text-gray-600 mb-12">
           Everything you need to make informed decisions about education.
@@ -43,17 +43,17 @@ const LandingPage = () => (
           <FeatureCard
             icon={<Search size={32} />}
             title="Comprehensive Search"
-            text="Easily search and filter through thousands of schools based on your preferences."
+            text="Easily search and filter through thousands of colleges based on your preferences."
           />
           <FeatureCard
             icon={<FileText size={32} />}
             title="Easy Applications"
-            text="Submit applications to multiple schools with a single, streamlined profile."
+            text="Submit applications to multiple colleges with a single, streamlined profile."
           />
           <FeatureCard
             icon={<Star size={32} />}
-            title="Quality Schools"
-            text="Browse detailed profiles of verified and quality-rated schools."
+            title="Quality colleges"
+            text="Browse detailed profiles of verified and quality-rated colleges."
           />
         </div>
       </div>
@@ -67,10 +67,10 @@ const LandingPage = () => (
           Join thousands of students finding their perfect educational match.
         </p>
         <Link
-          to="/schools"
+          to="/colleges"
           className="bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-700 shadow-lg"
         >
-          Explore Schools Now
+          Explore colleges Now
         </Link>
       </div>
     </section>

@@ -88,7 +88,7 @@ ${formData.additionalNotes ? `Additional Notes: ${formData.additionalNotes}` : '
             <div>
               <h2 className="text-xl font-semibold text-gray-900">Schedule Interview</h2>
               <p className="text-sm text-gray-600">
-                {application?.studentName} - {application?.schoolName}
+                {application?.studentName} - {application?.collegeName}
               </p>
             </div>
           </div>

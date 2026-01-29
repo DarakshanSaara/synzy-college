@@ -1,7 +1,7 @@
 # Admin Panel Documentation
 
 ## Overview
-The admin panel provides administrative access to manage users, schools, and system settings for the School Finder application.
+The admin panel provides administrative access to manage users, colleges, and system settings for the college Finder application.
 
 ## Access
 
@@ -24,7 +24,7 @@ The admin panel provides administrative access to manage users, schools, and sys
 ### Admin Dashboard
 - **URL**: `/admin/dashboard`
 - **Features**:
-  - Overview statistics (users, schools, activity)
+  - Overview statistics (users, colleges, activity)
   - Quick action buttons
   - Recent activity feed
   - Protected route (admin access only)
@@ -48,11 +48,11 @@ The admin panel provides administrative access to manage users, schools, and sys
 - `loginAdmin()` - Admin login
 - `getAdminStats()` - Dashboard statistics
 - `getAllUsers()` - User management
-- `getAllSchools()` - School management
+- `getAllcolleges()` - college management
 - `updateUserStatus()` - Activate/deactivate users
-- `updateSchoolStatus()` - Approve/reject schools
+- `updatecollegeStatus()` - Approve/reject colleges
 - `deleteUser()` - Remove users
-- `deleteSchool()` - Remove schools
+- `deletecollege()` - Remove colleges
 - `getAdminProfile()` - Admin profile
 - `updateAdminProfile()` - Update profile
 - `changeAdminPassword()` - Password change
@@ -75,7 +75,7 @@ The admin panel provides administrative access to manage users, schools, and sys
 1. **Access Admin Panel**: Click "Admin" link in the main navigation
 2. **Login**: Use admin credentials or create new admin account
 3. **Dashboard**: View system statistics and quick actions
-4. **Manage**: Use quick action buttons to manage users and schools
+4. **Manage**: Use quick action buttons to manage users and colleges
 
 ## Development Notes
 
@@ -88,7 +88,7 @@ The admin panel provides administrative access to manage users, schools, and sys
 ## Future Enhancements
 
 - User management interface
-- School approval workflow
+- college approval workflow
 - Analytics and reporting
 - System settings configuration
 - Audit logs and activity tracking

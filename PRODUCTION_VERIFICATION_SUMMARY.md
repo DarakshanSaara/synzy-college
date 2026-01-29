@@ -35,7 +35,7 @@ const apiBaseURL = import.meta.env.DEV
 **Status**: PRODUCTION READY ✅
 
 **Files Fixed**:
-1. `src/pages/SchoolPortalPage.jsx` (lines 331-339)
+1. `src/pages/CollegePortalPage.jsx` (lines 331-339)
 2. `src/pages/StudentApplicationTrackingPage.jsx` (lines 229-237)
 
 **Implementation**:
@@ -197,33 +197,33 @@ if (import.meta.env.DEV) {
 
 **User Flow 1: Parent/Student Login → Browse → Apply**
 1. ✅ Login with user credentials
-2. ✅ Browse schools list
-3. ✅ View school details
+2. ✅ Browse colleges list
+3. ✅ View college details
 4. ✅ Add to shortlist
 5. ✅ Fill application form
 6. ✅ Submit application
 
-**User Flow 2: School Admin Login → View Applications → View PDF**
-1. ✅ Login with school credentials
-2. ✅ View school portal
+**User Flow 2: college Admin Login → View Applications → View PDF**
+1. ✅ Login with college credentials
+2. ✅ View college portal
 3. ✅ See application list
 4. ✅ Click to view student PDF
 5. ✅ PDF opens in new tab
 
-**User Flow 3: Guest → Predictor → View School**
+**User Flow 3: Guest → Predictor → View college**
 1. ✅ Visit predictor page
 2. ✅ Fill predictor form
 3. ✅ Submit and see results
-4. ✅ Click school card
-5. ✅ View school details
+4. ✅ Click college card
+5. ✅ View college details
 
 ### API Endpoint Testing
 
 After deployment, verify these endpoints work:
 
 **GET Endpoints**:
-- [ ] `/api/schools` - School listing
-- [ ] `/api/schools/:id` - School details
+- [ ] `/api/colleges` - college listing
+- [ ] `/api/colleges/:id` - college details
 - [ ] `/api/users/shortlist/:authId` - Get shortlist
 - [ ] `/api/users/pdf/view/:id` - View PDF
 
@@ -231,7 +231,7 @@ After deployment, verify these endpoints work:
 - [ ] `/api/users/shortlist` - Add to shortlist
 - [ ] `/api/users/shortlist/remove` - Remove from shortlist
 - [ ] `/api/applications` - Submit application
-- [ ] `/api/predict` - School predictor
+- [ ] `/api/predict` - college predictor
 
 ---
 

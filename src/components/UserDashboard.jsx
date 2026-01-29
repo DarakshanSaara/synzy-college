@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
-import SchoolCard from './SchoolCard';
+import collegeCard from './collegeCard';
 import UserProfileForm from './UserProfileForm';
 import { fetchPdfBlob } from '../utils/pdfHelper';
 
@@ -17,7 +17,7 @@ import {
   getUserPreferences,
   getFormsByStudent
 } from '../api/userService';
-import { getSchoolById } from '../api/adminService';
+import { getcollegeById } from '../api/adminService';
 import { Download } from 'lucide-react';
 
 const UserDashboard = ({ shortlist, comparisonList, onCompareToggle, onShortlistToggle }) => {
@@ -26,7 +26,7 @@ const UserDashboard = ({ shortlist, comparisonList, onCompareToggle, onShortlist
 
   const [applicationExists, setApplicationExists] = useState(false);
   const [applications, setApplications] = useState([]);
-  const [schoolNameById, setSchoolNameById] = useState({});
+  const [collegeNameById, setcollegeNameById] = useState({});
   const [forms, setForms] = useState([]);
   const [displayForms, setDisplayForms] = useState([]);
   const [isEditingProfile, setIsEditingProfile] = useState(() => !currentUser?.contactNo);
@@ -149,11 +149,11 @@ const UserDashboard = ({ shortlist, comparisonList, onCompareToggle, onShortlist
       if (typeof localStorage !== 'undefined' && userId) {
         for (let i = 0; i < localStorage.length; i++) {
           const k = localStorage.key(i);
-          if (k && k.startsWith(`schoolInfo:${userId}:`)) {
+          if (k && k.startsWith(`collegeInfo:${userId}:`)) {
             const raw = localStorage.getItem(k);
             try {
               const parsed = JSON.parse(raw || '{}');
-              if (parsed && (parsed.schoolId || parsed.schoolName)) {
+              if (parsed && (parsed.collegeId || parsed.collegeName)) {
                 cached.push(parsed);
               }
             } catch (_) {}
@@ -163,8 +163,8 @@ const UserDashboard = ({ shortlist, comparisonList, onCompareToggle, onShortlist
 
       const synthesizedFromCache = cached.map((c) => ({
         _synthetic: true,
-        schoolName: c.schoolName,
-        schoolId: c.schoolId,
+        collegeName: c.collegeName,
+        collegeId: c.collegeId,
         status: 'Submitted',
         createdAt: c.createdAt || null,
       }));
@@ -173,8 +173,8 @@ const UserDashboard = ({ shortlist, comparisonList, onCompareToggle, onShortlist
       const map = new Map();
       merged.forEach((item, idx) => {
         const strong = item?._id || item?.id;
-        const sId = typeof item?.schoolId === 'object' ? (item?.schoolId?._id || item?.schoolId?.id) : item?.schoolId;
-        const sName = item?.schoolName || item?.school?.name || '';
+        const sId = typeof item?.collegeId === 'object' ? (item?.collegeId?._id || item?.collegeId?.id) : item?.collegeId;
+        const sName = item?.collegeName || item?.college?.name || '';
         const when = item?.createdAt || item?.updatedAt || '';
         const key = strong || `${sId || 'noid'}-${when || 'notime'}-${sName || 'noname'}-${idx}`;
         map.set(String(key), item);
@@ -185,38 +185,38 @@ const UserDashboard = ({ shortlist, comparisonList, onCompareToggle, onShortlist
     }
   }, [forms, currentUser]);
 
-  // Load school names for applications (only based on current display list)
+  // Load college names for applications (only based on current display list)
   useEffect(() => {
-    const loadSchoolNames = async () => {
+    const loadcollegeNames = async () => {
       const ids = (displayForms.length ? displayForms : forms)
         .map(app =>
-          typeof (app.schoolId || app.school) === 'object'
-            ? (app.schoolId || app.school)?._id
-            : (app.schoolId || app.school)
+          typeof (app.collegeId || app.college) === 'object'
+            ? (app.collegeId || app.college)?._id
+            : (app.collegeId || app.college)
         )
         .filter(Boolean);
 
       const uniqueIds = Array.from(new Set(ids));
-      const idsToFetch = uniqueIds.filter(id => !schoolNameById[id]);
+      const idsToFetch = uniqueIds.filter(id => !collegeNameById[id]);
       if (!idsToFetch.length) return;
 
       try {
-        const results = await Promise.allSettled(idsToFetch.map(id => getSchoolById(id)));
+        const results = await Promise.allSettled(idsToFetch.map(id => getcollegeById(id)));
         const newMap = {};
         results.forEach((res, idx) => {
           const id = idsToFetch[idx];
           newMap[id] =
             res.status === 'fulfilled'
-              ? res.value?.data?.data?.name || res.value?.data?.name || 'School'
-              : 'School';
+              ? res.value?.data?.data?.name || res.value?.data?.name || 'college'
+              : 'college';
         });
-        setSchoolNameById(prev => ({ ...prev, ...newMap }));
+        setcollegeNameById(prev => ({ ...prev, ...newMap }));
       } catch (err) {
-        console.error('Error loading school names:', err);
+        console.error('Error loading college names:', err);
       }
     };
 
-    loadSchoolNames();
+    loadcollegeNames();
   }, [displayForms, forms]);
 
   // Handle profile update
@@ -280,16 +280,16 @@ const UserDashboard = ({ shortlist, comparisonList, onCompareToggle, onShortlist
   };
 
   // Card and Apply actions
-  const handleCardClick = school => navigate(`/school/${school._id || school.schoolId}`);
-  const handleApplyClick = school => {
-    const schoolId = school._id || school.schoolId;
-    if (!schoolId) return;
-    localStorage.setItem('lastAppliedSchoolId', String(schoolId));
-    const displayName = school.name || school.schoolName || school.title || school.instituteName;
+  const handleCardClick = college => navigate(`/college/${college._id || college.collegeId}`);
+  const handleApplyClick = college => {
+    const collegeId = college._id || college.collegeId;
+    if (!collegeId) return;
+    localStorage.setItem('lastAppliedcollegeId', String(collegeId));
+    const displayName = college.name || college.collegeName || college.title || college.instituteName;
     if (displayName) {
-      try { localStorage.setItem(`schoolName:${schoolId}`, displayName); } catch (_) {}
+      try { localStorage.setItem(`collegeName:${collegeId}`, displayName); } catch (_) {}
     }
-    navigate(`/apply/${schoolId}`);
+    navigate(`/apply/${collegeId}`);
   };
 
   if (!currentUser) {
@@ -353,7 +353,7 @@ const UserDashboard = ({ shortlist, comparisonList, onCompareToggle, onShortlist
                 ? [
                     profile.preferences.boards,
                     profile.preferences.preferredStandard,
-                    profile.preferences.schoolType,
+                    profile.preferences.collegeType,
                     profile.preferences.shift
                   ]
                     .filter(Boolean)
@@ -405,26 +405,26 @@ const extractStudentId = (app, currentUser) => {
     <div className="space-y-12">
       {/* Shortlist */}
       <div>
-        <h2 className="text-2xl font-semibold text-gray-700 mb-6">Your Shortlisted Schools</h2>
+        <h2 className="text-2xl font-semibold text-gray-700 mb-6">Your Shortlisted colleges</h2>
         {shortlist && shortlist.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {shortlist.map(school => (
-              <SchoolCard
-                key={school.schoolId || school._id}
-                school={school}
-                onCardClick={() => handleCardClick(school)}
-                onShortlistToggle={() => onShortlistToggle(school)}
+            {shortlist.map(college => (
+              <collegeCard
+                key={college.collegeId || college._id}
+                college={college}
+                onCardClick={() => handleCardClick(college)}
+                onShortlistToggle={() => onShortlistToggle(college)}
                 isShortlisted={shortlist.some(
                   item =>
-                    (item.schoolId || item._id) === (school.schoolId || school._id)
+                    (item.collegeId || item._id) === (college.collegeId || college._id)
                 )}
-                onCompareToggle={() => onCompareToggle(school)}
+                onCompareToggle={() => onCompareToggle(college)}
                 isCompared={comparisonList?.some(
                   item =>
-                    (item.schoolId || item._id) === (school.schoolId || school._id)
+                    (item.collegeId || item._id) === (college.collegeId || college._id)
                 )}
                 currentUser={currentUser}
-                onApply={() => handleApplyClick(school)}
+                onApply={() => handleApplyClick(college)}
               />
             ))}
           </div>
@@ -433,7 +433,7 @@ const extractStudentId = (app, currentUser) => {
             <p>
               {!shortlist?.length
                 ? 'Loading...'
-                : "You haven't shortlisted any schools yet."}
+                : "You haven't shortlisted any colleges yet."}
             </p>
           </div>
         )}
@@ -448,7 +448,7 @@ const extractStudentId = (app, currentUser) => {
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="text-left text-gray-600 border-b">
-                    <th className="py-2 pr-4">School</th>
+                    <th className="py-2 pr-4">college</th>
                     <th className="py-2 pr-4">Status</th>
                     <th className="py-2 pr-4">Application ID</th>
                     <th className="py-2 pr-4">Actions</th>
@@ -456,15 +456,15 @@ const extractStudentId = (app, currentUser) => {
                 </thead>
                 <tbody>
                   {(displayForms.length ? displayForms : (forms.length ? forms : applications)).map(row => {
-                    const schoolRef = row.schoolId || row.school;
-                    let schoolIdStr =
-                      typeof schoolRef === 'object' ? schoolRef?._id : schoolRef;
-                    if (!schoolIdStr)
-                      schoolIdStr = localStorage.getItem('lastAppliedSchoolId') || null;
+                    const collegeRef = row.collegeId || row.college;
+                    let collegeIdStr =
+                      typeof collegeRef === 'object' ? collegeRef?._id : collegeRef;
+                    if (!collegeIdStr)
+                      collegeIdStr = localStorage.getItem('lastAppliedcollegeId') || null;
                     const displayName =
-                      typeof schoolRef === 'object'
-                        ? (schoolRef?.name || schoolRef?.schoolName)
-                        : (row.schoolName || schoolNameById[schoolIdStr] || schoolIdStr || '—');
+                      typeof collegeRef === 'object'
+                        ? (collegeRef?.name || collegeRef?.collegeName)
+                        : (row.collegeName || collegeNameById[collegeIdStr] || collegeIdStr || '—');
                     const rawStatus = (row.status || row.applicationStatus || row.formStatus || row.decision || 'Pending');
                     const status = String(rawStatus).toLowerCase().includes('submit') ? 'Submitted' : (
                       String(rawStatus).charAt(0).toUpperCase() + String(rawStatus).slice(1)
@@ -474,9 +474,9 @@ const extractStudentId = (app, currentUser) => {
                     return (
                       <tr key={row._id || row.applicationId} className="border-b last:border-0">
                         <td className="py-2 pr-4">
-                          {schoolIdStr ? (
+                          {collegeIdStr ? (
                             <button
-                              onClick={() => navigate(`/school/${schoolIdStr}`)}
+                              onClick={() => navigate(`/college/${collegeIdStr}`)}
                               className="text-blue-600 hover:text-blue-800 hover:underline font-medium text-left"
                             >
                               {displayName}
@@ -492,13 +492,13 @@ const extractStudentId = (app, currentUser) => {
                         </td>
                         <td className="py-2 pr-4">{idToShow}</td>
                         <td className="py-2 pr-4">
-                          {schoolIdStr && (
+                          {collegeIdStr && (
                             <button
                               type="button"
-                              onClick={() => navigate(`/school/${schoolIdStr}`)}
+                              onClick={() => navigate(`/college/${collegeIdStr}`)}
                               className="inline-flex items-center bg-blue-600 text-white font-semibold px-3 py-1.5 rounded-md hover:bg-blue-700 mr-2"
                             >
-                              View School
+                              View college
                             </button>
                           )}
    {/* View PDF */}

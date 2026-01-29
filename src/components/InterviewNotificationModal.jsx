@@ -3,7 +3,7 @@ import { X, Calendar, Clock, MapPin, User, Phone, FileText, CheckCircle, AlertCi
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
-const InterviewNotificationModal = ({ isOpen, onClose, interviewData, schoolName, notificationType }) => {
+const InterviewNotificationModal = ({ isOpen, onClose, interviewData, collegeName, notificationType }) => {
   const navigate = useNavigate();
   if (!isOpen || !interviewData) return null;
 
@@ -122,7 +122,7 @@ const InterviewNotificationModal = ({ isOpen, onClose, interviewData, schoolName
             </div>
             <div>
               <h2 className="text-2xl font-bold">{isWrittenExam ? 'Written Exam Scheduled! 🎯' : 'Interview Scheduled! 🎉'}</h2>
-              <p className="text-purple-100">{schoolName}</p>
+              <p className="text-purple-100">{collegeName}</p>
             </div>
           </div>
           <button
@@ -140,7 +140,7 @@ const InterviewNotificationModal = ({ isOpen, onClose, interviewData, schoolName
             <div className="flex items-center space-x-2">
               <CheckCircle className="w-5 h-5 text-green-600" />
               <p className="text-green-800 font-medium">
-                {isWrittenExam ? `You have been scheduled for a written exam at ${schoolName}.` : `Congratulations! You have been selected for an interview at ${schoolName}.`}
+                {isWrittenExam ? `You have been scheduled for a written exam at ${collegeName}.` : `Congratulations! You have been selected for an interview at ${collegeName}.`}
               </p>
             </div>
           </div>
@@ -253,7 +253,7 @@ const InterviewNotificationModal = ({ isOpen, onClose, interviewData, schoolName
                 <div className="flex items-center">
                   <AlertCircle className="w-5 h-5 text-yellow-600 mr-2" />
                   <p className="text-yellow-800">
-                    {isWrittenExam ? 'Written exam has been scheduled, but detailed information is not available yet. Please contact the school for more details.' : 'Interview has been scheduled, but detailed information is not available yet. Please contact the school for more details.'}
+                    {isWrittenExam ? 'Written exam has been scheduled, but detailed information is not available yet. Please contact the college for more details.' : 'Interview has been scheduled, but detailed information is not available yet. Please contact the college for more details.'}
                   </p>
                 </div>
               </div>

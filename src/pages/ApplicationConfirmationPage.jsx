@@ -6,17 +6,17 @@ const ApplicationConfirmationPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Get schoolId from location state or URL params
-  const schoolId = location.state?.schoolId || new URLSearchParams(location.search).get('schoolId');
+  // Get collegeId from location state or URL params
+  const collegeId = location.state?.collegeId || new URLSearchParams(location.search).get('collegeId');
 
   const handleGoBack = () => {
     navigate('/dashboard');
   };
 
   const handleViewPdf = () => {
-    // Navigate to application summary with schoolId
-    if (schoolId) {
-      navigate(`/application-summary?schoolId=${schoolId}`);
+    // Navigate to application summary with collegeId
+    if (collegeId) {
+      navigate(`/application-summary?collegeId=${collegeId}`);
     } else {
       navigate('/application-summary');
     }

@@ -3,15 +3,15 @@ import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-
 import Header from "./components/Header";
 import LandingPage from "./pages/LandingPage";
 import HomePage from "./pages/HomePage";
-import SchoolsPage from "./pages/SchoolsPage";
-import SchoolDetailsPage from "./pages/SchoolDetailsPage";
+import collegesPage from "./pages/collegesPage";
+import collegeDetailsPage from "./pages/collegeDetailsPage";
 import LoginPage from "./pages/LoginPage";
 import ComparePage from "./pages/ComparePage";
 import SignUpPage from "./pages/SignUpPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import DashboardPage from "./pages/DashboardPage";
 import ShortlistPage from "./pages/ShortlistPage";
-import SchoolPortalPage from "./pages/SchoolPortalPage";
+import CollegePortalPage from "./pages/CollegePortalPage";
 import StudentApplicationPage from "./pages/StudentApplicationPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -24,7 +24,7 @@ import CreateProfilePage from "./pages/CreateProfilePage";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import AdminSignupPage from "./pages/AdminSignupPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
-import AdminSchoolDetailsPage from "./pages/AdminSchoolDetailsPage";
+import AdmincollegeDetailsPage from "./pages/AdmincollegeDetailsPage";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import BlogPage from "./pages/BlogPage";
 import ApplicationStatusPage from "./pages/ApplicationStatusPage";
@@ -103,8 +103,8 @@ useEffect(() => {
         return;
       }
 
-      // Skip shortlist/profile fetch for school and admin users
-      if (currentUser.userType === 'school' || currentUser.userType === 'admin') {
+      // Skip shortlist/profile fetch for college and admin users
+      if (currentUser.userType === 'college' || currentUser.userType === 'admin') {
         setShortlist([]);
         return;
       }
@@ -128,7 +128,7 @@ useEffect(() => {
           // Don't redirect automatically - let user decide when to create profile
         } else {
           // Agar koi aur error hai, to use console mein dikhao
-          console.error("Could not load shortlisted schools:", error.response?.data || error.message);
+          console.error("Could not load shortlisted colleges:", error.response?.data || error.message);
           setShortlist([]);
         }
       }
@@ -146,32 +146,32 @@ useEffect(() => {
    
   };
 
-  const handleShortlistToggle = async (school) => {
+  const handleShortlistToggle = async (college) => {
     if (!currentUser) {
-      toast.info("Please log in to shortlist schools.");
+      toast.info("Please log in to shortlist colleges.");
       return;
     }
     // More robust ID extraction
-    const schoolId = school.schoolId || school._id || school.id;
+    const collegeId = college.collegeId || college._id || college.id;
     const authId = currentUser.authId || currentUser._id || currentUser.id;
     
-    // Check if the school is shortlisted with multiple ID field combinations
+    // Check if the college is shortlisted with multiple ID field combinations
     const isShortlisted = shortlist.some(
       (item) => {
-        const itemId = item.schoolId || item._id || item.id;
-        return itemId === schoolId || 
-               itemId === school.schoolId || 
-               itemId === school._id || 
-               itemId === school.id;
+        const itemId = item.collegeId || item._id || item.id;
+        return itemId === collegeId || 
+               itemId === college.collegeId || 
+               itemId === college._id || 
+               itemId === college.id;
       }
     );
 
     console.log('Shortlist toggle:', {
-      schoolName: school.name,
-      schoolId,
+      collegeName: college.name,
+      collegeId,
       authId,
       isShortlisted,
-      school,
+      college,
       currentUser
     });
 
@@ -180,34 +180,34 @@ useEffect(() => {
       const prevShortlist = shortlist;
       setShortlist((prev) =>
         prev.filter((item) => {
-          const itemId = item.schoolId || item._id || item.id;
-          return itemId !== schoolId && 
-                 itemId !== school.schoolId && 
-                 itemId !== school._id && 
-                 itemId !== school.id;
+          const itemId = item.collegeId || item._id || item.id;
+          return itemId !== collegeId && 
+                 itemId !== college.collegeId && 
+                 itemId !== college._id && 
+                 itemId !== college.id;
         })
       );
       try {
-        await removeFromShortlist(authId, schoolId);
-        toast.success(`${school.name} removed from shortlist.`);
+        await removeFromShortlist(authId, collegeId);
+        toast.success(`${college.name} removed from shortlist.`);
       } catch (error) {
         // Revert on failure
         setShortlist(prevShortlist);
         console.error('Failed to remove from shortlist:', {
           error: error.response?.data || error.message,
-          schoolName: school.name,
-          schoolId,
+          collegeName: college.name,
+          collegeId,
           authId
         });
         const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
-        toast.error(`Failed to remove ${school.name}: ${errorMessage}`);
+        toast.error(`Failed to remove ${college.name}: ${errorMessage}`);
       }
     } else {
       // Optimistic add
       const prevShortlist = shortlist;
-      setShortlist((prev) => [...prev, school]);
+      setShortlist((prev) => [...prev, college]);
       try {
-        await addToShortlist(authId, schoolId);
+        await addToShortlist(authId, collegeId);
         // Optionally refresh in background to sync with server shape
         try {
           const responseData = await getShortlist(authId);
@@ -215,41 +215,41 @@ useEffect(() => {
             setShortlist(responseData.data);
           }
         } catch (_) {}
-        toast.success(`${school.name} added to shortlist!`);
+        toast.success(`${college.name} added to shortlist!`);
       } catch (error) {
         // Revert on failure
         setShortlist(prevShortlist);
         console.error('Failed to add to shortlist:', {
           error: error.response?.data || error.message,
-          schoolName: school.name,
-          schoolId,
+          collegeName: college.name,
+          collegeId,
           authId
         });
         const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
-        toast.error(`Failed to shortlist ${school.name}: ${errorMessage}`);
+        toast.error(`Failed to shortlist ${college.name}: ${errorMessage}`);
       }
     }
   };
 
-  const handleCompareToggle = (school) => {
+  const handleCompareToggle = (college) => {
     setComparisonList((prevList) => {
       const isInList = prevList.some(
         (item) =>
-          (item.schoolId || item._id) === (school.schoolId || school._id)
+          (item.collegeId || item._id) === (college.collegeId || college._id)
       );
 
       return isInList
         ? prevList.filter(
             (item) =>
-              (item.schoolId || item._id) !== (school.schoolId || school._id)
+              (item.collegeId || item._id) !== (college.collegeId || college._id)
           )
-        : [...prevList, school];
+        : [...prevList, college];
     });
   };
 
   // Calculate valid shortlist count (filter out invalid entries)
   const validShortlistCount = Array.isArray(shortlist) 
-    ? shortlist.filter(school => school && (school._id || school.schoolId)).length 
+    ? shortlist.filter(college => college && (college._id || college.collegeId)).length 
     : 0;
 
   return (
@@ -283,15 +283,15 @@ useEffect(() => {
          <Route path="/admin/signup" element={<AdminSignupPage />} />
           <Route path="/create-profile" element={<CreateProfilePage shortlist={shortlist}/>} />
           <Route
-            path="/signup-school"
-            element={<SignUpPage isSchoolSignUp={true} />}
+            path="/signup-college"
+            element={<SignUpPage iscollegeSignUp={true} />}
           />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
           <Route
-            path="/schools"
+            path="/colleges"
             element={
-              <SchoolsPage
+              <collegesPage
                 onCompareToggle={handleCompareToggle}
                 comparisonList={comparisonList}
                 shortlist={shortlist}
@@ -300,7 +300,7 @@ useEffect(() => {
             }
           />
           <Route path="/search" element={<AdvancedSearchPage />} />
-          <Route path="/search-schools" element={<SearchPage />} />
+          <Route path="/search-colleges" element={<SearchPage />} />
           <Route path="/predictor" element={<PredictorPage />} />
           <Route path="/chatbot" element={<ChatbotPage />} />
           <Route path="/blog" element={<BlogPage />} />
@@ -310,9 +310,9 @@ useEffect(() => {
           <Route path="/application-confirmation" element={<ApplicationConfirmationPage />} />
           <Route path="/compare/select" element={<CompareSelectPage />} />
           <Route
-            path="/school/:id"
+            path="/college/:id"
             element={
-              <SchoolDetailsPage
+              <collegeDetailsPage
                 shortlist={shortlist}
                 onShortlistToggle={handleShortlistToggle}
               />
@@ -353,17 +353,17 @@ useEffect(() => {
                 />
               }
             />
-            <Route path="/school-registration" element={<RegistrationPage />} />
+            <Route path="/college-registration" element={<RegistrationPage />} />
             <Route
-              path="/school-portal/*"
-            element={<SchoolPortalPage currentUser={currentUser} onLogout={handleLogout} />}
+              path="/college-portal/*"
+            element={<CollegePortalPage currentUser={currentUser} onLogout={handleLogout} />}
             />
             <Route
-              path="/apply/:schoolId"
+              path="/apply/:collegeId"
               element={<ApplicationFlowPage />}
             />
             <Route
-              path="/student-application/:schoolId"
+              path="/student-application/:collegeId"
               element={<StudentApplicationPage />}
             />
             <Route
@@ -387,10 +387,10 @@ useEffect(() => {
             }
           />
           <Route
-            path="/admin/school/:id"
+            path="/admin/college/:id"
             element={
               <AdminProtectedRoute>
-                <AdminSchoolDetailsPage />
+                <AdmincollegeDetailsPage />
               </AdminProtectedRoute>
             }
           />
@@ -404,7 +404,7 @@ useEffect(() => {
           isOpen={!!interviewNotification}
           onClose={dismissNotification}
           interviewData={interviewNotification.interviewData}
-          schoolName={interviewNotification.schoolName}
+          collegeName={interviewNotification.collegeName}
           notificationType={interviewNotification.notificationType}
         />
       )}

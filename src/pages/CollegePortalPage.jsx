@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Link, useNavigate, Navigate } from "react-router-dom";
-import { School, LogOut, FileText, Eye, Star, Check, X, Calendar } from "lucide-react";
+import {  LogOut, FileText, Eye, Star, Check, X, Calendar } from "lucide-react";
 import {
-  getSchoolById,
-  getPendingSchools,
-  checkSchoolProfileExists,
-  getSchoolByAuthId,
+  getcollegeById,
+  getPendingcolleges,
+  checkcollegeProfileExists,
+  getcollegeByAuthId,
 } from "../api/adminService";
 import RegistrationPage from "./RegistrationPage";
 import { fetchStudentApplications, updateApplicationStatus } from "../api/apiService";
-import { getSchoolForms, updateFormStatus } from "../api/applicationService";
+import { getcollegeForms, updateFormStatus } from "../api/applicationService";
 import InterviewSchedulingModal from "../components/InterviewSchedulingModal";
 import WrittenExamSchedulingModal from "../components/WrittenExamSchedulingModal";
 import { useAuth } from "../context/AuthContext";
@@ -17,28 +17,28 @@ import ErrorBoundary from "../components/ErrorBoundary";
 import { toast } from "react-toastify";
 import Logo from "../components/Logo";
 
-const SchoolHeader = ({ schoolName, onLogout, applicationsCount, hasProfile, currentUser }) => (
+const CollegeHeader = ({ collegeName, onLogout, applicationsCount, hasProfile, currentUser }) => (
   <header className="bg-white shadow-md">
     <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
-      <Logo to="/school-portal" size="default" />
+      <Logo to="/college-portal" size="default" />
       <div className="flex items-center space-x-6">
         {currentUser?.userType === 'college' && (
           <Link
-            to="/school-portal/register"
+            to="/college-portal/register"
             className="text-gray-600 hover:text-blue-600 flex items-center"
           >
-            <FileText size={18} className="mr-2" /> {hasProfile ? 'School Profile' : 'School Registration'}
+            <FileText size={18} className="mr-2" /> {hasProfile ? 'college Profile' : 'college Registration'}
           </Link>
         )}
         {/* Approval Status removed per request */}
         {/* <Link
-          to="/school-portal/shortlisted"
+          to="/college-portal/shortlisted"
           className="text-gray-600 hover:text-blue-600 flex items-center"
         >
           <Star size={18} className="mr-2" /> Shortlisted Applications
         </Link> */}
         <Link
-          to="/school-portal/applications"
+          to="/college-portal/applications"
           className="text-gray-600 hover:text-blue-600 flex items-center relative"
         >
           <Eye size={18} className="mr-2" /> View Student Applications
@@ -97,7 +97,7 @@ const ViewStudentApplications = ({ }) => {
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [showWrittenExamModal, setShowWrittenExamModal] = useState(false);
   const [selectedWrittenExamApplication, setSelectedWrittenExamApplication] = useState(null);
-  const [detectedSchoolId, setDetectedSchoolId] = useState(null);
+  const [detectedcollegeId, setDetectedcollegeId] = useState(null);
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
 
@@ -109,23 +109,23 @@ const ViewStudentApplications = ({ }) => {
         setLoading(true);
       }
       setError(null);
-      let schoolId = null;
-      let schoolIdentifier = null;
+      let collegeId = null;
+      let collegeIdentifier = null;
       if (currentUser?._id) {
         try {
-          // Use authId to find the school in schools collection where authId matches
-          debugger
-          const schoolProfileResponse = await getSchoolByAuthId(currentUser._id);
-          const schoolProfileData = schoolProfileResponse?.data.data[0];
+          // Use authId to find the college in colleges collection where authId matches
+          
+          const collegeProfileResponse = await getcollegeByAuthId(currentUser._id);
+          const collegeProfileData = collegeProfileResponse?.data.data[0];
 
-          if (schoolProfileData?._id) {
-            schoolId = schoolProfileData._id;
-            schoolIdentifier = schoolId;
+          if (collegeProfileData?._id) {
+            collegeId = collegeProfileData._id;
+            collegeIdentifier = collegeId;
           }else {
-            console.warn(`⚠️ [NO SCHOOL PROFILE] No school found for authId: ${currentUser._id}`);
+            console.warn(`⚠️ [NO college PROFILE] No college found for authId: ${currentUser._id}`);
           }
         } catch (profileError) {
-          console.warn(`⚠️ Error occured while fetching school using auth id:`, {
+          console.warn(`⚠️ Error occured while fetching college using auth id:`, {
             authId: currentUser?._id,
             error: profileError.message,
             status: profileError.response?.status,
@@ -136,26 +136,26 @@ const ViewStudentApplications = ({ }) => {
         console.warn(`⚠️ [NO AUTH ID] No authId found in currentUser, using fallback`);
       }
 
-      console.log(`🎯 [FINAL SCHOOL ID] Using schoolId: ${schoolId}, identifier: ${schoolIdentifier}`, {
+      console.log(`🎯 [FINAL college ID] Using collegeId: ${collegeId}, identifier: ${collegeIdentifier}`, {
         authId: currentUser?._id,  // This is the user ID from Auth collection
         userEmail: currentUser?.email,
         userType: currentUser?.userType,
-        originalUserSchoolId: currentUser?.schoolId,  // This might be wrong
-        detectedSchoolId: schoolId,  // This is the correct school ID from schools collection
-        finalIdentifier: schoolIdentifier
+        originalUsercollegeId: currentUser?.collegeId,  // This might be wrong
+        detectedcollegeId: collegeId,  // This is the correct college ID from colleges collection
+        finalIdentifier: collegeIdentifier
       });
 
-      // Fetch applications using the correct school identifier
-      debugger;
+      // Fetch applications using the correct college identifier
+      
       let response;
 
     try {
-      response = await fetchStudentApplications(schoolIdentifier);
+      response = await fetchStudentApplications(collegeIdentifier);
     } catch (err) {
-      // 🆕 New school → backend throws 500 when no applications exist
+      // 🆕 New college → backend throws 500 when no applications exist
       if (err.response?.status === 500) {
-        console.warn('🆕 [NO APPLICATIONS] Redirecting new school to profile page');
-        navigate('/school-portal/register', { replace: true });
+        console.warn('🆕 [NO APPLICATIONS] Redirecting new college to profile page');
+        navigate('/college-portal/register', { replace: true });
         return;
       }
       throw err; // real error
@@ -166,36 +166,36 @@ const ViewStudentApplications = ({ }) => {
         responseKeys: Object.keys(response)
       });
 
-      // Use the schoolId we already detected from the profile
-      let detectedSchoolId = schoolId; // Use the schoolId from email lookup
+      // Use the collegeId we already detected from the profile
+      let detectedcollegeId = collegeId; // Use the collegeId from email lookup
 
-      // If we didn't get schoolId from profile, try to detect it from forms as fallback
-      if (!detectedSchoolId && response.data && response.data.length > 0) {
-        console.log(`🔍 [FORM FALLBACK] Detecting schoolId from forms since profile lookup failed...`);
+      // If we didn't get collegeId from profile, try to detect it from forms as fallback
+      if (!detectedcollegeId && response.data && response.data.length > 0) {
+        console.log(`🔍 [FORM FALLBACK] Detecting collegeId from forms since profile lookup failed...`);
 
-        // Extract schoolId from the first form that has it
+        // Extract collegeId from the first form that has it
         for (const [index, app] of response.data.entries()) {
           console.log(`📋 [FORM ${index}] Analyzing form:`, {
             formId: app?._id || app?.id,
-            hasSchoolId: !!app?.schoolId,
-            schoolId: app?.schoolId,
+            hascollegeId: !!app?.collegeId,
+            collegeId: app?.collegeId,
             hasStudId: !!app?.studId,
             studId: app?.studId,
             status: app?.status,
             studentName: app?.studentName
           });
 
-          if (app?.schoolId && !detectedSchoolId) {
-            detectedSchoolId = typeof app.schoolId === 'object' ? app.schoolId._id || app.schoolId : app.schoolId;
-            console.log(`🎯 [SCHOOL ID DETECTED FROM FORM] Found schoolId from form ${index}: ${detectedSchoolId}`);
+          if (app?.collegeId && !detectedcollegeId) {
+            detectedcollegeId = typeof app.collegeId === 'object' ? app.collegeId._id || app.collegeId : app.collegeId;
+            console.log(`🎯 [college ID DETECTED FROM FORM] Found collegeId from form ${index}: ${detectedcollegeId}`);
             break;
           }
         }
       }
 
-      // Store the detected schoolId
-      setDetectedSchoolId(detectedSchoolId);
-      console.log(`🔄 [STATE UPDATE] Set detectedSchoolId to: ${detectedSchoolId}`);
+      // Store the detected collegeId
+      setDetectedcollegeId(detectedcollegeId);
+      console.log(`🔄 [STATE UPDATE] Set detectedcollegeId to: ${detectedcollegeId}`);
 
       // Log each application to see the structure after update
       if (response.data && response.data.length > 0) {
@@ -204,8 +204,8 @@ const ViewStudentApplications = ({ }) => {
             id: app._id,
             formId: app?._id,
             studentId: app?.studId,
-            schoolId: app?.schoolId,
-            detectedSchoolId: detectedSchoolId,
+            collegeId: app?.collegeId,
+            detectedcollegeId: detectedcollegeId,
             status: app.status,
             studentName: app.studentName,
             standard: app.standard,
@@ -229,7 +229,7 @@ const ViewStudentApplications = ({ }) => {
         console.log(`📋 [STATUS FILTER] Application status check:`, {
           applicationId: a._id || a.id,
           studentId: a?.studId,
-          schoolId: detectedSchoolId,
+          collegeId: detectedcollegeId,
           status: a.status,
           normalizedStatus: status,
           showInViewStudentApplications: keepInViewStudent
@@ -241,7 +241,7 @@ const ViewStudentApplications = ({ }) => {
       console.log(`📊 [FILTER RESULTS] Filtered applications:`, {
         totalForms: response.data?.length || 0,
         pendingApplications: pendingApplications.length,
-        schoolId: detectedSchoolId,
+        collegeId: detectedcollegeId,
         studentIds: pendingApplications.map(a => a?.studId).filter(Boolean),
         applicationIds: pendingApplications.map(a => a?._id || a?.id).filter(Boolean)
       });*/
@@ -250,13 +250,13 @@ const ViewStudentApplications = ({ }) => {
       const allApplications = response.data || [];
       if (allApplications.length === 0) {
       console.warn('🆕 [EMPTY APPLICATION LIST] Redirecting to profile');
-      navigate('/school-portal/register', { replace: true });
+      navigate('/college-portal/register', { replace: true });
       return;
     }
 
 console.log(`📊 [FETCH RESULTS] Applications fetched:`, {
   totalForms: allApplications.length,
-  schoolId: detectedSchoolId,
+  collegeId: detectedcollegeId,
   statuses: allApplications.map(a => a.status)
 });
 
@@ -273,13 +273,13 @@ setApplications(allApplications);
         requestMethod: error.config?.method,
         requestData: error.config?.data,
         // ID context
-        attemptedSchoolIdentifier: currentUser?.schoolId || currentUser?._id || currentUser?.email,
-        detectedSchoolId: detectedSchoolId,
+        attemptedcollegeIdentifier: currentUser?.collegeId || currentUser?._id || currentUser?.email,
+        detectedcollegeId: detectedcollegeId,
         currentUser: {
           _id: currentUser?._id,
           email: currentUser?.email,
           userType: currentUser?.userType,
-          schoolId: currentUser?.schoolId
+          collegeId: currentUser?.collegeId
         },
         // Error classification
         isNetworkError: !error.response,
@@ -309,7 +309,7 @@ setApplications(allApplications);
     const handleNewApplication = (event) => {
       console.log('📨 New application received:', event.detail);
       // Refresh applications when a new one is added
-      if (event.detail.schoolId === detectedSchoolId || !detectedSchoolId) {
+      if (event.detail.collegeId === detectedcollegeId || !detectedcollegeId) {
         console.log('🔄 Refreshing applications due to new application');
         fetchApplications(true);
       }
@@ -321,7 +321,7 @@ setApplications(allApplications);
     return () => {
       window.removeEventListener('applicationAdded', handleNewApplication);
     };
-  }, [detectedSchoolId]);
+  }, [detectedcollegeId]);
 
   const handleStatusChange = async (app, newStatus) => {
     // Try multiple possible form ID locations
@@ -331,7 +331,7 @@ setApplications(allApplications);
       console.warn('❌ No valid form id to update:', {
         applicationId: app?._id || app?.id,
         studentId: app?.studId || app?.studentId,
-        schoolId: detectedSchoolId,
+        collegeId: detectedcollegeId,
         status: app?.status,
         newStatus,
         availableKeys: Object.keys(app || {}),
@@ -352,7 +352,7 @@ setApplications(allApplications);
       console.log(`🔄 Updating form ${formId} to status: ${newStatus}`, {
         formId,
         newStatus,
-        schoolId: detectedSchoolId,
+        collegeId: detectedcollegeId,
         studentId: app?.studId || app?.studentId,
         applicationId: app?._id || app?.id
       });
@@ -360,7 +360,7 @@ setApplications(allApplications);
       console.log('✅ Status updated successfully:', {
         formId,
         newStatus,
-        schoolId: detectedSchoolId,
+        collegeId: detectedcollegeId,
         studentId: app?.studId || app?.studentId,
         applicationId: app?._id || app?.id
       });
@@ -369,7 +369,7 @@ setApplications(allApplications);
       console.error('❌ Failed to update form status:', {
         formId,
         newStatus,
-        schoolId: detectedSchoolId,
+        collegeId: detectedcollegeId,
         studentId: app?.studId || app?.studentId,
         applicationId: app?._id || app?.id,
         error: e.message,
@@ -379,7 +379,7 @@ setApplications(allApplications);
       });
       // Revert optimistic update by refetching
       try {
-        const response = await fetchStudentApplications(currentUser?.schoolId || currentUser?._id || currentUser?.email);
+        const response = await fetchStudentApplications(currentUser?.collegeId || currentUser?._id || currentUser?.email);
         const pendingApplications = (response.data || []).filter((a) => {
           const status = (a.status || '').toString().toLowerCase();
           return status === 'pending' || status === 'rejected' || status === 'reviewed' || status === '';
@@ -399,7 +399,7 @@ setApplications(allApplications);
       console.warn('❌ No valid form id for interview scheduling:', {
         applicationId: app?._id || app?.id,
         studentId: app?.studId || app?.studentId,
-        schoolId: detectedSchoolId,
+        collegeId: detectedcollegeId,
         status: app?.status,
         availableKeys: Object.keys(app || {}),
         fullApplicationData: app
@@ -420,7 +420,7 @@ setApplications(allApplications);
       console.warn('❌ No valid form id for written exam scheduling:', {
         applicationId: app?._id || app?.id,
         studentId: app?.studId || app?.studentId,
-        schoolId: detectedSchoolId,
+        collegeId: detectedcollegeId,
         status: app?.status,
         availableKeys: Object.keys(app || {}),
         fullApplicationData: app
@@ -444,7 +444,7 @@ setApplications(allApplications);
         formId,
         status,
         note,
-        schoolId: detectedSchoolId,
+        collegeId: detectedcollegeId,
         studentId: selectedApplication?.studId || selectedApplication?.studentId,
         applicationId: selectedApplication?._id || selectedApplication?.id,
         apiResponse: result
@@ -467,7 +467,7 @@ setApplications(allApplications);
         formId: formId,
         status: status,
         note: note,
-        schoolId: detectedSchoolId,
+        collegeId: detectedcollegeId,
         studentId: selectedApplication?.studId || selectedApplication?.studentId,
         applicationId: selectedApplication?._id || selectedApplication?.id,
         // Current user context
@@ -475,7 +475,7 @@ setApplications(allApplications);
           _id: currentUser?._id,
           email: currentUser?.email,
           userType: currentUser?.userType,
-          schoolId: currentUser?.schoolId
+          collegeId: currentUser?.collegeId
         },
         // Application context
         selectedApplicationKeys: Object.keys(selectedApplication || {}),
@@ -495,7 +495,7 @@ setApplications(allApplications);
         formId,
         status,
         note,
-        schoolId: detectedSchoolId,
+        collegeId: detectedcollegeId,
         studentId: selectedWrittenExamApplication?.studId || selectedWrittenExamApplication?.studentId,
         applicationId: selectedWrittenExamApplication?._id || selectedWrittenExamApplication?.id,
         apiResponse: result
@@ -517,7 +517,7 @@ setApplications(allApplications);
         formId: formId,
         status: status,
         note: note,
-        schoolId: detectedSchoolId,
+        collegeId: detectedcollegeId,
         studentId: selectedWrittenExamApplication?.studId || selectedWrittenExamApplication?.studentId,
         applicationId: selectedWrittenExamApplication?._id || selectedWrittenExamApplication?.id,
         // Current user context
@@ -525,7 +525,7 @@ setApplications(allApplications);
           _id: currentUser?._id,
           email: currentUser?.email,
           userType: currentUser?.userType,
-          schoolId: currentUser?.schoolId
+          collegeId: currentUser?.collegeId
         },
         // Application context
         selectedWrittenExamApplicationKeys: Object.keys(selectedWrittenExamApplication || {}),
@@ -600,7 +600,7 @@ setApplications(allApplications);
       console.error('❌ Error showing interview details:', {
         applicationId: app?._id || app?.id,
         studentId: app?.studId || app?.studentId,
-        schoolId: detectedSchoolId,
+        collegeId: detectedcollegeId,
         status: app?.status,
         error: error.message,
         fullError: error
@@ -681,7 +681,7 @@ else if (typeof app?.formId === 'object' && app?.formId?._id) {
       console.warn('❌ No student ID found for application:', {
         applicationId: app?._id || app?.id,
         formId: app?.formId,
-        schoolId: detectedSchoolId,
+        collegeId: detectedcollegeId,
         status: app?.status,
         studId: app?.studId,
         studentId: app?.studentId,
@@ -902,7 +902,7 @@ else if (typeof app?.formId === 'object' && app?.formId?._id) {
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">Interview Details</h2>
                   <p className="text-sm text-gray-600">
-                    {selectedInterviewApplication?.studId?.name || selectedInterviewApplication?.studentName} - {selectedInterviewApplication?.schoolId?.name || selectedInterviewApplication?.schoolName || 'School'}
+                    {selectedInterviewApplication?.studId?.name || selectedInterviewApplication?.studentName} - {selectedInterviewApplication?.collegeId?.name || selectedInterviewApplication?.collegeName || 'college'}
                   </p>
                 </div>
               </div>
@@ -920,7 +920,7 @@ else if (typeof app?.formId === 'object' && app?.formId?._id) {
                 <h3 className="font-medium text-purple-900 mb-2">Interview Information:</h3>
                 <div className="text-sm text-purple-800 space-y-1">
                   <p><strong>Student:</strong> {selectedInterviewApplication?.studId?.name || selectedInterviewApplication?.studentName || 'N/A'}</p>
-                  <p><strong>School:</strong> {selectedInterviewApplication?.schoolId?.name || selectedInterviewApplication?.schoolName || 'N/A'}</p>
+                  <p><strong>college:</strong> {selectedInterviewApplication?.collegeId?.name || selectedInterviewApplication?.collegeName || 'N/A'}</p>
                   <p><strong>Class:</strong> {selectedInterviewApplication?.standard || 'N/A'}</p>
                   <p><strong>Application Date:</strong> {selectedInterviewApplication?.date || 'N/A'}</p>
                 </div>
@@ -971,7 +971,7 @@ else if (typeof app?.formId === 'object' && app?.formId?._id) {
 const ViewShortlistedApplications = ({ }) => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [detectedSchoolId, setDetectedSchoolId] = useState(null);
+  const [detectedcollegeId, setDetectedcollegeId] = useState(null);
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
@@ -979,88 +979,88 @@ const ViewShortlistedApplications = ({ }) => {
       try {
         setLoading(true);
 
-        // First, use authId to find the school profile and get the correct schoolId
-        console.log(`🔍 [SHORTLIST SCHOOL DETECTION] Starting school detection using authId: ${currentUser?._id}`);
+        // First, use authId to find the college profile and get the correct collegeId
+        console.log(`🔍 [SHORTLIST college DETECTION] Starting college detection using authId: ${currentUser?._id}`);
 
-        let schoolId = null;
-        let schoolIdentifier = null;
+        let collegeId = null;
+        let collegeIdentifier = null;
 
         if (currentUser?._id) {
           try {
-            console.log(`🔑 [SHORTLIST AUTH ID LOOKUP] Finding school profile for authId: ${currentUser._id}`);
+            console.log(`🔑 [SHORTLIST AUTH ID LOOKUP] Finding college profile for authId: ${currentUser._id}`);
 
-            // Use authId to find the school in schools collection where authId matches
-            const schoolProfileResponse = await getSchoolByAuthId(currentUser._id);
-            const schoolProfileData = schoolProfileResponse?.data;
+            // Use authId to find the college in colleges collection where authId matches
+            const collegeProfileResponse = await getcollegeByAuthId(currentUser._id);
+            const collegeProfileData = collegeProfileResponse?.data;
 
-            console.log(`🏫 [SHORTLIST SCHOOL PROFILE] Found school by authId:`, {
-              profileData: schoolProfileData,
-              hasData: !!schoolProfileData,
-              profileKeys: schoolProfileData ? Object.keys(schoolProfileData) : []
+            console.log(`🏫 [SHORTLIST college PROFILE] Found college by authId:`, {
+              profileData: collegeProfileData,
+              hasData: !!collegeProfileData,
+              profileKeys: collegeProfileData ? Object.keys(collegeProfileData) : []
             });
 
-            if (schoolProfileData?.data?._id) {
-              schoolId = schoolProfileData.data._id;
-              schoolIdentifier = schoolId;
-              console.log(`✅ [SHORTLIST SCHOOL ID FOUND] Extracted schoolId from schools collection: ${schoolId}`);
-            } else if (schoolProfileData?._id) {
-              schoolId = schoolProfileData._id;
-              schoolIdentifier = schoolId;
-              console.log(`✅ [SHORTLIST SCHOOL ID FOUND] Direct schoolId from schools collection: ${schoolId}`);
+            if (collegeProfileData?.data?._id) {
+              collegeId = collegeProfileData.data._id;
+              collegeIdentifier = collegeId;
+              console.log(`✅ [SHORTLIST college ID FOUND] Extracted collegeId from colleges collection: ${collegeId}`);
+            } else if (collegeProfileData?._id) {
+              collegeId = collegeProfileData._id;
+              collegeIdentifier = collegeId;
+              console.log(`✅ [SHORTLIST college ID FOUND] Direct collegeId from colleges collection: ${collegeId}`);
             } else {
-              console.warn(`⚠️ [SHORTLIST NO SCHOOL PROFILE] No school found for authId: ${currentUser._id}`);
-              // Fallback to currentUser schoolId
-              schoolId = currentUser?.schoolId;
-              schoolIdentifier = schoolId || currentUser?._id || currentUser?.email;
-              console.log(`🔄 [SHORTLIST FALLBACK] Using fallback identifier: ${schoolIdentifier}`);
+              console.warn(`⚠️ [SHORTLIST NO college PROFILE] No college found for authId: ${currentUser._id}`);
+              // Fallback to currentUser collegeId
+              collegeId = currentUser?.collegeId;
+              collegeIdentifier = collegeId || currentUser?._id || currentUser?.email;
+              console.log(`🔄 [SHORTLIST FALLBACK] Using fallback identifier: ${collegeIdentifier}`);
             }
           } catch (profileError) {
-            console.warn(`⚠️ [SHORTLIST PROFILE LOOKUP ERROR] Could not find school profile by authId:`, {
+            console.warn(`⚠️ [SHORTLIST PROFILE LOOKUP ERROR] Could not find college profile by authId:`, {
               authId: currentUser?._id,
               error: profileError.message,
               status: profileError.response?.status,
               responseData: profileError.response?.data
             });
 
-            // Fallback to currentUser schoolId
-            schoolId = currentUser?.schoolId;
-            schoolIdentifier = schoolId || currentUser?._id || currentUser?.email;
-            console.log(`🔄 [SHORTLIST FALLBACK AFTER ERROR] Using fallback identifier: ${schoolIdentifier}`);
+            // Fallback to currentUser collegeId
+            collegeId = currentUser?.collegeId;
+            collegeIdentifier = collegeId || currentUser?._id || currentUser?.email;
+            console.log(`🔄 [SHORTLIST FALLBACK AFTER ERROR] Using fallback identifier: ${collegeIdentifier}`);
           }
         } else {
           console.warn(`⚠️ [SHORTLIST NO AUTH ID] No authId found in currentUser, using fallback`);
-          schoolId = currentUser?.schoolId;
-          schoolIdentifier = schoolId || currentUser?._id || currentUser?.email;
+          collegeId = currentUser?.collegeId;
+          collegeIdentifier = collegeId || currentUser?._id || currentUser?.email;
         }
 
-        console.log(`🎯 [SHORTLIST FINAL SCHOOL ID] Using schoolId: ${schoolId}, identifier: ${schoolIdentifier}`, {
+        console.log(`🎯 [SHORTLIST FINAL college ID] Using collegeId: ${collegeId}, identifier: ${collegeIdentifier}`, {
           authId: currentUser?._id,  // This is the user ID from Auth collection
           userEmail: currentUser?.email,
           userType: currentUser?.userType,
-          originalUserSchoolId: currentUser?.schoolId,  // This might be wrong
-          detectedSchoolId: schoolId,  // This is the correct school ID from schools collection
-          finalIdentifier: schoolIdentifier
+          originalUsercollegeId: currentUser?.collegeId,  // This might be wrong
+          detectedcollegeId: collegeId,  // This is the correct college ID from colleges collection
+          finalIdentifier: collegeIdentifier
         });
 
-        const response = await fetchStudentApplications(schoolIdentifier);
+        const response = await fetchStudentApplications(collegeIdentifier);
         const all = response.data || [];
 
-        // Use the schoolId we already detected from the profile
-        let detectedSchoolId = schoolId; // Use the schoolId from email lookup
+        // Use the collegeId we already detected from the profile
+        let detectedcollegeId = collegeId; // Use the collegeId from email lookup
 
-        // If we didn't get schoolId from profile, try to detect it from forms as fallback
-        if (!detectedSchoolId && all && all.length > 0) {
+        // If we didn't get collegeId from profile, try to detect it from forms as fallback
+        if (!detectedcollegeId && all && all.length > 0) {
           for (const app of all) {
-            if (app.schoolId) {
-              detectedSchoolId = typeof app.schoolId === 'object' ? app.schoolId._id || app.schoolId : app.schoolId;
-              console.log(`🎯 [SHORTLIST SCHOOL ID DETECTED FROM FORM] Found schoolId from form: ${detectedSchoolId}`);
+            if (app.collegeId) {
+              detectedcollegeId = typeof app.collegeId === 'object' ? app.collegeId._id || app.collegeId : app.collegeId;
+              console.log(`🎯 [SHORTLIST college ID DETECTED FROM FORM] Found collegeId from form: ${detectedcollegeId}`);
               break;
             }
           }
         }
 
-        // Store the detected schoolId
-        setDetectedSchoolId(detectedSchoolId);
+        // Store the detected collegeId
+        setDetectedcollegeId(detectedcollegeId);
 
         // Show applications that have been processed: accepted, interview, written exam, or shortlisted
         const processedApplications = all.filter((a) => {
@@ -1197,13 +1197,13 @@ const ViewShortlistedApplications = ({ }) => {
           requestMethod: error.config?.method,
           requestData: error.config?.data,
           // ID context
-          schoolIdentifier: currentUser?.schoolId || currentUser?._id || currentUser?.email,
-          detectedSchoolId: detectedSchoolId,
+          collegeIdentifier: currentUser?.collegeId || currentUser?._id || currentUser?.email,
+          detectedcollegeId: detectedcollegeId,
           currentUser: {
             _id: currentUser?._id,
             email: currentUser?.email,
             userType: currentUser?.userType,
-            schoolId: currentUser?.schoolId
+            collegeId: currentUser?.collegeId
           },
           // Application context
           totalApplicationsProcessed: all?.length || 0,
@@ -1258,14 +1258,14 @@ const ViewShortlistedApplications = ({ }) => {
   );
 };
 
-const SchoolPortalPage = ({ currentUser, onLogout, onRegister }) => {
+const CollegePortalPage = ({ currentUser, onLogout, onRegister }) => {
   const navigate = useNavigate();
   const [applicationsCount, setApplicationsCount] = useState(0);
   const [hasProfile, setHasProfile] = useState(null);
 
   useEffect(() => {
     const loadCount = async () => {
-      const idForQuery = currentUser?.schoolId || currentUser?._id;
+      const idForQuery = currentUser?.collegeId || currentUser?._id;
       if (!idForQuery) return;
       try {
         const res = await fetchStudentApplications(idForQuery);
@@ -1273,7 +1273,7 @@ const SchoolPortalPage = ({ currentUser, onLogout, onRegister }) => {
         setApplicationsCount(Array.isArray(apps) ? apps.length : 0);
       } catch (error) {
         console.error("❌ Error loading applications count:", {
-          schoolId: idForQuery,
+          collegeId: idForQuery,
           userId: currentUser?._id,
           error: error.message,
           fullError: error
@@ -1282,30 +1282,30 @@ const SchoolPortalPage = ({ currentUser, onLogout, onRegister }) => {
       }
     };
     loadCount();
-  }, [currentUser?.schoolId, currentUser?._id]);
+  }, [currentUser?.collegeId, currentUser?._id]);
 
   useEffect(() => {
-    // Assume registered for school users by default (hides link), refine after API check
+    // Assume registered for college users by default (hides link), refine after API check
     if (currentUser?.userType === 'college') {
       setHasProfile(true);
-    } else if (currentUser?.schoolId) {
+    } else if (currentUser?.collegeId) {
       setHasProfile(true);
     } else {
       setHasProfile(null);
     }
-  }, [currentUser?.userType, currentUser?.schoolId]);
+  }, [currentUser?.userType, currentUser?.collegeId]);
 
   useEffect(() => {
     const checkProfile = async () => {
       try {
-        // For school users, always set hasProfile to true - no need for API checks
+        // For college users, always set hasProfile to true - no need for API checks
         if (currentUser?.userType === 'college') {
           setHasProfile(true);
           return;
         }
 
-        // For users with schoolId, also assume they have a profile
-        if (currentUser?.schoolId) {
+        // For users with collegeId, also assume they have a profile
+        if (currentUser?.collegeId) {
           setHasProfile(true);
           return;
         }
@@ -1315,10 +1315,10 @@ const SchoolPortalPage = ({ currentUser, onLogout, onRegister }) => {
           return;
         }
 
-        // Only do API checks for non-school users without schoolId
+        // Only do API checks for non-college users without collegeId
         let found = null;
         try {
-          const byAuth = await checkSchoolProfileExists(currentUser._id);
+          const byAuth = await checkcollegeProfileExists(currentUser._id);
           const payload = byAuth?.data;
           found = payload?.data || payload || null;
           if (!found && byAuth?.status === 200) {
@@ -1326,10 +1326,10 @@ const SchoolPortalPage = ({ currentUser, onLogout, onRegister }) => {
           }
         } catch (_) { }
 
-        // Only try fetching by schoolId; avoid calling with auth _id (not a school id)
-        if (!found && currentUser?.schoolId) {
+        // Only try fetching by collegeId; avoid calling with auth _id (not a college id)
+        if (!found && currentUser?.collegeId) {
           try {
-            const byId = await getSchoolById(currentUser.schoolId, { headers: { 'X-Silent-Request': '1' } });
+            const byId = await getcollegeById(currentUser.collegeId, { headers: { 'X-Silent-Request': '1' } });
             const payload = byId?.data;
             found = payload?.data || payload || null;
             if (!found && byId?.status === 200) {
@@ -1343,19 +1343,19 @@ const SchoolPortalPage = ({ currentUser, onLogout, onRegister }) => {
       }
     };
     checkProfile();
-  }, [currentUser?._id, currentUser?.schoolId, currentUser?.userType]);
+  }, [currentUser?._id, currentUser?.collegeId, currentUser?.userType]);
 
   if (!currentUser || currentUser.userType !== "college") {
     return (
       <div className="container mx-auto px-6 py-20 text-center">
-        <p>Access Denied. Please log in as a school.</p>
+        <p>Access Denied. Please log in as a college.</p>
       </div>
     );
   }
 
   return (
     <div>
-      <SchoolHeader schoolName={currentUser?.name} onLogout={onLogout} applicationsCount={applicationsCount} hasProfile={hasProfile} currentUser={currentUser} />
+      <CollegeHeader collegeName={currentUser?.name} onLogout={onLogout} applicationsCount={applicationsCount} hasProfile={hasProfile} currentUser={currentUser} />
       <Routes>
         <Route
           path="shortlisted"
@@ -1376,7 +1376,7 @@ const SchoolPortalPage = ({ currentUser, onLogout, onRegister }) => {
             element={
               <RegistrationPage
                 onRegister={onRegister}
-                onRegisterSuccess={() => navigate("/school-portal/applications")}
+                onRegisterSuccess={() => navigate("/college-portal/applications")}
               />
             }
           />
@@ -1396,4 +1396,4 @@ const SchoolPortalPage = ({ currentUser, onLogout, onRegister }) => {
   );
 };
 
-export default SchoolPortalPage;
+export default CollegePortalPage;

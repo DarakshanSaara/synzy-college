@@ -1,4 +1,4 @@
-# PowerShell Deployment Script for Smart School Finder
+# PowerShell Deployment Script for Smart college Finder
 # Run this script to build and prepare for deployment
 
 Write-Host "🚀 Starting Production Build Process..." -ForegroundColor Cyan

@@ -3,17 +3,17 @@ import apiClient from './axios';
 
 const API = axios.create();
 
-let schoolsData = [
+let collegesData = [
     {
         id: 1,
-        basicInfo: { name: 'Delhi Public School, RK Puram', description: 'A premier institution known for its academic excellence and holistic development.', board: 'CBSE', state: 'Delhi', city: 'New Delhi', schoolMode: 'private', genderType: 'co-ed', shifts: ['morning'], feeRange: '75000 - 100000', upto: 'Class 12', email: 'contact@dpsrkp.net', mobileNo: '9876543210', website: 'https://dpsrkp.net/', languageMedium: ['English'], transportAvailable: 'yes' },
+        basicInfo: { name: 'Delhi Public college, RK Puram', description: 'A premier institution known for its academic excellence and holistic development.', board: 'CBSE', state: 'Delhi', city: 'New Delhi', collegeMode: 'private', genderType: 'co-ed', shifts: ['morning'], feeRange: '75000 - 100000', upto: 'Class 12', email: 'contact@dpsrkp.net', mobileNo: '9876543210', website: 'https://dpsrkp.net/', languageMedium: ['English'], transportAvailable: 'yes' },
         activityInfo: { activities: ['Focusing on Academics', 'Empowering in Sports', 'STEM Activities', 'Leadership Development'] },
         alumniInfo: { topAlumnis: [{ name: 'Raghuram Rajan', percentage: 98 }], famousAlumnies: [{ name: 'Shah Rukh Khan', profession: 'Actor' }] },
         amenitiesInfo: { predefinedAmenities: ['Library', 'Science Lab', 'Computer Lab', 'Sports Ground'], customAmenities: 'Robotics Lab, Swimming Pool' }
     },
     {
         id: 2,
-        basicInfo: { name: 'Modern School, Barakhamba Road', description: 'Fostering creativity and critical thinking since 1920.', board: 'CBSE', state: 'Delhi', city: 'New Delhi', schoolMode: 'private', genderType: 'co-ed', shifts: ['morning'], feeRange: '1 Lakh - 2 Lakh', upto: 'Class 12', email: 'info@modernschool.net', mobileNo: '9123456789', website: 'https://modernschool.net/', languageMedium: ['English'], transportAvailable: 'yes' },
+        basicInfo: { name: 'Modern college, Barakhamba Road', description: 'Fostering creativity and critical thinking since 1920.', board: 'CBSE', state: 'Delhi', city: 'New Delhi', collegeMode: 'private', genderType: 'co-ed', shifts: ['morning'], feeRange: '1 Lakh - 2 Lakh', upto: 'Class 12', email: 'info@moderncollege.net', mobileNo: '9123456789', website: 'https://moderncollege.net/', languageMedium: ['English'], transportAvailable: 'yes' },
         activityInfo: { activities: ['Empowering in Arts', 'Cultural Education', 'Technology Integration'] },
         alumniInfo: { topAlumnis: [{ name: 'Khushwant Singh', percentage: 95 }], famousAlumnies: [{ name: 'Gurcharan Das', profession: 'Author' }] },
         amenitiesInfo: { predefinedAmenities: ['Auditorium', 'Art Studio', 'Music Room'], customAmenities: 'Horse Riding Club' }
@@ -21,10 +21,10 @@ let schoolsData = [
 ];
 
 let studentApplicationsData = [
-    { id: 1, studentName: 'Rohan Sharma', class: '5', date: '2025-08-15', status: 'Pending', schoolId: 'school123', schoolEmail: 'contact@dpsrkp.net' },
-    { id: 2, studentName: 'Priya Singh', class: '6', date: '2025-08-14', status: 'Accepted', schoolId: 'school123', schoolEmail: 'contact@dpsrkp.net' },
-    { id: 3, studentName: 'Amit Kumar', class: '7', date: '2025-08-16', status: 'Pending', schoolId: 'school456', schoolEmail: 'info@modernschool.net' },
-    { id: 4, studentName: 'Sneha Patel', class: '8', date: '2025-08-17', status: 'Accepted', schoolId: 'school456', schoolEmail: 'info@modernschool.net' },
+    { id: 1, studentName: 'Rohan Sharma', class: '5', date: '2025-08-15', status: 'Pending', collegeId: 'college123', collegeEmail: 'contact@dpsrkp.net' },
+    { id: 2, studentName: 'Priya Singh', class: '6', date: '2025-08-14', status: 'Accepted', collegeId: 'college123', collegeEmail: 'contact@dpsrkp.net' },
+    { id: 3, studentName: 'Amit Kumar', class: '7', date: '2025-08-16', status: 'Pending', collegeId: 'college456', collegeEmail: 'info@moderncollege.net' },
+    { id: 4, studentName: 'Sneha Patel', class: '8', date: '2025-08-17', status: 'Accepted', collegeId: 'college456', collegeEmail: 'info@moderncollege.net' },
 ];
 
 // In apiService.js
@@ -55,10 +55,10 @@ export const fetchStudentPDF = async (studId,applicationId) => {
 };
 // CORRECTED: Properly fetch from Forms API with debugging
 
-export const fetchStudentApplications = async (schoolId) => {
-    debugger
+export const fetchStudentApplications = async (collegeId) => {
+    
     try {        
-        const res = await apiClient.get(`/form/school/${schoolId}`, { 
+        const res = await apiClient.get(`/form/college/${collegeId}`, { 
             headers: { 'X-Silent-Request': '1' } 
         });
         
@@ -75,7 +75,7 @@ export const fetchStudentApplications = async (schoolId) => {
         console.log(`✅ Fetched ${forms.length} forms`);
 
         if (forms.length === 0) {
-            console.warn('⚠️ No forms found for this school');
+            console.warn('⚠️ No forms found for this college');
             return { data: [] };
         }
 
@@ -168,7 +168,7 @@ return {
     ? new Date(form.createdAt).toISOString().slice(0, 10)
     : '—',
   status: form?.status || 'Pending',
-  schoolId: form?.schoolId,
+  collegeId: form?.collegeId,
   studId: application?.studId || form?.applicationId?.studId || null,
   application_id,              // ✅ CORRECT application id
   applicationData: form,
@@ -191,7 +191,7 @@ return {
         
         // Check if it's a 404 - endpoint doesn't exist
         if (e?.response?.status === 404) {
-            console.error('❌ Endpoint /api/form/school/:schoolId not found - check backend routes');
+            console.error('❌ Endpoint /api/form/college/:collegeId not found - check backend routes');
         }
         
         throw e;
@@ -199,7 +199,7 @@ return {
 };
 
 // Update form status
-export const updateApplicationStatus = async (formId, newStatus, schoolId, note = null) => {
+export const updateApplicationStatus = async (formId, newStatus, collegeId, note = null) => {
     const id = encodeURIComponent(formId);
 
     try {

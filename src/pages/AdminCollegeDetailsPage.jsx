@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { 
-  getSchoolById, 
-  getAmenitiesById,
-  getActivitiesById,
+  getcollegeById, 
+  getAmenitiesByCollegeId,
+  getActivitiesByCollegeId,
   getInfrastructureById,
   getFeesAndScholarshipsById,
   getAcademicsById,
@@ -14,7 +14,7 @@ import {
   getTechnologyAdoptionById,
   getSafetyAndSecurityById,
   getInternationalExposureById,
-  updateSchoolStatus
+  updatecollegeStatus
 } from "../api/adminService";
 import { toast } from "react-toastify";
 import {
@@ -53,12 +53,12 @@ const InfoBox = ({ icon, label, value }) => (
   </div>
 );
 
-const AdminSchoolDetailsPage = () => {
+const AdmincollegeDetailsPage = () => {
   const navigate = useNavigate();
-  const { id: schoolId } = useParams();
+  const { id: collegeId } = useParams();
   const { user: currentUser } = useAuth();
 
-  const [school, setSchool] = useState(null);
+  const [college, setcollege] = useState(null);
   const [loading, setLoading] = useState(true);
   const [amenities, setAmenities] = useState([]);
   const [activities, setActivities] = useState([]);
@@ -75,50 +75,50 @@ const AdminSchoolDetailsPage = () => {
   const [isRejecting, setIsRejecting] = useState(false);
 
   useEffect(() => {
-    if (!schoolId) return;
+    if (!collegeId) return;
 
-    // Validate schoolId format
+    // Validate collegeId format
     const isValidObjectId = (id) => {
       return /^[0-9a-fA-F]{24}$/.test(id);
     };
 
-    // If schoolId is not a valid ObjectId, show error
-    if (!isValidObjectId(schoolId)) {
-      console.error(`Invalid school ID format: ${schoolId}. Expected MongoDB ObjectId format.`);
-      toast.error("Invalid school ID format. Please check the URL.");
+    // If collegeId is not a valid ObjectId, show error
+    if (!isValidObjectId(collegeId)) {
+      console.error(`Invalid college ID format: ${collegeId}. Expected MongoDB ObjectId format.`);
+      toast.error("Invalid college ID format. Please check the URL.");
       navigate("/admin/dashboard");
       return;
     }
 
-    const fetchSchoolDetails = async () => {
+    const fetchcollegeDetails = async () => {
       try {
         setLoading(true);
-        console.log('🔍 Fetching admin school details for ID:', schoolId);
+        console.log('🔍 Fetching admin college details for ID:', collegeId);
         
-        // Fetch school directly by ID
-        const response = await getSchoolById(schoolId);
+        // Fetch college directly by ID
+        const response = await getcollegeById(collegeId);
         const raw = response?.data;
-        const schoolData = raw?.data || raw; // support {data: {...}} or direct {...}
+        const collegeData = raw?.data || raw; // support {data: {...}} or direct {...}
         
-        console.log('🔍 School data:', schoolData);
+        console.log('🔍 college data:', collegeData);
         
-        if (schoolData) {
-          console.log('🔍 School Data Structure:', schoolData);
+        if (collegeData) {
+          console.log('🔍 college Data Structure:', collegeData);
           console.log('🔍 Available Image Fields:', {
-            photos: schoolData.photos,
-            profilePhoto: schoolData.profilePhoto,
-            image: schoolData.image,
-            logo: schoolData.logo,
-            profileImage: schoolData.profileImage,
-            schoolLogo: schoolData.schoolLogo,
-            schoolImage: schoolData.schoolImage,
-            schoolPhoto: schoolData.schoolPhoto,
-            avatar: schoolData.avatar,
-            picture: schoolData.picture,
-            thumbnail: schoolData.thumbnail
+            photos: collegeData.photos,
+            profilePhoto: collegeData.profilePhoto,
+            image: collegeData.image,
+            logo: collegeData.logo,
+            profileImage: collegeData.profileImage,
+            collegeLogo: collegeData.collegeLogo,
+            collegeImage: collegeData.collegeImage,
+            collegePhoto: collegeData.collegePhoto,
+            avatar: collegeData.avatar,
+            picture: collegeData.picture,
+            thumbnail: collegeData.thumbnail
           });
-          console.log('🔍 All school keys containing "image", "photo", "logo", "avatar":', 
-            Object.keys(schoolData).filter(key => 
+          console.log('🔍 All college keys containing "image", "photo", "logo", "avatar":', 
+            Object.keys(collegeData).filter(key => 
               key.toLowerCase().includes('image') || 
               key.toLowerCase().includes('photo') || 
               key.toLowerCase().includes('logo') || 
@@ -126,15 +126,15 @@ const AdminSchoolDetailsPage = () => {
               key.toLowerCase().includes('picture')
             )
           );
-          setSchool(schoolData);
+          setcollege(collegeData);
         } else {
-          console.warn(`No school data returned for ID: ${schoolId}`);
-          toast.error(`School with ID ${schoolId} not found`);
+          console.warn(`No college data returned for ID: ${collegeId}`);
+          toast.error(`college with ID ${collegeId} not found`);
           navigate("/admin/dashboard");
         }
       } catch (error) {
-        console.error("🔍 Fetch School Error:", error);
-        toast.error("Could not load school details.");
+        console.error("🔍 Fetch college Error:", error);
+        toast.error("Could not load college details.");
         navigate("/admin/dashboard");
       } finally {
         setLoading(false);
@@ -144,8 +144,8 @@ const AdminSchoolDetailsPage = () => {
     const fetchAmenitiesAndActivities = async () => {
       try {
         const [amenitiesRes, activitiesRes] = await Promise.all([
-          getAmenitiesById(schoolId),
-          getActivitiesById(schoolId),
+          getAmenitiesByCollegeId(collegeId),
+          getActivitiesByCollegeId(collegeId),
         ]);
         
         console.log("Amenities Response:", amenitiesRes?.data);
@@ -187,73 +187,73 @@ const AdminSchoolDetailsPage = () => {
           safetyRes,
           internationalRes
         ] = await Promise.allSettled([
-          getInfrastructureById(schoolId).catch(err => {
+          getInfrastructureById(collegeId).catch(err => {
             if (err.response?.status === 404) {
-              console.log('ℹ️ Infrastructure details not added for this school yet');
+              console.log('ℹ️ Infrastructure details not added for this college yet');
             } else {
               console.warn('Infrastructure fetch failed:', err.response?.status);
             }
             return { data: null };
           }),
-          getFeesAndScholarshipsById(schoolId).catch(err => {
+          getFeesAndScholarshipsById(collegeId).catch(err => {
             if (err.response?.status === 404) {
-              console.log('ℹ️ Fees details not added for this school yet');
+              console.log('ℹ️ Fees details not added for this college yet');
             } else {
               console.warn('Fees fetch failed:', err.response?.status);
             }
             return { data: null };
           }),
-          getAcademicsById(schoolId).catch(err => {
+          getAcademicsById(collegeId).catch(err => {
             if (err.response?.status === 404) {
-              console.log('ℹ️ Academics details not added for this school yet');
+              console.log('ℹ️ Academics details not added for this college yet');
             } else {
               console.warn('Academics fetch failed:', err.response?.status);
             }
             return { data: null };
           }),
-          getOtherDetailsById(schoolId).catch(err => {
+          getOtherDetailsById(collegeId).catch(err => {
             if (err.response?.status === 404) {
-              console.log('ℹ️ Other details not added for this school yet');
+              console.log('ℹ️ Other details not added for this college yet');
             } else {
               console.warn('Other details fetch failed:', err.response?.status);
             }
             return { data: null };
           }),
-          getFacultyById(schoolId).catch(err => {
+          getFacultyById(collegeId).catch(err => {
             if (err.response?.status === 404) {
-              console.log('ℹ️ Faculty details not added for this school yet');
+              console.log('ℹ️ Faculty details not added for this college yet');
             } else {
               console.warn('Faculty fetch failed:', err.response?.status);
             }
             return { data: null };
           }),
-          getAdmissionTimelineById(schoolId).catch(err => {
+          getAdmissionTimelineById(collegeId).catch(err => {
             if (err.response?.status === 404) {
-              console.log('ℹ️ Admission timeline not added for this school yet');
+              console.log('ℹ️ Admission timeline not added for this college yet');
             } else {
               console.warn('Admission timeline fetch failed:', err.response?.status);
             }
             return { data: null };
           }),
-          getTechnologyAdoptionById(schoolId).catch(err => {
+          getTechnologyAdoptionById(collegeId).catch(err => {
             if (err.response?.status === 404) {
-              console.log('ℹ️ Technology adoption details not added for this school yet');
+              console.log('ℹ️ Technology adoption details not added for this college yet');
             } else {
               console.warn('Technology adoption fetch failed:', err.response?.status);
             }
             return { data: null };
           }),
-          getSafetyAndSecurityById(schoolId).catch(err => {
+          getSafetyAndSecurityById(collegeId).catch(err => {
             if (err.response?.status === 404) {
-              console.log('ℹ️ Safety & security details not added for this school yet');
+              console.log('ℹ️ Safety & security details not added for this college yet');
             } else {
               console.warn('Safety and security fetch failed:', err.response?.status);
             }
             return { data: null };
           }),
-          getInternationalExposureById(schoolId).catch(err => {
+          getInternationalExposureById(collegeId).catch(err => {
             if (err.response?.status === 404) {
-              console.log('ℹ️ International exposure details not added for this school yet');
+              console.log('ℹ️ International exposure details not added for this college yet');
             } else {
               console.warn('International exposure fetch failed:', err.response?.status);
             }
@@ -290,14 +290,14 @@ const AdminSchoolDetailsPage = () => {
           console.log('🔍 International Exposure structure:', Object.keys(internationalData));
         }
 
-        // Check if we have school data with embedded details
-        if (school) {
-          console.log('🔍 Checking school object for embedded data...');
-          console.log('🔍 School object keys:', Object.keys(school));
-          console.log('🔍 Full school object:', school);
+        // Check if we have college data with embedded details
+        if (college) {
+          console.log('🔍 Checking college object for embedded data...');
+          console.log('🔍 college object keys:', Object.keys(college));
+          console.log('🔍 Full college object:', college);
           
           // Check for any fields that might contain the data we need
-          const allKeys = Object.keys(school);
+          const allKeys = Object.keys(college);
           const relevantKeys = allKeys.filter(key => 
             key.toLowerCase().includes('infrastructure') ||
             key.toLowerCase().includes('fees') ||
@@ -308,62 +308,62 @@ const AdminSchoolDetailsPage = () => {
             key.toLowerCase().includes('technology') ||
             key.toLowerCase().includes('international')
           );
-          console.log('🔍 Relevant keys in school object:', relevantKeys);
+          console.log('🔍 Relevant keys in college object:', relevantKeys);
           
-          // Try to extract data from school object if API endpoints failed
+          // Try to extract data from college object if API endpoints failed
           // Check multiple possible field names for each data type
-          const infrastructureFromSchool = school.infrastructure || school.infrastructureDetails || school.infrastructureData;
-          if (!infrastructureData && infrastructureFromSchool) {
-            console.log('📦 Found infrastructure in school object:', infrastructureFromSchool);
-            setInfrastructure(infrastructureFromSchool);
+          const infrastructureFromcollege = college.infrastructure || college.infrastructureDetails || college.infrastructureData;
+          if (!infrastructureData && infrastructureFromcollege) {
+            console.log('📦 Found infrastructure in college object:', infrastructureFromcollege);
+            setInfrastructure(infrastructureFromcollege);
           } else {
             setInfrastructure(infrastructureData);
           }
           
-          const feesFromSchool = school.feesAndScholarships || school.fees || school.feesData || school.scholarships;
-          if (!feesData && feesFromSchool) {
-            console.log('📦 Found fees in school object:', feesFromSchool);
-            setFeesAndScholarships(feesFromSchool);
+          const feesFromcollege = college.feesAndScholarships || college.fees || college.feesData || college.scholarships;
+          if (!feesData && feesFromcollege) {
+            console.log('📦 Found fees in college object:', feesFromcollege);
+            setFeesAndScholarships(feesFromcollege);
           } else {
             setFeesAndScholarships(feesData);
           }
           
-          const academicsFromSchool = school.academics || school.academicDetails || school.academicData;
-          if (!academicsData && academicsFromSchool) {
-            console.log('📦 Found academics in school object:', academicsFromSchool);
-            setAcademics(academicsFromSchool);
+          const academicsFromcollege = college.academics || college.academicDetails || college.academicData;
+          if (!academicsData && academicsFromcollege) {
+            console.log('📦 Found academics in college object:', academicsFromcollege);
+            setAcademics(academicsFromcollege);
           } else {
             setAcademics(academicsData);
           }
           
-          const admissionFromSchool = school.admissionTimeline || school.admissionDetails || school.admissionData || school.admissionProcess;
-          if (!admissionData && admissionFromSchool) {
-            console.log('📦 Found admission timeline in school object:', admissionFromSchool);
-            setAdmissionTimeline(admissionFromSchool);
+          const admissionFromcollege = college.admissionTimeline || college.admissionDetails || college.admissionData || college.admissionProcess;
+          if (!admissionData && admissionFromcollege) {
+            console.log('📦 Found admission timeline in college object:', admissionFromcollege);
+            setAdmissionTimeline(admissionFromcollege);
           } else {
             setAdmissionTimeline(admissionData);
           }
           
-          const safetyFromSchool = school.safetyAndSecurity || school.safetyDetails || school.safetyData || school.security;
-          if (!safetyData && safetyFromSchool) {
-            console.log('📦 Found safety & security in school object:', safetyFromSchool);
-            setSafetyAndSecurity(safetyFromSchool);
+          const safetyFromcollege = college.safetyAndSecurity || college.safetyDetails || college.safetyData || college.security;
+          if (!safetyData && safetyFromcollege) {
+            console.log('📦 Found safety & security in college object:', safetyFromcollege);
+            setSafetyAndSecurity(safetyFromcollege);
           } else {
             setSafetyAndSecurity(safetyData);
           }
           
-          const technologyFromSchool = school.technologyAdoption || school.technologyDetails || school.technologyData || school.technology;
-          if (!technologyData && technologyFromSchool) {
-            console.log('📦 Found technology adoption in school object:', technologyFromSchool);
-            setTechnologyAdoption(technologyFromSchool);
+          const technologyFromcollege = college.technologyAdoption || college.technologyDetails || college.technologyData || college.technology;
+          if (!technologyData && technologyFromcollege) {
+            console.log('📦 Found technology adoption in college object:', technologyFromcollege);
+            setTechnologyAdoption(technologyFromcollege);
           } else {
             setTechnologyAdoption(technologyData);
           }
           
-          const internationalFromSchool = school.internationalExposure || school.internationalDetails || school.internationalData || school.international;
-          if (!internationalData && internationalFromSchool) {
-            console.log('📦 Found international exposure in school object:', internationalFromSchool);
-            setInternationalExposure(internationalFromSchool);
+          const internationalFromcollege = college.internationalExposure || college.internationalDetails || college.internationalData || college.international;
+          if (!internationalData && internationalFromcollege) {
+            console.log('📦 Found international exposure in college object:', internationalFromcollege);
+            setInternationalExposure(internationalFromcollege);
           } else {
             setInternationalExposure(internationalData);
           }
@@ -384,52 +384,52 @@ const AdminSchoolDetailsPage = () => {
       }
     };
 
-    fetchSchoolDetails();
+    fetchcollegeDetails();
     fetchAmenitiesAndActivities();
     fetchAdditionalDetails();
-  }, [schoolId, navigate]);
+  }, [collegeId, navigate]);
 
-  const handleAcceptSchool = async () => {
-    if (!schoolId) {
-      toast.error('School ID is missing');
+  const handleAcceptcollege = async () => {
+    if (!collegeId) {
+      toast.error('college ID is missing');
       return;
     }
     try {
       setIsAccepting(true);
-      await updateSchoolStatus(schoolId, 'accepted');
-      toast.success('School accepted successfully!');
+      await updatecollegeStatus(collegeId, 'accepted');
+      toast.success('college accepted successfully!');
       // Update local state to reflect the change
-      setSchool(prev => ({ ...prev, status: 'accepted' }));
+      setcollege(prev => ({ ...prev, status: 'accepted' }));
       // Optionally navigate back to dashboard after a short delay
       setTimeout(() => {
         navigate('/admin/dashboard');
       }, 1500);
     } catch (error) {
-      console.error('Failed to accept school:', error);
-      toast.error('Failed to accept school');
+      console.error('Failed to accept college:', error);
+      toast.error('Failed to accept college');
     } finally {
       setIsAccepting(false);
     }
   };
 
-  const handleRejectSchool = async () => {
-    if (!schoolId) {
-      toast.error('School ID is missing');
+  const handleRejectcollege = async () => {
+    if (!collegeId) {
+      toast.error('college ID is missing');
       return;
     }
     try {
       setIsRejecting(true);
-      await updateSchoolStatus(schoolId, 'rejected');
-      toast.success('School rejected successfully!');
+      await updatecollegeStatus(collegeId, 'rejected');
+      toast.success('college rejected successfully!');
       // Update local state to reflect the change
-      setSchool(prev => ({ ...prev, status: 'rejected' }));
+      setcollege(prev => ({ ...prev, status: 'rejected' }));
       // Optionally navigate back to dashboard after a short delay
       setTimeout(() => {
         navigate('/admin/dashboard');
       }, 1500);
     } catch (error) {
-      console.error('Failed to reject school:', error);
-      toast.error('Failed to reject school');
+      console.error('Failed to reject college:', error);
+      toast.error('Failed to reject college');
     } finally {
       setIsRejecting(false);
     }
@@ -439,15 +439,15 @@ const AdminSchoolDetailsPage = () => {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600">Loading school details...</span>
+        <span className="ml-3 text-gray-600">Loading college details...</span>
       </div>
     );
   }
 
-  if (!school) {
+  if (!college) {
     return (
       <div className="flex flex-col justify-center items-center h-screen">
-        <p className="text-gray-600 mb-4">Could not load school data.</p>
+        <p className="text-gray-600 mb-4">Could not load college data.</p>
         <button
           onClick={() => navigate("/admin/dashboard")}
           className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
@@ -471,24 +471,24 @@ const AdminSchoolDetailsPage = () => {
             </button>
           </div>
           
-          {/* School Header with Profile Photo and Details */}
+          {/* college Header with Profile Photo and Details */}
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-6">
-            {/* School Profile Photo */}
+            {/* college Profile Photo */}
             <div className="flex-shrink-0">
             <img
               src={(() => {
                 const imageSources = [
-                  school.photos && school.photos.length > 0 ? school.photos[0] : null,
-                  school.profilePhoto,
-                  school.image,
-                  school.logo,
-                  school.profileImage,
-                  school.schoolLogo,
-                  school.schoolImage,
-                  school.schoolPhoto,
-                  school.avatar,
-                  school.picture,
-                  school.thumbnail
+                  college.photos && college.photos.length > 0 ? college.photos[0] : null,
+                  college.profilePhoto,
+                  college.image,
+                  college.logo,
+                  college.profileImage,
+                  college.collegeLogo,
+                  college.collegeImage,
+                  college.collegePhoto,
+                  college.avatar,
+                  college.picture,
+                  college.thumbnail
                 ].filter(Boolean);
                 
                 const selectedSource = imageSources[0] || "/api/placeholder/200/200";
@@ -496,7 +496,7 @@ const AdminSchoolDetailsPage = () => {
                 console.log('🖼️ Selected image source:', selectedSource);
                 return selectedSource;
               })()}
-              alt={`${school.name} profile`}
+              alt={`${college.name} profile`}
               className="w-32 h-32 md:w-40 md:h-40 rounded-lg object-cover border-4 border-gray-200 shadow-lg"
               onError={(e) => {
                 console.log('🖼️ Image failed to load:', e.target.src);
@@ -515,41 +515,41 @@ const AdminSchoolDetailsPage = () => {
             />
             </div>
             
-            {/* School Details */}
+            {/* college Details */}
             <div className="flex-1 min-w-0">
               <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2">
-                {school.name}
+                {college.name}
               </h1>
               <p className="text-lg text-gray-600 flex items-center mb-4">
                 <MapPin size={18} className="mr-2" />
-                {school.address || school.location || "Address not provided"}
+                {college.address || college.location || "Address not provided"}
               </p>
-              <p className="text-md text-gray-700 mb-4">{school.description}</p>
+              <p className="text-md text-gray-700 mb-4">{college.description}</p>
               
               {/* Contact Information */}
               <div className="flex flex-wrap gap-4 mb-4">
-                {school.phone && (
+                {college.phone && (
                   <div className="flex items-center text-gray-600 hover:text-indigo-600 transition-colors">
                     <Phone size={16} className="mr-2" />
-                    <span className="text-sm">{school.phone}</span>
+                    <span className="text-sm">{college.phone}</span>
                   </div>
                 )}
-                {school.email && (
+                {college.email && (
                   <div className="flex items-center text-gray-600 hover:text-indigo-600 transition-colors">
                     <Mail size={16} className="mr-2" />
-                    <span className="text-sm">{school.email}</span>
+                    <span className="text-sm">{college.email}</span>
                   </div>
                 )}
-                {school.website && (
+                {college.website && (
                   <div className="flex items-center text-gray-600 hover:text-indigo-600 transition-colors">
                     <Globe size={16} className="mr-2" />
                     <a 
-                      href={school.website} 
+                      href={college.website} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-sm hover:underline"
                     >
-                      {school.website}
+                      {college.website}
                     </a>
                   </div>
                 )}
@@ -578,27 +578,27 @@ const AdminSchoolDetailsPage = () => {
           
           <div className="mt-6 flex flex-wrap gap-3">
             {/* Status Badge */}
-            {school.status && (
+            {college.status && (
               <div className="w-full mb-2">
                 <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${
-                  school.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                  school.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                  school.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                  college.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                  college.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                  college.status === 'rejected' ? 'bg-red-100 text-red-800' :
                   'bg-gray-100 text-gray-800'
                 }`}>
-                  {school.status === 'pending' && <Clock className="h-4 w-4 mr-2" />}
-                  {school.status === 'accepted' && <CheckCircle className="h-4 w-4 mr-2" />}
-                  {school.status === 'rejected' && <XCircle className="h-4 w-4 mr-2" />}
-                  Status: {school.status ? school.status.charAt(0).toUpperCase() + school.status.slice(1) : 'Unknown'}
+                  {college.status === 'pending' && <Clock className="h-4 w-4 mr-2" />}
+                  {college.status === 'accepted' && <CheckCircle className="h-4 w-4 mr-2" />}
+                  {college.status === 'rejected' && <XCircle className="h-4 w-4 mr-2" />}
+                  Status: {college.status ? college.status.charAt(0).toUpperCase() + college.status.slice(1) : 'Unknown'}
                 </span>
               </div>
             )}
 
             {/* Approval Buttons - Only show if status is pending */}
-            {school.status === 'pending' && (
+            {college.status === 'pending' && (
               <>
                 <button
-                  onClick={handleAcceptSchool}
+                  onClick={handleAcceptcollege}
                   disabled={isAccepting || isRejecting}
                   className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md"
                 >
@@ -610,13 +610,13 @@ const AdminSchoolDetailsPage = () => {
                   ) : (
                     <>
                       <CheckCircle className="h-5 w-5 mr-2" />
-                      Accept School
+                      Accept college
                     </>
                   )}
                 </button>
                 
                 <button
-                  onClick={handleRejectSchool}
+                  onClick={handleRejectcollege}
                   disabled={isAccepting || isRejecting}
                   className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md"
                 >
@@ -628,7 +628,7 @@ const AdminSchoolDetailsPage = () => {
                   ) : (
                     <>
                       <XCircle className="h-5 w-5 mr-2" />
-                      Reject School
+                      Reject college
                     </>
                   )}
                 </button>
@@ -637,7 +637,7 @@ const AdminSchoolDetailsPage = () => {
 
             {/* Visit Website Button */}
             <a
-              href={school.website}
+              href={college.website}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center px-6 py-3 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-md"
@@ -657,27 +657,27 @@ const AdminSchoolDetailsPage = () => {
               <InfoBox
                 icon={<Award size={16} />}
                 label="Board"
-                value={school.board}
+                value={college.board}
               />
               <InfoBox
                 icon={<Users size={16} />}
                 label="Gender Type"
-                value={school.genderType}
+                value={college.genderType}
               />
               <InfoBox
                 icon={<Building size={16} />}
-                label="School Mode"
-                value={school.schoolMode}
+                label="college Mode"
+                value={college.collegeMode}
               />
               <InfoBox
                 icon={<BookOpen size={16} />}
                 label="Classes Upto"
-                value={school.upto}
+                value={college.upto}
               />
               <InfoBox
                 icon={<Sun size={16} />}
                 label="Shifts"
-                value={school.shifts}
+                value={college.shifts}
               />
             </div>
           </div>
@@ -984,11 +984,11 @@ const AdminSchoolDetailsPage = () => {
                   value={`${academics.averageClass12Result}%`}
                 />
               )}
-              {academics.averageSchoolMarks && (
+              {academics.averagecollegeMarks && (
                 <InfoBox
                   icon={<Award size={16} />}
                   label="Overall Average"
-                  value={`${academics.averageSchoolMarks}%`}
+                  value={`${academics.averagecollegeMarks}%`}
                 />
               )}
             </div>
@@ -1247,7 +1247,7 @@ const AdminSchoolDetailsPage = () => {
               <div className="bg-gray-50 rounded-lg p-6">
                 <div className="text-gray-400 mb-2">🛡️</div>
                 <p className="text-gray-600 font-medium mb-2">Safety & Security Details</p>
-                <p className="text-gray-500 text-sm">This school hasn't added safety & security information yet.</p>
+                <p className="text-gray-500 text-sm">This college hasn't added safety & security information yet.</p>
               </div>
             </div>
           )}
@@ -1291,7 +1291,7 @@ const AdminSchoolDetailsPage = () => {
               <div className="bg-gray-50 rounded-lg p-6">
                 <div className="text-gray-400 mb-2">📅</div>
                 <p className="text-gray-600 font-medium mb-2">Admission Timeline</p>
-                <p className="text-gray-500 text-sm">This school hasn't added admission timeline information yet.</p>
+                <p className="text-gray-500 text-sm">This college hasn't added admission timeline information yet.</p>
               </div>
             </div>
           </div>
@@ -1366,7 +1366,7 @@ const AdminSchoolDetailsPage = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {internationalExposure.exchangePrograms.map((program, index) => (
                       <div key={index} className="bg-blue-50 p-4 rounded-lg">
-                        <h4 className="font-medium text-gray-800">{program.partnerSchool}</h4>
+                        <h4 className="font-medium text-gray-800">{program.partnercollege}</h4>
                         <p className="text-sm text-gray-600">{program.type}</p>
                         <p className="text-sm text-gray-500">Duration: {program.duration}</p>
                       </div>
@@ -1383,5 +1383,5 @@ const AdminSchoolDetailsPage = () => {
   );
 };
 
-export default AdminSchoolDetailsPage;
+export default AdmincollegeDetailsPage;
 
