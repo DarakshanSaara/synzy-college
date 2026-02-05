@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { searchcolleges } from '../api/searchService';
 import { getUserPreferences } from '../api/preferencesService';
-import collegeCard from '../components/collegeCard';
+import CollegeCard from '../components/collegeCard';
 import { useAuth } from '../context/AuthContext';
 
 const HomePage = ({ onCompareToggle, comparisonList, shortlist, onShortlistToggle }) => {
@@ -171,7 +171,7 @@ const HomePage = ({ onCompareToggle, comparisonList, shortlist, onShortlistToggl
         ) : colleges.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {colleges.map((college) => (
-              <collegeCard
+              <CollegeCard
                 key={college._id || college.id || college.collegeId}
                 college={college}
                 onCardClick={() => navigate(`/college/${college._id || college.id || college.collegeId}`)}
