@@ -24,7 +24,7 @@ import CreateProfilePage from "./pages/CreateProfilePage";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import AdminSignupPage from "./pages/AdminSignupPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
-import AdmincollegeDetailsPage from "./pages/AdmincollegeDetailsPage";
+import AdminCollegeDetailsPage from "./pages/AdminCollegeDetailsPage";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import BlogPage from "./pages/BlogPage";
 import ApplicationStatusPage from "./pages/ApplicationStatusPage";
@@ -390,7 +390,7 @@ useEffect(() => {
             path="/admin/college/:id"
             element={
               <AdminProtectedRoute>
-                <AdmincollegeDetailsPage />
+                <AdminCollegeDetailsPage />
               </AdminProtectedRoute>
             }
           />
