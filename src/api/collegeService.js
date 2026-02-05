@@ -114,10 +114,10 @@ export const getAmenitiesByCollegeId = (collegeId) =>
  * Backend: GET /api/colleges/alumnus/:id
  */
 export const getAlumniBycollege = (collegeId) => {
-  return apiClient.get(`/admin/alumnus/${encodeURIComponent(collegeId)}`);
+  return apiClient.get(`/colleges/alumni/${encodeURIComponent(collegeId)}`);
 };
 export const updateAlumniBycollege = (collegeId,data) => {
-  return apiClient.put(`/admin/alumnus/${encodeURIComponent(collegeId)}`,data);
+  return apiClient.put(`/colleges/alumni/${encodeURIComponent(collegeId)}`,data);
 };
 
 /**

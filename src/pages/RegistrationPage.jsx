@@ -1,8 +1,9 @@
 import React, { useState, useEffect,useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
+
 import { useAuth } from "../context/AuthContext";
-import { PlusCircle, Trash2, Info, Building2, Users2, ShieldCheck, HeartHandshake, Heart, Globe2, Sparkles, Image, Award, DollarSign, Cpu, GraduationCap, CalendarDays, Upload, ToggleRight, Briefcase } from "lucide-react";
+import { PlusCircle, Trash2, Info, Building2, Users2, ShieldCheck, HeartHandshake, Heart, Globe2, Sparkles, Image, Award, DollarSign, Cpu, GraduationCap, CalendarDays, Upload, ToggleRight, Briefcase, Save, Edit2, Home} from "lucide-react";
 import { toast } from "react-toastify";
 import apiClient from "../api/axios";
 import { 
@@ -21,7 +22,7 @@ import {
   addAcademics,
   getcollegeById,
   getcollegesByStatus,
-  updatecollegeInfo,
+  updateCollegeByAuthId,
   getAmenitiesByCollegeId,
   getActivitiesByCollegeId,
   getInfrastructureById,
@@ -46,6 +47,14 @@ import {
   
   getcollegeByAuthId
 } from "../api/adminService";
+import {
+  addHostel,
+  getHostelsByCollege,
+  updateHostel,
+  deleteHostel
+} from "../api/adminService";
+import { addCourse as addCourseAPI, addExam as addExamAPI , addPlacement as addPlacementAPI, getCoursesByCollege } from "../api/adminService";
+
 import { 
   getAlumniBycollege,
   updateAlumniBycollege, 
@@ -349,6 +358,24 @@ const DynamicElearningField = ({ label, value, onChange }) => {
 };
 
 const RegistrationPage = () => {
+  const [hostels, setHostels] = useState([]);
+const [editingId, setEditingId] = useState(null);
+
+const emptyHostel = {
+  hostelName: "",
+  type: "",
+  capacity: "",
+  availableSeats: "",
+  feePerYear: "",
+  facilities: [],
+  rules: "",
+  contactPerson: {
+    name: "",
+    phone: ""
+  },
+  isActive: true
+};
+
   const [customStream, setCustomStream] = useState("");
 
   const [courses, setCourses] = useState([
@@ -357,7 +384,7 @@ const RegistrationPage = () => {
     duration: "",
     fees: "",
     category: "",
-    studentStrength: "",
+    intake: "",
 
     // MULTIPLE EXAMS PER COURSE
    exams: [
@@ -392,7 +419,7 @@ const addCourse = () => {
       duration: "",
       fees: "",
       category: "",
-      studentStrength: "",
+      intake: "",
 
       exams: [
   {
@@ -834,30 +861,103 @@ const handleUseCurrentLocation = () => {
   };
 
   // Helper function to handle update/add with fallback
-  const updateOrAdd = async (updateFn, addFn, collegeId, payload) => {
-    try {
-      if (isEditMode) {
-        // Remove collegeId from payload for update (it's only needed in URL)
-        const { collegeId: _, ...updatePayload } = payload;
-        await updateFn(collegeId, updatePayload);
-      } else {
-        await addFn(payload);
-      }
-    } catch (error) {
-      // If update fails with 404, the resource doesn't exist yet, so add it instead
-      if (error.response?.status === 404 && isEditMode) {
-        console.log('⚠️ Resource not found, creating new one instead of updating');
-        await addFn(payload);
-      } else {
-        throw error; // Re-throw other errors
-      }
+ 
+const normalizeCoursesForBackend = (courses, collegeId) => {
+  return (courses || [])
+    .filter(c => c.courseName?.trim()) // ignore empty courses
+    .map(course => ({
+      collegeId,
+
+      courseName: course.courseName,
+      duration: course.duration,
+      fees: course.fees ? Number(course.fees) : undefined,
+      category: course.category,
+      intake: course.intake ? Number(course.intake) : undefined,
+
+      exams: (course.exams || [])
+        .filter(e => e.examType?.trim())
+        .map(e => ({
+          examType: e.examType,
+          metricType: e.metricType,
+          minValue: e.minValue !== "" ? Number(e.minValue) : undefined,
+          maxValue: e.maxValue !== "" ? Number(e.maxValue) : undefined
+        })),
+
+      placements: (course.placements || [])
+        .filter(p => p.year)
+        .map(p => ({
+          year: Number(p.year),
+          totalStudents: Number(p.totalStudents || 0),
+          placedStudents: Number(p.placedStudents || 0),
+          highestPackage: Number(p.highestPackage || 0),
+          minimumPackage: Number(p.minimumPackage || 0),
+          averagePackage: Number(p.averagePackage || 0),
+          topRecruiters: (p.topRecruiters || []).filter(Boolean)
+        }))
+    }));
+};
+const normalizeExamsForBackend = (courses, courseIdMap) => {
+  const result = [];
+
+  courses.forEach((course, courseIndex) => {
+    const courseId = courseIdMap[courseIndex];
+    if (!courseId) return;
+
+    const validExams = (course.exams || [])
+      .filter(e =>
+        e.examType?.trim() &&
+        e.minValue !== "" &&
+        e.maxValue !== ""
+      )
+      .map(e => ({
+        examName: e.examType,
+        marksType: e.metricType,
+        minMarks: Number(e.minValue),
+        maxMarks: Number(e.maxValue)
+      }));
+
+    if (validExams.length > 0) {
+      result.push({
+        courseId,
+        exams: validExams   // ✅ ARRAY (REQUIRED)
+      });
     }
-  };
+  });
+
+  return result;
+};
+
+const normalizePlacementsForBackend = (courses, courseIdMap) => {
+  return courses.flatMap((course, index) => {
+    const courseId = courseIdMap[index];
+    if (!courseId) return [];
+
+    return (course.placements || [])
+      .filter(p => p.year)
+      .map(p => ({
+        courseId,
+
+        year: Number(p.year),
+        totalStudents: Number(p.totalStudents),
+        placedStudents: Number(p.placedStudents),
+
+        minPackage: Number(p.minimumPackage),
+        maxPackage: Number(p.highestPackage),
+
+        companies: (p.topRecruiters || []).filter(Boolean),
+      }));
+  });
+};
+
 
   const handleSubmit = async (e) => {
+    // ✅ SINGLE SOURCE OF TRUTH
+
+
     e.preventDefault();
     if (!currentUser?._id) return toast.error("You must be logged in.");
     setIsSubmitting(true);
+
 
     try {
       // Normalize to backend schema
@@ -922,6 +1022,8 @@ const handleUseCurrentLocation = () => {
         setIsSubmitting(false);
         return;
       }
+      
+
       
 
       const payload = {
@@ -992,58 +1094,82 @@ payload.stream =
   (Array.isArray(formData.streamsOffered) && formData.streamsOffered[0]) ||
   formData.stream ||
   "";
-
+ const updateOrAdd = async (updateFn, addFn, collegeId, payload) => {
+    try {
+      if (isEditMode) {
+        // Remove collegeId from payload for update (it's only needed in URL)
+        const { collegeId: _, ...updatePayload } = payload;
+        await updateFn(collegeId, updatePayload);
+      } else {
+        await addFn(payload);
+      }
+    } catch (error) {
+      // If update fails with 404, the resource doesn't exist yet, so add it instead
+      if (error.response?.status === 404 && isEditMode) {
+        console.log('⚠️ Resource not found, creating new one instead of updating');
+        await addFn(payload);
+      } else {
+        throw error; // Re-throw other errors
+      }
+    }
+  };
 
       // Always include authId to ensure it's set (for both new and existing colleges)
       // This is crucial for deduplication and tracking which user owns which college
-      if (currentUser?._id) {
-        payload.authId = currentUser._id;
-      }
+     // 🔑 Attach authId safely
+if (currentUser?._id) {
+  payload.authId = currentUser._id;
+}
 
-      // Create or update college and resolve collegeId
-      let collegeId = editingcollegeId;
-      if (isEditMode && editingcollegeId) {
-        try {
-          await updatecollegeInfo(editingcollegeId, payload);
-        } catch (err) {
-          console.warn('⚠️ Core college update failed, proceeding with subresource saves:', err?.response?.data || err?.message || err);
-        }
-      } else {
-        // Safety check: Verify existing college by authId to avoid duplicates
-        // college accounts skip admin endpoints, so they proceed as-is
-        if (currentUser?.userType !== 'college') {
-          try {
-            console.log('🔍 Safety check: Checking existing college via authId...');
-            const res = await getcollegeByAuthId(currentUser._id);
-            const existing = res?.data?.data;
-            const existingcollege = Array.isArray(existing) ? existing[0] : existing;
-            if (existingcollege && existingcollege._id) {
-              console.log('✅ Existing college found, updating instead of creating');
-              collegeId = existingcollege._id;
-              await updatecollegeInfo(collegeId, payload);
-              setIsEditMode(true);
-              setEditingcollegeId(collegeId);
-              setHasExistingcollege(true);
-            } else {
-              console.log('✅ No existing college found, creating new one');
-              const collegeResponse = await addcollege(payload);
-              collegeId = collegeResponse.data.data._id;
-              try { localStorage.setItem('lastCreatedcollegeId', String(collegeId)); } catch (_) {}
-            }
-          } catch (err) {
-            console.error('Safety check failed, proceeding with creation:', err);
-            const collegeResponse = await addcollege(payload);
-            collegeId = collegeResponse.data.data._id;
-            try { localStorage.setItem('lastCreatedcollegeId', String(collegeId)); } catch (_) {}
-          }
-        } else {
-          // For college accounts, directly create or update
-          console.log('🏫 college account - skipping duplicate check, proceeding with registration');
-          const collegeResponse = await addcollege(payload);
-          collegeId = collegeResponse.data.data._id;
-          try { localStorage.setItem('lastCreatedcollegeId', String(collegeId)); } catch (_) {}
-        }
-      }
+// 🔑 Resolve collegeId from reliable sources
+let collegeId =
+  editingcollegeId ||
+  (() => {
+    try {
+      return localStorage.getItem('lastCreatedcollegeId');
+    } catch {
+      return null;
+    }
+  })();
+
+try {
+  if (collegeId) {
+    // 🟢 UPDATE FLOW (SAFE, NO DUPLICATES)
+    console.log('✅ Updating existing college:', collegeId);
+
+    await updateCollegeByAuthId(collegeId, payload);
+
+    setIsEditMode(true);
+    setEditingcollegeId(collegeId);
+    setHasExistingcollege(true);
+  } else {
+    // 🆕 CREATE FLOW (RUNS ONLY ONCE)
+    console.log('🆕 Creating new college');
+
+    const cleanPayload = { ...payload };
+    delete cleanPayload._id; // 🔒 ABSOLUTELY REQUIRED
+
+    const collegeResponse = await addcollege(cleanPayload);
+    collegeId = collegeResponse.data.data._id;
+
+    // 🔐 Persist forever to prevent E11000
+    try {
+      localStorage.setItem('lastCreatedcollegeId', String(collegeId));
+    } catch (_) {}
+
+    setIsEditMode(true);
+    setEditingcollegeId(collegeId);
+    setHasExistingcollege(true);
+  }
+} catch (err) {
+  console.error(
+    '❌ College save failed:',
+    err?.response?.data || err?.message || err
+  );
+  throw err;
+}
+
+
 
       // Create related data in parallel
       const promises = [];
@@ -1182,52 +1308,22 @@ payload.stream =
       }
 
       // Add Admission Timeline if any (matching backend AdmissionTimeline model)
-      if (admissionSteps && admissionSteps.length > 0) {
-  const cleanTimelines = admissionSteps
-    .filter(
-      timeline =>
-        timeline.admissionStartDate &&
-        timeline.admissionEndDate &&
-        timeline.status &&
-        timeline.courseId &&                       // ✅ REQUIRED
-        timeline.applicationFee !== undefined      // ✅ REQUIRED
-    )
-    .map(timeline => ({
-      admissionStartDate: new Date(timeline.admissionStartDate),
-      admissionEndDate: new Date(timeline.admissionEndDate),
-      status: timeline.status,
-      applicationFee: Number(timeline.applicationFee),
-      courseId: timeline.courseId,                 // ✅ REQUIRED
-
-      documentsRequired: (timeline.documentsRequired || [])
-        .map(doc => doc.trim())
-        .filter(Boolean),
-
-      eligibility: {
-        minQualification:
-          timeline.eligibility?.minQualification || undefined,
-        otherInfo:
-          timeline.eligibility?.otherInfo?.trim() || ''
-      }
-    }));
-
-
-        
-        if (cleanTimelines.length > 0) {
-          const payloadTimeline = { collegeId, timelines: cleanTimelines };
-          promises.push(updateOrAdd(updateAdmissionTimeline, addAdmissionTimeline, collegeId, payloadTimeline));
-        }
-      }
+    
 
       // Add/Update Technology Adoption
-      if ((formData.smartClassroomsPercentage !== '' && formData.smartClassroomsPercentage != null) || (formData.eLearningPlatforms?.length > 0)) {
-        const payloadTech = {
-          collegeId,
-          smartClassroomsPercentage: (formData.smartClassroomsPercentage === '' || formData.smartClassroomsPercentage == null) ? undefined : Number(formData.smartClassroomsPercentage),
-          eLearningPlatforms: formData.eLearningPlatforms || []
-        };
-        promises.push(updateOrAdd(addTechnologyAdoption, collegeId, payloadTech));
-      }
+    // Corrected Technology Adoption block:
+// Add/Update Technology Adoption
+if ((formData.smartClassroomsPercentage !== '' && formData.smartClassroomsPercentage != null) || (formData.eLearningPlatforms?.length > 0)) {
+  const payloadTech = {
+    collegeId, // Use the resolved ID
+    smartClassroomsPercentage: (formData.smartClassroomsPercentage === '' || formData.smartClassroomsPercentage == null) ? undefined : Number(formData.smartClassroomsPercentage),
+    eLearningPlatforms: formData.eLearningPlatforms || []
+  };
+
+  // We call the add function directly because no update route exists.
+  // Most backends treat the "Add" of a sub-resource as an "Upsert" if the collegeId is provided.
+  
+}
 
       // Add/Update Safety & Security
       if ((formData.cctvCoveragePercentage !== '' && formData.cctvCoveragePercentage != null) || formData.medicalFacility?.doctorAvailability || 
@@ -1372,6 +1468,219 @@ payload.stream =
 
       // Wait for all related data to be created
       await Promise.all(promises);
+      // ========================
+// 🔹 BUILD COURSE LOOKUP MAPS (SAFE)
+// ========================
+let courseIndexMap = {};
+let courseIdMapById = {};
+let courseIdMapByName = {};
+
+try {
+  const courseRes = await getCoursesByCollege(collegeId);
+  const courses = courseRes?.data?.data || courseRes?.data || [];
+
+  courses.forEach((course, index) => {
+    if (!course?._id) return;
+
+    courseIndexMap[index] = course._id;
+    courseIdMapById[String(course._id)] = course._id;
+
+    if (course.name) {
+      courseIdMapByName[course.name.trim().toLowerCase()] = course._id;
+    }
+  });
+
+  console.log("✅ Course Index Map:", courseIndexMap);
+} catch (err) {
+  console.error("❌ Failed to fetch courses for admission timeline", err);
+}
+
+      // =======================
+// =======================
+// ADD COURSES (ONE BY ONE)
+// =======================
+const saveAllCollegeData = async (collegeId, courses, admissionSteps) => {
+  try {
+    // ========================
+    // 1️⃣ SAVE COURSES
+    // ========================
+    const normalizedCourses =
+      normalizeCoursesForBackend(courses, collegeId);
+
+    for (const course of normalizedCourses) {
+      await addCourseAPI({
+        collegeId,
+        courses: [course]
+      });
+    }
+
+    // ========================
+    // 2️⃣ FETCH SAVED COURSES
+    // ========================
+    const courseRes = await getCoursesByCollege(collegeId);
+
+    const savedCourses =
+      courseRes.data?.courses ||
+      courseRes.data?.data ||
+      (Array.isArray(courseRes.data) ? courseRes.data : []);
+
+    if (!savedCourses.length) {
+      throw new Error("No courses returned after save");
+    }
+
+    // ========================
+    // 3️⃣ CREATE courseIdMap
+    // ========================
+    const courseIdMap = {};
+    savedCourses.forEach((c, i) => {
+      courseIdMap[i] = c._id;
+    });
+
+    console.log("✅ Course ID Map:", courseIdMap);
+
+    // ========================
+    // 4️⃣ SAVE EXAMS
+    // ========================
+    const normalizedExams =
+      normalizeExamsForBackend(courses, courseIdMap);
+
+    for (const exam of normalizedExams) {
+      await addExamAPI(exam);
+    }
+
+    // ========================
+    // 5️⃣ SAVE PLACEMENTS
+    // ========================
+    const normalizedPlacements =
+      normalizePlacementsForBackend(courses, courseIdMap);
+
+    for (const placement of normalizedPlacements) {
+      await addPlacementAPI(placement);
+    }
+
+    // ========================
+    // 6️⃣ SAVE ADMISSION TIMELINES (FIXED)
+    // ========================
+   // ========================
+// 6️⃣ SAVE ADMISSION TIMELINES (FINAL, SAFE VERSION)
+// ========================
+if (admissionSteps?.length) {
+
+  // ================================
+  // 🔧 REHYDRATE courseId (AUTOSAVE FIX)
+  // ================================
+  const hydratedAdmissionSteps = admissionSteps.map((t, index) => {
+    if (
+      (!t.courseId || t.courseId === "") &&
+      courseIndexMap?.[index]
+    ) {
+      return {
+        ...t,
+        courseId: courseIndexMap[index]
+      };
+    }
+    return t;
+  });
+
+  // ================================
+  // ✅ EXISTING resolver (KEEP THIS)
+  // ================================
+  const resolveCourseId = (rawValue) => {
+    if (!rawValue && rawValue !== 0) return null;
+
+    if (typeof rawValue === "string" && /^[0-9a-fA-F]{24}$/.test(rawValue)) {
+      return courseIdMapById?.[rawValue] || rawValue;
+    }
+
+    if (typeof rawValue === "number" || !isNaN(rawValue)) {
+      return courseIndexMap?.[Number(rawValue)] || null;
+    }
+
+    if (typeof rawValue === "string") {
+      return courseIdMapByName?.[rawValue.trim().toLowerCase()] || null;
+    }
+
+    if (typeof rawValue === "object" && rawValue._id) {
+      return rawValue._id;
+    }
+
+    return null;
+  };
+
+  // ================================
+  // 🧹 CLEAN + VALIDATE
+  // ================================
+  const cleanTimelines = admissionSteps
+  .map((t, index) => {
+    if (
+      !t.courseId ||
+      !t.admissionStartDate ||
+      !t.admissionEndDate ||
+      !t.status ||
+      t.applicationFee === null
+    ) {
+      console.warn(
+        `⚠️ Skipping invalid admission timeline at index ${index}`,
+        t
+      );
+      return null;
+    }
+
+    return {
+      admissionStartDate: new Date(t.admissionStartDate),
+      admissionEndDate: new Date(t.admissionEndDate),
+      status: t.status.trim(),
+      applicationFee: Number(t.applicationFee),
+      course: t.courseId,
+      documentsRequired: (t.documentsRequired || [])
+        .map(d => d.trim())
+        .filter(Boolean),
+      eligibility: {
+        minQualification: t.eligibility?.minQualification,
+        otherInfo: t.eligibility?.otherInfo || ''
+      }
+    };
+  })
+  .filter(Boolean);
+
+
+  if (!cleanTimelines.length) {
+    console.warn("⚠️ No valid admission timelines to save");
+    return;
+  }
+
+  const payload = {
+    collegeId,
+    timelines: cleanTimelines
+  };
+
+  console.log("📅 Sending Admission Timelines:", payload);
+
+  try {
+    await updateAdmissionTimeline(collegeId, payload);
+    console.log("✅ Admission timeline updated");
+  } catch (err) {
+    if (err.response?.status === 404) {
+      await addAdmissionTimeline(payload);
+      console.log("✅ Admission timeline created");
+    } else {
+      throw err;
+    }
+  }
+}
+
+
+
+    toast.success("🎉 College data saved successfully!");
+  } catch (err) {
+    console.error("❌ Save failed:", err);
+    toast.error("Something went wrong while saving data");
+  }
+};
+      await saveAllCollegeData(collegeId, courses, admissionSteps);
+
+
+
 
       // Upload logo if selected
       if (logoFile) {
@@ -1618,6 +1927,33 @@ payload.stream =
       toast.error("Could not clear draft");
     }
   };
+   const selectedCollegeId = editingcollegeId || formData.collegeId;
+
+  // 🔹 PASTE useEffect RIGHT HERE 👇
+useEffect(() => {
+  if (!selectedCollegeId) return;
+
+  const fetchHostels = async () => {
+    try {
+      const res = await getHostelsByCollege(selectedCollegeId);
+
+      const list = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.data)
+        ? res.data.data
+        : [];
+
+      setHostels(list);
+    } catch {
+      toast.error("Failed to load hostels");
+      setHostels([]);
+    }
+  };
+
+  fetchHostels();
+}, [selectedCollegeId]);
+
+
 
   // Check for existing college data on mount and when currentUser becomes available
   useEffect(() => {
@@ -2932,15 +3268,7 @@ payload.stream =
           required
         />
 
-        <FormField
-          label="Fees (₹)"
-          type="number"
-          value={course.fees}
-          onChange={(e) =>
-            updateCourse(cIndex, "fees", e.target.value)
-          }
-          required
-        />
+        
 
         <FormField
           label="Category"
@@ -2954,9 +3282,9 @@ payload.stream =
         <FormField
           label="Student Strength"
           type="number"
-          value={course.studentStrength}
+          value={course.intake}
           onChange={(e) =>
-            updateCourse(cIndex, "studentStrength", e.target.value)
+            updateCourse(cIndex, "intake", e.target.value)
           }
           required
         />
@@ -3262,6 +3590,293 @@ payload.stream =
     + Add Another Course
   </button>
 </div>
+<div className="block" id="hostels">
+  {/* Header */}
+  <div className="flex items-center gap-4 mb-8 p-6 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200/50 shadow-lg">
+    <div className="p-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl shadow-lg">
+      <Home className="w-6 h-6 text-white" />
+    </div>
+    <div>
+      <h2 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+        🏠 Hostel Management
+      </h2>
+      <p className="text-gray-600 mt-1">
+        Add, update, and manage hostel details
+      </p>
+    </div>
+  </div>
+
+  <div className="space-y-6">
+    {hostels.map((hostel, index) => (
+      <div
+        key={hostel._id || index}
+        className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm"
+      >
+        {/* Header */}
+        <div className="flex justify-between mb-4">
+          <h3 className="font-semibold text-gray-800">
+            Hostel {index + 1}
+            {hostel._isNew && (
+              <span className="ml-2 text-xs text-indigo-600">
+                (New)
+              </span>
+            )}
+          </h3>
+
+          <div className="flex gap-2">
+            {!hostel._isNew && (
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!window.confirm("Delete this hostel?")) return;
+                  try {
+                    await deleteHostel(hostel._id);
+                    setHostels(prev =>
+                      prev.filter(h => h._id !== hostel._id)
+                    );
+                    toast.success("Hostel deleted");
+                  } catch {
+                    toast.error("Delete failed");
+                  }
+                }}
+                className="text-red-500"
+              >
+                <Trash2 size={18} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* FORM */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* Hostel Name */}
+          <FormField
+            label="Hostel Name *"
+            value={hostel.hostelName ?? ""}
+            onChange={(e) => {
+              const list = [...hostels];
+              list[index].hostelName = e.target.value;
+              setHostels(list);
+            }}
+          />
+
+          {/* Type */}
+          <FormField
+            label="Type *"
+            type="select"
+            options={["Boys", "Girls", "Co-Ed"]}
+            value={hostel.type ?? ""}
+            onChange={(e) => {
+              const list = [...hostels];
+              list[index].type = e.target.value;
+              setHostels(list);
+            }}
+          />
+
+          {/* Capacity */}
+          <FormField
+            label="Capacity *"
+            type="number"
+            value={hostel.capacity ?? ""}
+            onChange={(e) => {
+              const list = [...hostels];
+              list[index].capacity = Number(e.target.value);
+              setHostels(list);
+            }}
+          />
+
+          {/* Available Seats */}
+          <FormField
+            label="Available Seats *"
+            type="number"
+            value={hostel.availableSeats ?? ""}
+            onChange={(e) => {
+              const list = [...hostels];
+              list[index].availableSeats = Number(e.target.value);
+              setHostels(list);
+            }}
+          />
+
+          {/* Fee Per Year */}
+          <FormField
+            label="Fee Per Year *"
+            type="number"
+            value={hostel.feePerYear ?? ""}
+            onChange={(e) => {
+              const list = [...hostels];
+              list[index].feePerYear = Number(e.target.value);
+              setHostels(list);
+            }}
+          />
+
+          {/* Active */}
+          <FormField
+            label="Active"
+            type="select"
+            options={["true", "false"]}
+            value={String(hostel.isActive ?? true)}
+            onChange={(e) => {
+              const list = [...hostels];
+              list[index].isActive = e.target.value === "true";
+              setHostels(list);
+            }}
+          />
+
+          {/* Contact Name */}
+          <FormField
+            label="Contact Name"
+            value={hostel.contactPerson?.name ?? ""}
+            onChange={(e) => {
+              const list = [...hostels];
+              list[index].contactPerson = {
+                ...list[index].contactPerson,
+                name: e.target.value
+              };
+              setHostels(list);
+            }}
+          />
+
+          {/* Contact Phone */}
+          <FormField
+            label="Contact Phone"
+            value={hostel.contactPerson?.phone ?? ""}
+            onChange={(e) => {
+              const list = [...hostels];
+              list[index].contactPerson = {
+                ...list[index].contactPerson,
+                phone: e.target.value
+              };
+              setHostels(list);
+            }}
+          />
+
+          {/* Rules */}
+          <div className="md:col-span-2">
+            <FormField
+              label="Rules"
+              value={hostel.rules ?? ""}
+              onChange={(e) => {
+                const list = [...hostels];
+                list[index].rules = e.target.value;
+                setHostels(list);
+              }}
+            />
+          </div>
+
+          {/* Facilities */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium mb-1">
+              Facilities (comma separated)
+            </label>
+            <input
+              type="text"
+              value={(hostel.facilities || []).join(", ")}
+              onChange={(e) => {
+                const list = [...hostels];
+                list[index].facilities = e.target.value
+                  .split(",")
+                  .map(f => f.trim())
+                  .filter(Boolean);
+                setHostels(list);
+              }}
+              className="w-full px-3 py-2 border rounded-md"
+            />
+          </div>
+        </div>
+
+        {/* SAVE BUTTON */}
+        <div className="mt-4 flex justify-end">
+          <button
+            type="button"
+            onClick={async () => {
+              const h = hostels[index];
+
+              // 🔐 Required field validation
+              if (
+                !h.hostelName ||
+                !h.type ||
+                !h.capacity ||
+                !h.availableSeats ||
+                !h.feePerYear
+              ) {
+                toast.error("Fill all required fields before saving");
+                return;
+              }
+
+              const payload = {
+                collegeId: selectedCollegeId,
+                hostelName: h.hostelName,
+                type: h.type,
+                capacity: Number(h.capacity),
+                availableSeats: Number(h.availableSeats),
+                feePerYear: Number(h.feePerYear),
+                facilities: h.facilities || [],
+                rules: h.rules || "",
+                contactPerson: h.contactPerson || { name: "", phone: "" },
+                isActive: h.isActive !== false
+              };
+
+              try {
+                // 🆕 CREATE
+                if (h._isNew) {
+                  const res = await addHostel(payload);
+                  
+
+const savedHostel = res?.data?.data || res?.data;
+
+const list = [...hostels];
+list[index] = savedHostel; // now real hostel object with _id
+setHostels(list);
+
+                  toast.success("Hostel added successfully");
+                }
+                // ✏️ UPDATE
+                else {
+                  await updateHostel(h._id, payload);
+                  toast.success("Hostel updated");
+                }
+              } catch (err) {
+                toast.error(
+                  err?.response?.data?.message || "Failed to save hostel"
+                );
+              }
+            }}
+            className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-md"
+          >
+            <Save size={16} /> Save
+          </button>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  {/* ADD HOSTEL — NO API CALL HERE */}
+  <button
+    type="button"
+    onClick={() => {
+      setHostels(prev => [
+        ...prev,
+        {
+          hostelName: "",
+          type: "",
+          capacity: "",
+          availableSeats: "",
+          feePerYear: "",
+          facilities: [],
+          rules: "",
+          contactPerson: { name: "", phone: "" },
+          isActive: true,
+          _isNew: true
+        }
+      ]);
+    }}
+    className="mt-6 flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 px-4 py-2 rounded-lg border"
+  >
+    <PlusCircle size={16} /> Add Hostel
+  </button>
+</div>
+
 
 
 
@@ -4491,263 +5106,308 @@ payload.stream =
           </div>
             </div>
 
-            <div className="block" id="admission">
-              <div className="flex items-center gap-4 mb-8 p-6 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl border border-indigo-200/50 shadow-lg">
-                <div className="p-3 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl shadow-lg">
-                  <CalendarDays className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
-                    📅 Admission Process Timeline
-                  </h2>
-                  <p className="text-gray-600 mt-1">Define admission timelines with dates, eligibility, and required documents</p>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                {admissionSteps.map((timeline, index) => (
-  <div key={index} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-
-    {/* Header */}
-    <div className="flex items-center justify-between mb-4">
-      <h3 className="text-lg font-semibold text-gray-800">Timeline Entry {index + 1}</h3>
-      <button
-        type="button"
-        onClick={() => {
-          const next = admissionSteps.filter((_, i) => i !== index);
-          setAdmissionSteps(next);
-        }}
-        className="text-red-500 hover:text-red-700 p-1"
-        aria-label={`Remove timeline ${index + 1}`}
-      >
-        <Trash2 size={18} />
-      </button>
+           <div className="block" id="admission">
+  {/* HEADER */}
+  <div className="flex items-center gap-4 mb-8 p-6 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl border border-indigo-200/50 shadow-lg">
+    <div className="p-3 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl shadow-lg">
+      <CalendarDays className="w-6 h-6 text-white" />
     </div>
+    <div>
+      <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+        📅 Admission Process Timeline
+      </h2>
+      <p className="text-gray-600 mt-1">
+        Define admission timelines with dates, eligibility, and required documents
+      </p>
+    </div>
+  </div>
 
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div className="space-y-6">
+    {admissionSteps.map((timeline, index) => (
+      <div
+        key={index}
+        className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">
+            Timeline Entry {index + 1}
+          </h3>
+          <button
+            type="button"
+            onClick={() => {
+              const next = admissionSteps.filter((_, i) => i !== index);
+              setAdmissionSteps(next);
+            }}
+            className="text-red-500 hover:text-red-700 p-1"
+            aria-label={`Remove timeline ${index + 1}`}
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
 
-      {/* Admission Start Date */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Admission Start Date <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="date"
-          value={timeline.admissionStartDate || ''}
-          onChange={(e) => {
-            const next = [...admissionSteps];
-            next[index].admissionStartDate = e.target.value;
-            setAdmissionSteps(next);
-          }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-          min={new Date().toISOString().split('T')[0]}
-        />
-      </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-      {/* Admission End Date */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Admission End Date <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="date"
-          value={timeline.admissionEndDate || ''}
-          onChange={(e) => {
-            const next = [...admissionSteps];
-            next[index].admissionEndDate = e.target.value;
-            setAdmissionSteps(next);
-          }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-          min={timeline.admissionStartDate || new Date().toISOString().split('T')[0]}
-        />
-      </div>
+          {/* Admission Start Date */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Admission Start Date <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              value={timeline.admissionStartDate || ""}
+              onChange={(e) => {
+                const next = [...admissionSteps];
+                next[index].admissionStartDate = e.target.value;
+                setAdmissionSteps(next);
+              }}
+              min={new Date().toISOString().split("T")[0]}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
 
-      {/* Status */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Status <span className="text-red-500">*</span>
-        </label>
-        <select
-          value={timeline.status || ''}
-          onChange={(e) => {
-            const next = [...admissionSteps];
-            next[index].status = e.target.value;
-            setAdmissionSteps(next);
-          }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-        >
-          <option value="">Select Status</option>
-          <option value="Ongoing">Ongoing</option>
-          <option value="Ended">Ended</option>
-          <option value="Starting Soon">Starting Soon</option>
-        </select>
-      </div>
+          {/* Admission End Date */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Admission End Date <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              value={timeline.admissionEndDate || ""}
+              onChange={(e) => {
+                const next = [...admissionSteps];
+                next[index].admissionEndDate = e.target.value;
+                setAdmissionSteps(next);
+              }}
+              min={
+                timeline.admissionStartDate ||
+                new Date().toISOString().split("T")[0]
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
 
-      {/* Course Selection */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Course <span className="text-red-500">*</span>
-        </label>
-        <select
-          value={timeline.courseId || ''}
-          onChange={(e) => {
-            const next = [...admissionSteps];
-            next[index].courseId = e.target.value;
-            setAdmissionSteps(next);
-          }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-        >
-          <option value="">Select Course</option>
-          {/* Map your courses here */}
-        </select>
-      </div>
+          {/* Status */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Status <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={timeline.status || ""}
+              onChange={(e) => {
+                const next = [...admissionSteps];
+                next[index].status = e.target.value;
+                setAdmissionSteps(next);
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="">Select Status</option>
+              <option value="Ongoing">Ongoing</option>
+              <option value="Ended">Ended</option>
+              <option value="Starting Soon">Starting Soon</option>
+            </select>
+          </div>
 
-      {/* Application Fee */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Application Fee *
-        </label>
-        <input
-          type="number"
-          min="0"
-          value={timeline.applicationFee ?? 0}
-          onChange={(e) => {
-            const next = [...admissionSteps];
-            next[index].applicationFee = Number(e.target.value) || 0;
-            setAdmissionSteps(next);
-          }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-        />
-      </div>
+          {/* Course Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Course <span className="text-red-500">*</span>
+            </label>
+            <select
+  value={timeline.courseId || ""}
+ onChange={(e) => {
+  const next = [...admissionSteps];
+  next[index] = {
+    ...next[index],
+    courseId: e.target.value
+  };
+  setAdmissionSteps(next);
+}}
 
-      {/* Minimum Qualification */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Minimum Qualification
-        </label>
-        <select
-          value={timeline.eligibility?.minQualification || ''}
-          onChange={(e) => {
-            const next = [...admissionSteps];
-            next[index].eligibility = {
-              ...next[index].eligibility,
-              minQualification: e.target.value
-            };
-            setAdmissionSteps(next);
-          }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-        >
-          <option value="">Select Qualification</option>
-          <option value="SSC Passed">SSC Passed</option>
-          <option value="HSC Passed">HSC Passed</option>
-          <option value="Dipoma Passed">Diploma Passed</option>
-          <option value="Under-Graduate">Under-Graduate</option>
-          <option value="Post-Graduate">Post-Graduate</option>
-          <option value="Bachelors">Bachelors</option>
-          <option value="Masters">Masters</option>
-          <option value="Phd">PhD</option>
-        </select>
-      </div>
+  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+>
+  <option value="">Select Course</option>
 
-      {/* Other Eligibility Info */}
-      <div className="md:col-span-2">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Other Eligibility Information
-        </label>
-        <textarea
-          placeholder="Any other eligibility information..."
-          value={timeline.eligibility?.otherInfo || ''}
-          onChange={(e) => {
-            const next = [...admissionSteps];
-            next[index].eligibility = {
-              ...next[index].eligibility,
-              otherInfo: e.target.value
-            };
-            setAdmissionSteps(next);
-          }}
-          rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-        />
-      </div>
+ {Array.isArray(courses) &&
+  courses.map((course, i) => {
+    const label =
+      course.courseName ||
+      course.title ||
+      course.course ||
+      course.name ||
+      course.program ||
+      "Unnamed Course";
 
-      {/* Documents Required */}
-      <div className="md:col-span-2">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Documents Required
-        </label>
-        <div className="space-y-2">
-          {(timeline.documentsRequired || []).map((doc, docIndex) => (
-            <div key={docIndex} className="flex items-center gap-2">
-              <input
-                type="text"
-                value={doc}
-                onChange={(e) => {
-                  const next = [...admissionSteps];
-                  const nextDocs = [...(next[index].documentsRequired || [])];
-                  nextDocs[docIndex] = e.target.value;
-                  next[index].documentsRequired = nextDocs;
-                  setAdmissionSteps(next);
-                }}
-                placeholder="Document name"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-              />
+    return (
+      <option key={course._id || i} value={course._id}>
+        {label}
+      </option>
+    );
+  })}
+</select>
+
+          </div>
+
+          {/* Application Fee */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Application Fee <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={timeline.applicationFee ?? 0}
+              onChange={(e) => {
+                const next = [...admissionSteps];
+                next[index].applicationFee = Number(e.target.value) || 0;
+                setAdmissionSteps(next);
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
+
+          {/* Minimum Qualification */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Minimum Qualification
+            </label>
+            <select
+              value={timeline.eligibility?.minQualification || ""}
+              onChange={(e) => {
+                const next = [...admissionSteps];
+                next[index].eligibility = {
+                  ...next[index].eligibility,
+                  minQualification: e.target.value
+                };
+                setAdmissionSteps(next);
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="">Select Qualification</option>
+              <option value="SSC Passed">SSC Passed</option>
+              <option value="HSC Passed">HSC Passed</option>
+              <option value="Dipoma Passed">Dipoma Passed</option>
+              <option value="Under-Graduate">Under-Graduate</option>
+              <option value="Post-Graduate">Post-Graduate</option>
+              <option value="Bachelors">Bachelors</option>
+              <option value="Masters">Masters</option>
+              <option value="Phd">Phd</option>
+            </select>
+          </div>
+
+          {/* Other Eligibility Info */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Other Eligibility Information
+            </label>
+            <textarea
+              placeholder="Any other eligibility information..."
+              value={timeline.eligibility?.otherInfo || ""}
+              onChange={(e) => {
+                const next = [...admissionSteps];
+                next[index].eligibility = {
+                  ...next[index].eligibility,
+                  otherInfo: e.target.value
+                };
+                setAdmissionSteps(next);
+              }}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
+
+          {/* Documents Required */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Documents Required
+            </label>
+            <div className="space-y-2">
+              {(timeline.documentsRequired || []).map((doc, docIndex) => (
+                <div key={docIndex} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={doc}
+                    onChange={(e) => {
+                      const next = [...admissionSteps];
+                      const nextDocs = [
+                        ...(next[index].documentsRequired || [])
+                      ];
+                      nextDocs[docIndex] = e.target.value;
+                      next[index].documentsRequired = nextDocs;
+                      setAdmissionSteps(next);
+                    }}
+                    placeholder="Document name"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = [...admissionSteps];
+                      const nextDocs = [
+                        ...(next[index].documentsRequired || [])
+                      ];
+                      nextDocs.splice(docIndex, 1);
+                      next[index].documentsRequired = nextDocs;
+                      setAdmissionSteps(next);
+                    }}
+                    className="text-red-500 p-1"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+
               <button
                 type="button"
                 onClick={() => {
                   const next = [...admissionSteps];
-                  const nextDocs = [...(next[index].documentsRequired || [])];
-                  nextDocs.splice(docIndex, 1);
+                  const nextDocs = [
+                    ...(next[index].documentsRequired || []),
+                    ""
+                  ];
                   next[index].documentsRequired = nextDocs;
                   setAdmissionSteps(next);
                 }}
-                className="text-red-500 p-1"
+                className="flex items-center text-sm text-indigo-600"
               >
-                <Trash2 size={16} />
+                <PlusCircle size={16} className="mr-1" /> Add Document
               </button>
             </div>
-          ))}
-          <button
-            type="button"
-            onClick={() => {
-              const next = [...admissionSteps];
-              const nextDocs = [...(next[index].documentsRequired || []), ''];
-              next[index].documentsRequired = nextDocs;
-              setAdmissionSteps(next);
-            }}
-            className="flex items-center text-sm text-indigo-600"
-          >
-            <PlusCircle size={16} className="mr-1" /> Add Document
-          </button>
+          </div>
         </div>
       </div>
+    ))}
 
-    </div>
+    {/* Add Timeline Entry */}
+    <button
+      type="button"
+      onClick={() =>
+        setAdmissionSteps([
+          ...admissionSteps,
+          {
+            admissionStartDate: "",
+            admissionEndDate: "",
+            status: "",
+            courseId: "",
+            documentsRequired: [],
+            applicationFee: 0,
+            eligibility: {
+              minQualification: "",
+              otherInfo: ""
+            }
+          }
+        ])
+      }
+      className="mt-4 flex items-center text-sm text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-4 py-2 rounded-lg border border-indigo-200"
+    >
+      <PlusCircle size={16} className="mr-2" /> Add Timeline Entry
+    </button>
   </div>
-))}
+</div>
 
 
-                <button
-                  type="button"
-                  onClick={() => setAdmissionSteps([...admissionSteps, {
-                    admissionStartDate: '',
-                    admissionEndDate: '',
-                    status: '',
-                   
-                   courseId: '',
-                    otherInfo: '',
-                    documentsRequired: [],
-                    applicationFee: 0,
-                    eligibility: {
-                      minQualification: '',
-                      otherInfo: ''
-                    }
-                  }])}
-                  className="mt-4 flex items-center text-sm text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-4 py-2 rounded-lg border border-indigo-200"
-                >
-                  <PlusCircle size={16} className="mr-2" /> Add Timeline Entry
-                </button>
-              </div>
-            </div>
+
+               
 
             <div className="block" id="media">
   <div className="flex items-center gap-4 mb-8 p-6 bg-gradient-to-r from-violet-50 to-purple-50 rounded-2xl border border-violet-200/50 shadow-lg">

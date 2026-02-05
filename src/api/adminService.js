@@ -103,7 +103,7 @@ export const addAmenities = (data) =>
 
 
 export const addAlumni = (data) =>
-  apiClient.post('/colleges/alumnus/add', data);
+  apiClient.post('/colleges/alumni/add', data);
 
 
 export const addOtherDetails = (data) =>
@@ -142,8 +142,8 @@ export const getcollegeById = (collegeId) =>
 export const getcollegeById1 = (collegeId, config) =>
   apiClient.get(`/admin/colleges/${encodeURIComponent(collegeId)}`, config);
 
-export const updatecollegeInfo = (collegeId, data) =>
-  apiClient.put(`/colleges/auth/${encodeURIComponent(collegeId)}`, data);
+export const updateCollegeByAuthId = (collegeId, data) =>
+  apiClient.put(`/colleges/${encodeURIComponent(collegeId)}`, data);
 
 export const updatecollegetatus = (collegeId, newStatus) =>
   apiClient.put(`/colleges/${encodeURIComponent(collegeId)}`, { status: newStatus });
@@ -444,4 +444,4 @@ export const getApprovedcolleges = () => getcollegeByStatus('approved');
 export const getRejectedcolleges = () => getcollegeByStatus('rejected');
 export const getPendingcolleges = () => getPendingcollege();
 export const updatecollegeStatus = (collegeId, newStatus) =>
-  apiClient.put(`/admin/college/${encodeURIComponent(collegeId)}`, { status: newStatus });
+  apiClient.put(`/college/${encodeURIComponent(collegeId)}`, { status: newStatus });
