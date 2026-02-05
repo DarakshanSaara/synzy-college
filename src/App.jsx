@@ -3,8 +3,8 @@ import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-
 import Header from "./components/Header";
 import LandingPage from "./pages/LandingPage";
 import HomePage from "./pages/HomePage";
-import collegesPage from "./pages/collegesPage";
-import collegeDetailsPage from "./pages/collegeDetailsPage";
+import CollegesPage from "./pages/CollegesPage";
+import CollegeDetailsPage from "./pages/CollegeDetailsPage";
 import LoginPage from "./pages/LoginPage";
 import ComparePage from "./pages/ComparePage";
 import SignUpPage from "./pages/SignUpPage";
@@ -291,7 +291,7 @@ useEffect(() => {
           <Route
             path="/colleges"
             element={
-              <collegesPage
+              <CollegesPage
                 onCompareToggle={handleCompareToggle}
                 comparisonList={comparisonList}
                 shortlist={shortlist}
