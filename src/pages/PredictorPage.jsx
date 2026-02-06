@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, User, MapPin, Building, Navigation, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { predictcolleges } from '../api/predictorService';
-import collegeCard from '../components/collegeCard';
+import CollegeCard from '../components/CollegeCard';
 import { toast } from 'react-toastify';
 
 const collegeTypes = [
@@ -444,7 +444,7 @@ const PredictorPage = () => {
             ) : searchResults.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {searchResults.map((college, index) => (
-                  <collegeCard
+                  <CollegeCard
                     key={college._id || college.id || college.collegeId || `college-${index}`}
                     college={college}
                     onCardClick={() => navigate(`/college/${college._id || college.id || college.collegeId}`)}

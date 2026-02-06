@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { searchcolleges } from '../api/searchService';
 import { getUserPreferences } from '../api/preferencesService';
-import CollegeCard from '../components/collegeCard';
+import CollegeCard from '../components/CollegeCard';
 import { useAuth } from '../context/AuthContext';
 
 const HomePage = ({ onCompareToggle, comparisonList, shortlist, onShortlistToggle }) => {

@@ -94,7 +94,7 @@ export const getcollegesByShift = (shift) => {
  * Get college card data
  * Backend: GET /api/colleges/card/:id
  */
-export const getcollegeCardData = (collegeId) => {
+export const getCollegeCardData = (collegeId) => {
   return apiClient.get(`/admin/card/${encodeURIComponent(collegeId)}`);
 };
 
@@ -316,7 +316,7 @@ export default {
   comparecolleges,
   getcollegesByFeeRange,
   getcollegesByShift,
-  getcollegeCardData,
+  getCollegeCardData,
   getAmenitiesByCollegeId,
   
   getAlumniBycollege,

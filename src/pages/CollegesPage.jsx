@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getPubliccollegesByStatus } from "../api/collegeService";
-import collegeCard from "../components/collegeCard";
+import CollegeCard from "../components/CollegeCard";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 import { getCurrentLocation, addDistanceTocolleges } from "../utils/distanceUtils";
@@ -258,7 +258,7 @@ const collegesPage = ({
                 const isCompared = comparisonList.some(item => (item.collegeId || item._id) === collegeId);
                 const isShortlisted = shortlist.some(item => (item.collegeId || item._id) === collegeId);
                 return (
-                  <collegeCard
+                  <CollegeCard
                     key={collegeId}
                     college={college}
                     onCardClick={() => handleCardClick(college)}

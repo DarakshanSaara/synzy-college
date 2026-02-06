@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, X, MapPin, DollarSign, Award, Users, Building, BookOpen, Calendar, CheckCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
-import collegeCard from '../components/collegeCard';
+import CollegeCard from '../components/CollegeCard';
 import { searchcolleges as searchcollegesApi } from '../api/searchService';
 import { useNavigate } from 'react-router-dom';
 
@@ -312,7 +312,7 @@ const AdvancedSearchPage = () => {
             {!loading && colleges.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {colleges.map((college) => (
-                  <collegeCard
+                  <CollegeCard
                     key={college._id || college.id || college.collegeId}
                     college={college}
                     onCardClick={() => navigate(`/college/${college._id || college.id || college.collegeId}`)}

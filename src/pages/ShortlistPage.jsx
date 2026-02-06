@@ -1,5 +1,5 @@
 import React from 'react';
-import collegeCard from '../components/collegeCard';
+import CollegeCard from '../components/CollegeCard';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -35,7 +35,7 @@ const ShortlistPage = ({ shortlist, onShortlistToggle, comparisonList, onCompare
       {validShortlist.length > 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {validShortlist.map((college) => (
-            <collegeCard
+            <CollegeCard
               key={college.collegeId || college._id}
               college={college}
               onCardClick={() => handleCardClick(college)}

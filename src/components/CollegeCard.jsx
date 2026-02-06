@@ -1,7 +1,7 @@
 import React from 'react';
 import { MapPin, PlusCircle, CheckCircle, Heart, Navigation } from 'lucide-react';
 
-const collegeCard = ({ college, onCardClick, onCompareToggle, isCompared, currentUser, onShortlistToggle, isShortlisted, onApply }) => {
+const CollegeCard = ({ college, onCardClick, onCompareToggle, isCompared, currentUser, onShortlistToggle, isShortlisted, onApply }) => {
   if (!college) {
     return null;
   }
@@ -186,4 +186,4 @@ const collegeCard = ({ college, onCardClick, onCompareToggle, isCompared, curren
   );
 };
 
-export default collegeCard;
+export default CollegeCard;

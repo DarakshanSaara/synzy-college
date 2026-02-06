@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Search, ArrowLeft, ChevronRight, ChevronDown, MapPin, GraduationCap, Building, Users, DollarSign, Filter } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { searchcolleges } from '../api/searchService';
-import collegeCard from '../components/collegeCard';
+import CollegeCard from '../components/CollegeCard';
 
 const states = [
   'Maharashtra', 'Karnataka', 'Delhi', 'Kerala', 'Gujarat', 'Tamil Nadu',
@@ -651,7 +651,7 @@ const SearchPage = () => {
             ) : searchResults.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {searchResults.map((college, idx) => (
-                  <collegeCard
+                  <CollegeCard
                     key={`${college._id || college.id || college.collegeId || 'college'}-${idx}`}
                     college={college}
                     onCardClick={() => navigate(`/college/${college._id || college.id || college.collegeId}`)}

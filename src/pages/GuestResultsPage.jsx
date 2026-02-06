@@ -80,7 +80,7 @@ const GuestResultsPage = () => {
     navigate(`/college/${collegeId}`);
   };
 
-  const collegeCard = ({ college }) => (
+  const CollegeCard = ({ college }) => (
     <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
       <div className="flex flex-col md:flex-row gap-4">
         <div className="md:w-1/3">
@@ -247,7 +247,7 @@ const GuestResultsPage = () => {
           
           {matchingcolleges.length > 0 ? (
             matchingcolleges.map((college) => (
-              <collegeCard key={college._id} college={college} />
+              <CollegeCard key={college._id} college={college} />
             ))
           ) : (
             <div className="text-center py-12">

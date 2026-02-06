@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
-import collegeCard from './collegeCard';
+import CollegeCard from './CollegeCard';
 import UserProfileForm from './UserProfileForm';
 import { fetchPdfBlob } from '../utils/pdfHelper';
 
@@ -409,7 +409,7 @@ const extractStudentId = (app, currentUser) => {
         {shortlist && shortlist.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {shortlist.map(college => (
-              <collegeCard
+              <CollegeCard
                 key={college.collegeId || college._id}
                 college={college}
                 onCardClick={() => handleCardClick(college)}
