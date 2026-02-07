@@ -9,7 +9,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import apiClient from "../api/axios";
-import PendingCollegesSection from "../components/PendingCollegesSection";
+import PendingCollegesSectionfixed from "../components/PendingCollegesSectionfixed";
 import PendingReviewsSection from "../components/PendingReviewsSection";
 import DebugAPI from "../components/DebugAPI";
 import collegeDebugger from "../components/collegeDebugger";
@@ -168,7 +168,7 @@ const AdminDashboardPage = () => {
 
         {/* Pending colleges Section */}
         <div className="mb-8">
-          <PendingCollegesSection />
+          <PendingCollegesSectionfixed />
         </div>
 
         {/* Pending Reviews Section */}
