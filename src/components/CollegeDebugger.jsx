@@ -6,7 +6,7 @@ import { Bug, RefreshCw } from 'lucide-react';
  * Debug component to help identify duplicate colleges
  * Add this to AdminDashboardPage temporarily to diagnose the issue
  */
-const collegeDebugger = () => {
+const CollegeDebugger = () => {
   const [debugData, setDebugData] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -184,4 +184,4 @@ const collegeDebugger = () => {
   );
 };
 
-export default collegeDebugger;
+export default CollegeDebugger;
