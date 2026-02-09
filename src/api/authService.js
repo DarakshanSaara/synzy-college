@@ -7,7 +7,7 @@ import apiClient from './axios';
  * @param {object} userData 
  */
 export const registerUser = (userData) => {
-  return apiClient.post('/api/auth/register', userData);
+  return apiClient.post('/auth/register', userData);
 };
 export const googleLogin = (payload) => {
   return apiClient.post('auth/google-web', payload);
@@ -19,7 +19,7 @@ export const googleLogin = (payload) => {
  * @param {object} credentials - User's email and password (like: { email, password }).
  */
 export const loginUser = (credentials) => {
-  return apiClient.post('/api/auth/login', credentials);
+  return apiClient.post('/auth/login', credentials);
 };
 
 /**
