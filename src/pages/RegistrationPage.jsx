@@ -140,7 +140,6 @@ const FormField = ({
   );
 };
 
-
 const DynamicListField = ({ label, fields, value, onChange, type = "famous" }) => {
   const list = value || [];
   const getDefaultItem = () => {
@@ -366,6 +365,411 @@ const DynamicElearningField = ({ label, value, onChange }) => {
 const RegistrationPage = () => {
   const [hostels, setHostels] = useState([]);
 const [editingId, setEditingId] = useState(null);
+
+// Replace your existing loadAllCollegeData function with this enhanced version
+const loadAllCollegeData = async (college) => {
+  console.log('🎯 DEBUG - loadAllCollegeData called with college:', {
+  id: college._id,
+  name: college.name,
+  rank: college.rank,
+  ranking: college.ranking,
+  type_rank: typeof college.rank,
+  type_ranking: typeof college.ranking
+});
+  try {
+    console.log('📥 Loading all college data for:', college._id);
+    
+    // Clear any existing draft
+    try {
+      localStorage.removeItem("collegeRegDraft");
+    } catch (error) {
+      console.error("Could not clear draft:", error);
+    }
+    
+    // Load basic college data
+    setFormData(prev => ({
+      ...prev,
+      name: college.name || "",
+      description: college.description || "",
+      address: college.address || "",
+      area: college.area || "",
+      city: college.city || "",
+      state: college.state || "",
+      country: college.country || "India",
+      pincode: college.pinCode ? String(college.pinCode) : "",
+      establishedYear: college.estYear ? String(college.estYear) : (college.establishedYear ? String(college.establishedYear) : ""),
+      board: college.board || "",
+      feeRange: college.feeRange || "",
+      upto: college.upto || "",
+      email: college.email || "",
+      website: college.website || "",
+      phoneNo: college.mobileNo || "",
+      collegeMode: college.collegeMode || "convent",
+      genderType: college.genderType === 'boy' ? 'boys' : college.genderType === 'girl' ? 'girls' : (college.genderType || 'co-ed'),
+      shifts: Array.isArray(college.shifts) ? college.shifts : ["morning"],
+      languageMedium: Array.isArray(college.languageMedium) ? college.languageMedium : ["English"],
+      transportAvailable: college.transportAvailable || "no",
+      latitude: college.lat != null ? String(college.lat) : (college.latitude != null ? String(college.latitude) : ""),
+      longitude: college.long != null ? String(college.long) : (college.longitude != null ? String(college.longitude) : ""),
+      TeacherToStudentRatio: college.TeacherToStudentRatio || "",
+      rank: college.rank || "",
+      ranking: college.rank || "",
+      acceptanceRate: college.acceptanceRate != null ? String(college.acceptanceRate) : "",
+      collegeInfo: college.collegeInfo || college.description || "",
+      streamsOffered: Array.isArray(college.streamsOffered) ? college.streamsOffered : 
+                  (college.stream ? [college.stream] : []),
+      specialist: Array.isArray(college.specialist) ? college.specialist : [],
+      tags: Array.isArray(college.tags) ? college.tags : []
+    }));
+    console.log('✅ Form data updated - ranking set to:', college.rank || "");
+
+    // Load social links
+    setSocialLinks({
+      instagramHandle: college.instagramHandle || "",
+      twitterHandle: college.twitterHandle || "",
+      linkedinHandle: college.linkedinHandle || ""
+    });
+
+    // Load logo if available
+    if (college.logo) {
+      const logoUrl = typeof college.logo === 'object' ? college.logo.url : college.logo;
+      if (logoUrl) setLogoPreview(logoUrl);
+    }
+
+    // Load all related data in parallel
+    const [
+      amenitiesRes,
+      activitiesRes,
+      infraRes,
+      feesRes,
+      academicsRes,
+      otherRes,
+      safetyRes,
+      techRes,
+      intlRes,
+      facultyRes,
+      timelineRes,
+      alumniRes,
+      coursesRes,
+      hostelsRes,
+      scholarshipsRes
+    ] = await Promise.allSettled([
+      getAmenitiesByCollegeId(college._id).catch(err => {
+        console.log('Amenities fetch failed:', err);
+        return { data: null };
+      }),
+      getActivitiesByCollegeId(college._id).catch(err => {
+        console.log('Activities fetch failed:', err);
+        return { data: null };
+      }),
+      getInfrastructureById(college._id).catch(err => {
+        console.log('Infrastructure fetch failed:', err);
+        return { data: null };
+      }),
+      getFeesAndScholarshipsById(college._id).catch(err => {
+        console.log('Fees fetch failed:', err);
+        return { data: null };
+      }),
+      getAcademicsById(college._id).catch(err => {
+        console.log('Academics fetch failed:', err);
+        return { data: null };
+      }),
+      getOtherDetailsById(college._id).catch(err => {
+        console.log('Other details fetch failed:', err);
+        return { data: null };
+      }),
+      getSafetyAndSecurityById(college._id).catch(err => {
+        console.log('Safety fetch failed:', err);
+        return { data: null };
+      }),
+      getTechnologyAdoptionById(college._id).catch(err => {
+        console.log('Technology fetch failed:', err);
+        return { data: null };
+      }),
+      getInternationalExposureById(college._id).catch(err => {
+        console.log('International fetch failed:', err);
+        return { data: null };
+      }),
+      getFacultyById(college._id).catch(err => {
+        console.log('Faculty fetch failed:', err);
+        return { data: null };
+      }),
+      getAdmissionTimelineById(college._id).catch(err => {
+        console.log('Timeline fetch failed:', err);
+        return { data: null };
+      }),
+      getAlumniBycollege(college._id).catch(err => {
+        console.log('Alumni fetch failed:', err);
+        return { data: null };
+      }),
+      getCoursesByCollege(college._id).catch(err => {
+        console.log('Courses fetch failed:', err);
+        return { data: [] };
+      }),
+      getHostelsByCollege(college._id).catch(err => {
+        console.log('Hostels fetch failed:', err);
+        return { data: [] };
+      }),
+      getScholarshipsByCollege(college._id).catch(err => {
+        console.log('Scholarships fetch failed:', err);
+        return { data: [] };
+      })
+    ]);
+
+    // Helper to log and extract data
+    const logAndExtract = (name, result) => {
+      console.log(`\n========== ${name} ==========`);
+      console.log('Status:', result.status);
+      
+      if (result.status === 'fulfilled' && result.value) {
+        console.log('Full response:', result.value);
+        console.log('Response data:', result.value.data);
+        console.log('Response data.data:', result.value.data?.data);
+        
+        // Try to extract the actual data
+        const extracted = result.value?.data?.data || result.value?.data || result.value;
+        console.log('Extracted data:', extracted);
+        return extracted;
+      } else if (result.status === 'rejected') {
+        console.log('Rejected with:', result.reason);
+      }
+      console.log('========== END ==========\n');
+      return null;
+    };
+
+    // ==================== COURSES ====================
+    const coursesData = logAndExtract('COURSES', coursesRes);
+    if (coursesData && Array.isArray(coursesData) && coursesData.length > 0) {
+      const transformedCourses = coursesData.map(course => ({
+        _id: course._id,
+        courseName: course.courseName || course.name || "",
+        duration: course.duration || "",
+        fees: course.fees || "",
+        category: course.category || "",
+        intake: course.intake || "",
+        exams: Array.isArray(course.exams) ? course.exams.map(exam => ({
+          examType: exam.examType || exam.examName || "",
+          metricType: exam.metricType || exam.marksType || "Rank",
+          minValue: exam.minValue || exam.minMarks || "",
+          maxValue: exam.maxValue || exam.maxMarks || ""
+        })) : [],
+        placements: Array.isArray(course.placements) ? course.placements.map(p => ({
+          year: p.year || "",
+          totalStudents: p.totalStudents || "",
+          placedStudents: p.placedStudents || "",
+          highestPackage: p.highestPackage || p.maxPackage || "",
+          minimumPackage: p.minimumPackage || p.minPackage || "",
+          averagePackage: p.averagePackage || "",
+          topRecruiters: Array.isArray(p.topRecruiters) ? p.topRecruiters : 
+                        (Array.isArray(p.companies) ? p.companies : [])
+        })) : []
+      }));
+      setCourses(transformedCourses);
+    }
+
+    // ==================== AMENITIES ====================
+    const amenities = logAndExtract('AMENITIES', amenitiesRes);
+    if (amenities) {
+      setFormData(prev => ({
+        ...prev,
+        predefinedAmenities: Array.isArray(amenities.predefinedAmenities) ? amenities.predefinedAmenities : 
+                            (Array.isArray(amenities.amenities) ? amenities.amenities : [])
+      }));
+      setCustomAmenities(Array.isArray(amenities.customAmenities) ? amenities.customAmenities : []);
+    }
+
+    // ==================== ACTIVITIES ====================
+    const activities = logAndExtract('ACTIVITIES', activitiesRes);
+    if (activities) {
+      setFormData(prev => ({
+        ...prev,
+        activities: Array.isArray(activities.activities) ? activities.activities : []
+      }));
+      setCustomActivities(Array.isArray(activities.customActivities) ? activities.customActivities : []);
+    }
+
+    // ==================== INFRASTRUCTURE ====================
+    const infra = logAndExtract('INFRASTRUCTURE', infraRes);
+    if (infra) {
+      setFormData(prev => ({
+        ...prev,
+        infraLabTypes: Array.isArray(infra.labs) ? infra.labs : [],
+        infraSportsTypes: Array.isArray(infra.sportsGrounds) ? infra.sportsGrounds : [],
+        infraLibraryBooks: infra.libraryBooks != null ? String(infra.libraryBooks) : "",
+        infraSmartClassrooms: infra.smartClassrooms != null ? String(infra.smartClassrooms) : ""
+      }));
+    }
+
+    // ==================== SAFETY ====================
+    const safety = logAndExtract('SAFETY', safetyRes);
+    if (safety) {
+      setFormData(prev => ({
+        ...prev,
+        cctvCoveragePercentage: safety.cctvCoveragePercentage != null ? String(safety.cctvCoveragePercentage) : "0",
+        medicalFacility: {
+          doctorAvailability: safety.medicalFacility?.doctorAvailability || "",
+          medkitAvailable: safety.medicalFacility?.medkitAvailable || false,
+          ambulanceAvailable: safety.medicalFacility?.ambulanceAvailable || false
+        },
+        transportSafety: {
+          gpsTrackerAvailable: safety.transportSafety?.gpsTrackerAvailable || false,
+          driversVerified: safety.transportSafety?.driversVerified || false
+        },
+        fireSafetyMeasures: Array.isArray(safety.fireSafetyMeasures) ? safety.fireSafetyMeasures : [],
+        visitorManagementSystem: safety.visitorManagementSystem || false
+      }));
+    }
+
+    // ==================== TECHNOLOGY ====================
+    const tech = logAndExtract('TECHNOLOGY', techRes);
+    if (tech) {
+      setFormData(prev => ({
+        ...prev,
+        smartClassroomsPercentage: tech.smartClassroomsPercentage != null ? String(tech.smartClassroomsPercentage) : "0",
+        eLearningPlatforms: Array.isArray(tech.eLearningPlatforms) ? tech.eLearningPlatforms : []
+      }));
+    }
+
+    // ==================== INTERNATIONAL ====================
+    const intl = logAndExtract('INTERNATIONAL', intlRes);
+    if (intl) {
+      setFormData(prev => ({
+        ...prev,
+        exchangePrograms: Array.isArray(intl.exchangePrograms) ? intl.exchangePrograms.map(p => ({
+          partnercollege: p.partnercollege || "",
+          type: p.type || p.programType || "",
+          duration: p.duration || "",
+          studentsParticipated: p.studentsParticipated || "",
+          activeSince: p.activeSince || ""
+        })) : [],
+        globalTieUps: Array.isArray(intl.globalTieUps) ? intl.globalTieUps.map(t => ({
+          partnerName: t.partnerName || "",
+          nature: t.nature || t.natureOfTieUp || "",
+          activeSince: t.activeSince || "",
+          description: t.description || ""
+        })) : []
+      }));
+    }
+
+    // ==================== FACULTY ====================
+    const faculty = logAndExtract('FACULTY', facultyRes);
+    if (faculty && faculty.facultyMembers) {
+      setFacultyQuality(faculty.facultyMembers.map(f => ({
+        name: f.name || "",
+        qualification: f.qualification || "",
+        awards: Array.isArray(f.awards) ? f.awards.join(', ') : (f.awards || ""),
+        experience: f.experience || ""
+      })));
+    }
+
+    // ==================== ALUMNI ====================
+    const alumni = logAndExtract('ALUMNI', alumniRes);
+    if (alumni) {
+      setFamousAlumnies(Array.isArray(alumni.famousAlumnies) ? alumni.famousAlumnies : []);
+      setTopAlumnies(Array.isArray(alumni.topAlumnis) ? alumni.topAlumnis : []);
+      setOtherAlumnies(Array.isArray(alumni.alumnis) ? alumni.alumnis : []);
+    }
+
+    // ==================== ADMISSION TIMELINE ====================
+    const timeline = logAndExtract('TIMELINE', timelineRes);
+    if (timeline && timeline.timelines) {
+      setAdmissionSteps(timeline.timelines.map(t => ({
+        admissionStartDate: t.admissionStartDate ? new Date(t.admissionStartDate).toISOString().split('T')[0] : "",
+        admissionEndDate: t.admissionEndDate ? new Date(t.admissionEndDate).toISOString().split('T')[0] : "",
+        status: t.status || "",
+        applicationFee: t.applicationFee || 0,
+        courseId: t.courseId || "",
+        documentsRequired: Array.isArray(t.documentsRequired) ? t.documentsRequired : [],
+        eligibility: {
+          minQualification: t.eligibility?.minQualification || "",
+          otherInfo: t.eligibility?.otherInfo || ""
+        }
+      })));
+    }
+
+    // ==================== HOSTELS ====================
+    const hostelsData = logAndExtract('HOSTELS', hostelsRes);
+    if (hostelsData && Array.isArray(hostelsData) && hostelsData.length > 0) {
+      setHostels(hostelsData.map(hostel => ({
+        ...hostel,
+        _isNew: false
+      })));
+    }
+
+    // ==================== SCHOLARSHIPS ====================
+    const scholarshipsData = logAndExtract('SCHOLARSHIPS', scholarshipsRes);
+    if (scholarshipsData && Array.isArray(scholarshipsData) && scholarshipsData.length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        scholarships: scholarshipsData.map(s => ({
+          name: s.name || "",
+          type: s.type || "",
+          amount: s.amount || "",
+          documentsRequired: Array.isArray(s.documentsRequired) ? s.documentsRequired : []
+        }))
+      }));
+    }
+
+    // ==================== OTHER DETAILS ====================
+    const other = logAndExtract('OTHER DETAILS', otherRes);
+    if (other) {
+      setFormData(prev => ({
+        ...prev,
+        genderRatioMale: other.genderRatio?.male != null ? String(other.genderRatio.male) : "",
+        genderRatioFemale: other.genderRatio?.female != null ? String(other.genderRatio.female) : "",
+        genderRatioOthers: other.genderRatio?.others != null ? String(other.genderRatio.others) : "",
+        scholarshipDiversityTypes: Array.isArray(other.scholarshipDiversity?.types) ? other.scholarshipDiversity.types : [],
+        scholarshipDiversityCoverage: other.scholarshipDiversity?.studentsCoveredPercentage != null ? 
+                                      String(other.scholarshipDiversity.studentsCoveredPercentage) : "",
+        specialNeedsStaff: other.specialNeedsSupport?.dedicatedStaff || false,
+        specialNeedsSupportPercentage: other.specialNeedsSupport?.studentsSupportedPercentage != null ? 
+                                      String(other.specialNeedsSupport.studentsSupportedPercentage) : "",
+        specialNeedsFacilities: Array.isArray(other.specialNeedsSupport?.facilitiesAvailable) ? 
+                               other.specialNeedsSupport.facilitiesAvailable : []
+      }));
+    }
+
+    // ==================== FEES ====================
+    const fees = logAndExtract('FEES', feesRes);
+    if (fees) {
+      setFormData(prev => ({
+        ...prev,
+        feesTransparency: fees.feesTransparency != null ? 
+          (fees.feesTransparency === 100 ? 'full' :
+           fees.feesTransparency === 50 ? 'partial' :
+           fees.feesTransparency === 0 ? 'low' : String(fees.feesTransparency)) : "",
+        classFees: Array.isArray(fees.classFees) ? fees.classFees.map(fee => ({
+          ...fee,
+          tuition: fee.tuition || "",
+          activity: fee.activity || "",
+          transport: fee.transport || "",
+          hostel: fee.hostel || "",
+          misc: fee.misc || ""
+        })) : []
+      }));
+    }
+
+    // ==================== ACADEMICS ====================
+    const academics = logAndExtract('ACADEMICS', academicsRes);
+    if (academics) {
+      setFormData(prev => ({
+        ...prev,
+        averageClass10Result: academics.averageClass10Result || "",
+        averageClass12Result: academics.averageClass12Result || "",
+        averagecollegeMarks: academics.averagecollegeMarks || "75",
+        specialExamsTraining: Array.isArray(academics.specialExamsTraining) ? academics.specialExamsTraining : [],
+        extraCurricularActivities: Array.isArray(academics.extraCurricularActivities) ? academics.extraCurricularActivities : []
+      }));
+    }
+
+    toast.success("✅ All college data loaded successfully!");
+    console.log('🎉 Data loading complete!');
+    
+  } catch (error) {
+    console.error("❌ Error loading college data:", error);
+    toast.error("Some data could not be loaded. Please check the form.");
+  }
+};
 
 const emptyHostel = {
   hostelName: "",
@@ -878,42 +1282,21 @@ const handleUseCurrentLocation = () => {
     return Math.round(Math.min(100, score));
   };
 
-  // Helper function to handle update/add with fallback
- 
+  // Also update the normalization functions to be more robust
 const normalizeCoursesForBackend = (courses, collegeId) => {
   return (courses || [])
-    .filter(c => c.courseName?.trim()) // ignore empty courses
+    .filter(c => c.courseName?.trim())
     .map(course => ({
       collegeId,
-
+      name: course.courseName, // Use 'name' field as expected by backend
       courseName: course.courseName,
       duration: course.duration,
-      fees: course.fees ? Number(course.fees) : undefined,
+      fees: course.fees ? Number(course.fees) : 0,
       category: course.category,
-      intake: course.intake ? Number(course.intake) : undefined,
-
-      exams: (course.exams || [])
-        .filter(e => e.examType?.trim())
-        .map(e => ({
-          examType: e.examType,
-          metricType: e.metricType,
-          minValue: e.minValue !== "" ? Number(e.minValue) : undefined,
-          maxValue: e.maxValue !== "" ? Number(e.maxValue) : undefined
-        })),
-
-      placements: (course.placements || [])
-        .filter(p => p.year)
-        .map(p => ({
-          year: Number(p.year),
-          totalStudents: Number(p.totalStudents || 0),
-          placedStudents: Number(p.placedStudents || 0),
-          highestPackage: Number(p.highestPackage || 0),
-          minimumPackage: Number(p.minimumPackage || 0),
-          averagePackage: Number(p.averagePackage || 0),
-          topRecruiters: (p.topRecruiters || []).filter(Boolean)
-        }))
+      intake: course.intake ? Number(course.intake) : 0
     }));
 };
+
 const normalizeExamsForBackend = (courses, courseIdMap) => {
   const result = [];
 
@@ -922,49 +1305,45 @@ const normalizeExamsForBackend = (courses, courseIdMap) => {
     if (!courseId) return;
 
     const validExams = (course.exams || [])
-      .filter(e =>
-        e.examType?.trim() &&
-        e.minValue !== "" &&
-        e.maxValue !== ""
-      )
+      .filter(e => e.examType?.trim())
       .map(e => ({
+        courseId,
         examName: e.examType,
-        marksType: e.metricType,
-        minMarks: Number(e.minValue),
-        maxMarks: Number(e.maxValue)
+        marksType: e.metricType || "Rank",
+        minMarks: e.minValue ? Number(e.minValue) : 0,
+        maxMarks: e.maxValue ? Number(e.maxValue) : 100
       }));
 
-    if (validExams.length > 0) {
-      result.push({
-        courseId,
-        exams: validExams   // ✅ ARRAY (REQUIRED)
-      });
-    }
+    result.push(...validExams);
   });
 
   return result;
 };
 
 const normalizePlacementsForBackend = (courses, courseIdMap) => {
-  return courses.flatMap((course, index) => {
-    const courseId = courseIdMap[index];
-    if (!courseId) return [];
+  const result = [];
 
-    return (course.placements || [])
+  courses.forEach((course, courseIndex) => {
+    const courseId = courseIdMap[courseIndex];
+    if (!courseId) return;
+
+    const validPlacements = (course.placements || [])
       .filter(p => p.year)
       .map(p => ({
         courseId,
-
         year: Number(p.year),
-        totalStudents: Number(p.totalStudents),
-        placedStudents: Number(p.placedStudents),
-
-        minPackage: Number(p.minimumPackage),
-        maxPackage: Number(p.highestPackage),
-
-        companies: (p.topRecruiters || []).filter(Boolean),
+        totalStudents: Number(p.totalStudents || 0),
+        placedStudents: Number(p.placedStudents || 0),
+        minPackage: Number(p.minimumPackage || 0),
+        maxPackage: Number(p.highestPackage || 0),
+        averagePackage: Number(p.averagePackage || 0),
+        companies: (p.topRecruiters || []).filter(Boolean)
       }));
+
+    result.push(...validPlacements);
   });
+
+  return result;
 };
 
 
@@ -1109,9 +1488,9 @@ payload.collegeInfo =
   "";
 
 payload.stream = 
-  (Array.isArray(formData.streamsOffered) && formData.streamsOffered[0]) ||
-  formData.stream ||
-  "";
+  (Array.isArray(formData.streamsOffered) && formData.streamsOffered.length > 0) 
+    ? formData.streamsOffered[0] 
+    : (formData.stream || "Engineering");
  const updateOrAdd = async (updateFn, addFn, collegeId, payload) => {
     try {
       if (isEditMode) {
@@ -1467,213 +1846,169 @@ try {
 // =======================
 const saveAllCollegeData = async (collegeId, courses, admissionSteps) => {
   try {
-    // ========================
-    // 1️⃣ NORMALIZE COURSES
-    // ========================
-    const normalizedCourses =
-      normalizeCoursesForBackend(courses, collegeId) || [];
+    console.log('📚 Saving courses for college:', collegeId);
+    
+    // Filter out empty courses
+    const validCourses = courses.filter(c => c.courseName?.trim());
+    
+    if (validCourses.length === 0) {
+      console.log('No courses to save');
+      return;
+    }
 
-    // ========================
-    // 2️⃣ FETCH EXISTING COURSES
-    // ========================
-    const existingRes = await getCoursesByCollege(collegeId);
-
-    const existingCourses =
-      existingRes?.data?.courses ||
-      existingRes?.data?.data ||
-      (Array.isArray(existingRes?.data) ? existingRes.data : []) ||
-      [];
-
-    const existingCourseMap = {};
-
-    existingCourses.forEach((c) => {
-      if (!c || typeof c.name !== "string") return;
-
-      const key = c.name.trim().toLowerCase();
-      if (key) {
-        existingCourseMap[key] = c._id;
-      }
-    });
-
-    // ========================
-    // 3️⃣ ADD ONLY NEW COURSES
-    // ========================
-    for (const course of normalizedCourses) {
-      if (!course || typeof course.name !== "string") continue;
-
-      const key = course.name.trim().toLowerCase();
-      if (!key) continue;
-
-      if (!existingCourseMap[key]) {
-        const res = await addCourseAPI({
+    // Save each course individually
+    const savedCourseIds = [];
+    
+    for (const course of validCourses) {
+      try {
+        // Prepare course payload
+        const coursePayload = {
           collegeId,
-          courses: [course],
+          courseName: course.courseName,
+          duration: course.duration,
+          fees: course.fees ? Number(course.fees) : 0,
+          category: course.category,
+          intake: course.intake ? Number(course.intake) : 0
+        };
+
+        console.log('Saving course:', coursePayload);
+        
+        // Save the course
+        const response = await addCourseAPI({
+          collegeId,
+          courses: [coursePayload]
         });
-
-        const createdCourse =
-          res?.data?.courses?.[0] ||
-          res?.data?.data?.[0];
-
-        if (createdCourse?._id) {
-          existingCourseMap[key] = createdCourse._id;
+        
+        // Extract saved course ID
+        const savedCourse = response?.data?.data?.[0] || response?.data?.courses?.[0];
+        if (savedCourse?._id) {
+          savedCourseIds.push(savedCourse._id);
+          console.log('✅ Course saved with ID:', savedCourse._id);
         }
+      } catch (error) {
+        console.error('❌ Failed to save course:', error);
       }
     }
 
-    // ========================
-    // 4️⃣ REFRESH COURSE LIST
-    // ========================
-    const courseRes = await getCoursesByCollege(collegeId);
-
-    const savedCourses =
-      courseRes?.data?.courses ||
-      courseRes?.data?.data ||
-      (Array.isArray(courseRes?.data) ? courseRes.data : []) ||
-      [];
-
-    if (!savedCourses.length) {
-      throw new Error("No courses returned after save");
+    if (savedCourseIds.length === 0) {
+      throw new Error("No courses were saved successfully");
     }
 
+    // Fetch all saved courses to get complete data
+    const courseRes = await getCoursesByCollege(collegeId);
+    const savedCourses = courseRes?.data?.data || courseRes?.data || [];
+    
+    if (!savedCourses.length) {
+      throw new Error("No courses found after save");
+    }
+
+    // Create course ID map
     const courseIdMap = {};
-    const courseIdMapByName = {};
-
-    savedCourses.forEach((c, i) => {
-      if (!c || !c._id) return;
-
-      courseIdMap[i] = c._id;
-
-      if (typeof c.name === "string") {
-        const key = c.name.trim().toLowerCase();
-        if (key) {
-          courseIdMapByName[key] = c._id;
-        }
+    savedCourses.forEach((course, index) => {
+      if (course?._id) {
+        courseIdMap[index] = course._id;
       }
     });
 
     console.log("✅ Course ID Map:", courseIdMap);
 
-    // ========================
-    // 5️⃣ SAVE EXAMS (SAFE)
-    // ========================
-    const normalizedExams =
-      normalizeExamsForBackend(courses, courseIdMap) || [];
+    // Save exams for each course
+    for (let cIndex = 0; cIndex < validCourses.length; cIndex++) {
+      const course = validCourses[cIndex];
+      const courseId = courseIdMap[cIndex];
+      
+      if (!courseId) continue;
 
-    const existingExamsRes = await getCollegeExams(collegeId);
-
-    const existingExams =
-      existingExamsRes?.data?.data || [];
-
-    for (const exam of normalizedExams) {
-      if (!exam || typeof exam.name !== "string") continue;
-
-      const examKey = exam.name.trim().toLowerCase();
-      if (!examKey) continue;
-
-      const alreadyExists = existingExams.some((e) => {
-        if (!e || typeof e.name !== "string") return false;
-        return e.name.trim().toLowerCase() === examKey;
-      });
-
-      if (!alreadyExists) {
-        await addExamAPI(exam);
+      // Save exams
+      if (course.exams?.length > 0) {
+        const validExams = course.exams.filter(e => e.examType?.trim());
+        
+        for (const exam of validExams) {
+          try {
+            const examPayload = {
+              courseId,
+              examName: exam.examType,
+              marksType: exam.metricType || "Rank",
+              minMarks: exam.minValue ? Number(exam.minValue) : 0,
+              maxMarks: exam.maxValue ? Number(exam.maxValue) : 100
+            };
+            
+            await addExamAPI(examPayload);
+            console.log('✅ Exam saved for course:', courseId);
+          } catch (error) {
+            console.error('❌ Failed to save exam:', error);
+          }
+        }
       }
-    }
 
-    // ========================
-    // 6️⃣ SAVE PLACEMENTS (SAFE)
-    // ========================
-    const normalizedPlacements =
-      normalizePlacementsForBackend(courses, courseIdMap) || [];
-
-    const existingPlacementRes =
-      await getPlacementsByCollege(collegeId);
-
-    const existingPlacements =
-      existingPlacementRes?.data?.data || [];
-
-    for (const placement of normalizedPlacements) {
-      if (!placement || !placement.course) continue;
-
-      const alreadyExists = existingPlacements.some((p) => {
-        if (!p || !p.course) return false;
-        return String(p.course) === String(placement.course);
-      });
-
-      if (!alreadyExists) {
-        await addPlacementAPI(placement);
-      }
-    }
-
-    // ========================
-    // 7️⃣ ADMISSION TIMELINES (SAFE)
-    // ========================
-    if (Array.isArray(admissionSteps) && admissionSteps.length) {
-      const cleanTimelines = admissionSteps
-        .map((t) => {
-          if (
-            !t ||
-            !t.courseId ||
-            !t.admissionStartDate ||
-            !t.admissionEndDate ||
-            !t.status ||
-            t.applicationFee === null ||
-            t.applicationFee === undefined
-          ) return null;
-
-          return {
-            admissionStartDate: new Date(t.admissionStartDate),
-            admissionEndDate: new Date(t.admissionEndDate),
-            status:
-              typeof t.status === "string"
-                ? t.status.trim()
-                : "",
-            applicationFee: Number(t.applicationFee),
-            course: t.courseId,
-            documentsRequired: Array.isArray(t.documentsRequired)
-              ? t.documentsRequired
-                  .map((d) =>
-                    typeof d === "string"
-                      ? d.trim()
-                      : null
-                  )
-                  .filter(Boolean)
-              : [],
-            eligibility: {
-              minQualification:
-                t?.eligibility?.minQualification || "",
-              otherInfo:
-                t?.eligibility?.otherInfo || "",
-            },
-          };
-        })
-        .filter(Boolean);
-
-      if (cleanTimelines.length) {
-        const payload = {
-          collegeId,
-          timelines: cleanTimelines,
-        };
-
-        try {
-          await updateAdmissionTimeline(
-            collegeId,
-            payload
-          );
-        } catch (err) {
-          if (err?.response?.status === 404) {
-            await addAdmissionTimeline(payload);
-          } else {
-            throw err;
+      // Save placements
+      if (course.placements?.length > 0) {
+        const validPlacements = course.placements.filter(p => p.year);
+        
+        for (const placement of validPlacements) {
+          try {
+            const placementPayload = {
+              courseId,
+              year: Number(placement.year),
+              totalStudents: Number(placement.totalStudents || 0),
+              placedStudents: Number(placement.placedStudents || 0),
+              minPackage: Number(placement.minimumPackage || 0),
+              maxPackage: Number(placement.highestPackage || 0),
+              averagePackage: Number(placement.averagePackage || 0),
+              companies: (placement.topRecruiters || []).filter(Boolean)
+            };
+            
+            await addPlacementAPI(placementPayload);
+            console.log('✅ Placement saved for course:', courseId);
+          } catch (error) {
+            console.error('❌ Failed to save placement:', error);
           }
         }
       }
     }
 
-    toast.success("🎉 College data saved successfully!");
+    // Save admission timelines
+    if (admissionSteps?.length > 0) {
+      const validTimelines = admissionSteps.filter(t => 
+        t.admissionStartDate && t.admissionEndDate && t.courseId
+      );
+
+      if (validTimelines.length > 0) {
+        const timelinePayload = {
+          collegeId,
+          timelines: validTimelines.map(t => ({
+            admissionStartDate: new Date(t.admissionStartDate),
+            admissionEndDate: new Date(t.admissionEndDate),
+            status: t.status || "Ongoing",
+            applicationFee: Number(t.applicationFee || 0),
+            course: t.courseId,
+            documentsRequired: t.documentsRequired || [],
+            eligibility: {
+              minQualification: t.eligibility?.minQualification || "",
+              otherInfo: t.eligibility?.otherInfo || ""
+            }
+          }))
+        };
+
+        try {
+          await updateAdmissionTimeline(collegeId, timelinePayload);
+          console.log('✅ Admission timelines saved');
+        } catch (error) {
+          if (error?.response?.status === 404) {
+            await addAdmissionTimeline(timelinePayload);
+          } else {
+            throw error;
+          }
+        }
+      }
+    }
+
+    toast.success("Details saved successfully!");
+    
   } catch (err) {
     console.error("❌ Save failed:", err);
-    toast.error("Something went wrong while saving data");
+    toast.error(err.message || "Something went wrong while saving data");
+    throw err; // Re-throw to handle in the main submit function
   }
 };
 
@@ -2045,6 +2380,11 @@ if (formData.scholarships?.length > 0) {
 }, [selectedCollegeId]);
 
 
+// Add near your other useEffects (around line 2700)
+useEffect(() => {
+  console.log('📊 Current formData.ranking value:', formData.ranking);
+}, [formData.ranking]);
+
   // 🔹 PASTE useEffect RIGHT HERE 👇
 useEffect(() => {
   if (!selectedCollegeId) return;
@@ -2129,94 +2469,117 @@ useEffect(() => {
     }
   }, [currentUser, hasExistingcollege, isLoadingExistingData]);
 
-  // Check for existing college data automatically
-
-  const checkForExistingcollege = async () => {
-    console.log('🔍 Starting checkForExistingcollege...');
+  // Update your checkForExistingcollege function
+const checkForExistingcollege = async () => {
+  console.log('🔍 Starting checkForExistingcollege...');
+  
+  if (!currentUser?._id) {
+    console.log('❌ No current user, treating as new college');
+    setHasExistingcollege(false);
+    setIsEditMode(false);
+    setIsLoadingExistingData(false);
+    loadDraft();
+    return;
+  }
+  
+  try {
+    setIsLoadingExistingData(true);
+    let college = null;
     
-    // 1. Security Check
-    if (!currentUser?._id) {
-      console.log('❌ No current user, treating as new college');
+    // Try localStorage first
+    const cachedcollegeId = localStorage.getItem('lastCreatedcollegeId');
+    if (cachedcollegeId) {
+      try {
+        const res = await getcollegeById(cachedcollegeId);
+        const found = res?.data?.data || res?.data || res;
+        if (found && found.authId === currentUser._id) {
+          college = found;
+          console.log('✅ Found existing college from localStorage:', college._id);
+        }
+      } catch (e) {
+        localStorage.removeItem('lastCreatedcollegeId');
+      }
+    }
+    
+    // Try direct database lookup via Auth ID
+    if (!college) {
+      try {
+        console.log('🔍 Fetching directly via Auth ID:', currentUser._id);
+        const res = await getcollegeByAuthId(currentUser._id);
+        console.log('📦 Auth ID lookup response:', res);
+        console.log('📦 Response data:', res?.data);
+        
+        // The response from your API has a 'college' property
+        // It might be in res.data or directly in res
+        let foundCollege = null;
+        
+        // Check all possible locations for the college data
+        if (res?.data?.college) {
+          // Case: { data: { college: {...}, courseCount: 1, ... } }
+          foundCollege = res.data.college;
+          console.log('✅ Found college in res.data.college');
+        } else if (res?.college) {
+          // Case: { college: {...}, courseCount: 1, ... }
+          foundCollege = res.college;
+          console.log('✅ Found college in res.college');
+        } else if (res?.data?.data?.college) {
+          // Case: { data: { data: { college: {...} } } }
+          foundCollege = res.data.data.college;
+          console.log('✅ Found college in res.data.data.college');
+        } else if (res?.data?.data) {
+          // Case: { data: { data: {...} } }
+          foundCollege = res.data.data;
+          console.log('✅ Found college in res.data.data');
+        } else if (res?.data && typeof res.data === 'object') {
+          // If the data itself has an _id, it might be the college
+          if (res.data._id) {
+            foundCollege = res.data;
+            console.log('✅ Found college directly in res.data');
+          }
+        }
+        
+        console.log('🔍 Extracted college:', foundCollege);
+        
+        if (foundCollege && foundCollege._id) {
+          college = foundCollege;
+          console.log('✅ Success! College found:', college._id, college.name);
+          localStorage.setItem('lastCreatedcollegeId', college._id);
+        } else {
+          console.log('❌ No valid college found in response');
+        }
+      } catch (e) {
+        console.log('❌ Error in Auth ID lookup:', e);
+      }
+    }
+    
+    if (college && college._id) {
+      console.log('🎉 College found! Loading all data...');
+      setHasExistingcollege(true);
+      setEditingcollegeId(college._id);
+      setIsEditMode(true);
+      
+      // Load all college data
+      await loadAllCollegeData(college);
+      
+    } else {
+      console.log('❌ No existing college found. Starting fresh.');
       setHasExistingcollege(false);
       setIsEditMode(false);
-      setIsLoadingExistingData(false);
+      
+      setFormData(prev => ({
+        ...prev,
+        email: currentUser.email || prev.email
+      }));
+      
       loadDraft();
-      return;
     }
-    
-    try {
-      setIsLoadingExistingData(true);
-      let college = null;
-      
-      // 2. Try LocalStorage (Fastest check)
-      const cachedcollegeId = typeof localStorage !== 'undefined' && localStorage.getItem('lastCreatedcollegeId');
-      if (cachedcollegeId) {
-        try {
-          const res = await getcollegeById(cachedcollegeId, { headers: { 'X-Silent-Request': '1' } });
-          const found = res?.data?.data || res?.data;
-          // Verify ownership
-          if (found && found.authId === currentUser._id) {
-             college = found;
-             console.log('✅ Found existing college from localStorage');
-          }
-        } catch (e) {
-          localStorage.removeItem('lastCreatedcollegeId');
-        }
-      }
-      
-      // 3. Try Direct Database Lookup via Auth ID (The Fix for Logout/Login)
-      if (!college) {
-        try {
-          console.log('🔍 Fetching directly via Auth ID:', currentUser._id);
-          // This calls the API: GET /colleges/auth/:authId
-          const res = await getcollegeById(currentUser._id);
-          
-          const foundData = res?.data?.data || res?.data;
-          
-          // Handle if backend returns an Array [college] or Object {college}
-          if (Array.isArray(foundData) && foundData.length > 0) {
-            college = foundData[0];
-          } else if (foundData && foundData._id) {
-             college = foundData;
-          }
-
-          if (college) {
-             console.log('✅ Found college via Database Lookup');
-             localStorage.setItem('lastCreatedcollegeId', college._id);
-          }
-        } catch (e) {
-          console.log('❌ No college found for this user in DB.');
-        }
-      }
-      
-      // 4. Final Decision: Load Data or Start Fresh
-      if (college && college._id) {
-        console.log('🎉 college found! Loading data...');
-        setHasExistingcollege(true);
-        setEditingcollegeId(college._id);
-        setIsEditMode(true);
-        await loadExistingcollegeData(college); // <--- This fills your form fields
-      } else {
-        console.log('❌ No existing college found. Starting fresh.');
-        setHasExistingcollege(false);
-        setIsEditMode(false);
-        
-        // Auto-fill email for new users
-        setFormData(prev => ({
-          ...prev,
-          email: currentUser.email || prev.email
-        }));
-        
-        // Only load draft if no real college exists
-        loadDraft();
-      }
-    } catch (error) {
-      console.error('Error in check process:', error);
-      setHasExistingcollege(false);
-    } finally {
-      setIsLoadingExistingData(false);
-    }
-  };
+  } catch (error) {
+    console.error('Error in check process:', error);
+    setHasExistingcollege(false);
+  } finally {
+    setIsLoadingExistingData(false);
+  }
+};
 
   // Load existing college data into form
   const loadExistingcollegeData = async (college) => {
@@ -2254,7 +2617,7 @@ useEffect(() => {
       state: college.state || "",
       country: college.country || "",
       pincode: college.pinCode ? String(college.pinCode) : "",
-      establishedYear: college.establishedYear ? String(college.establishedYear) : "",
+      establishedYear: college.estYear ? String(college.estYear) : (college.establishedYear ? String(college.establishedYear) : ""),
       board: college.board || "",
       feeRange: college.feeRange || "",
       upto: college.upto || "",
@@ -2266,10 +2629,12 @@ useEffect(() => {
       shifts: Array.isArray(college.shifts) ? college.shifts : [],
       languageMedium: Array.isArray(college.languageMedium) ? college.languageMedium : [],
       transportAvailable: college.transportAvailable || "no",
-      latitude: college.latitude != null ? String(college.latitude) : "",
-      longitude: college.longitude != null ? String(college.longitude) : "",
+      latitude: college.lat != null ? String(college.lat) : (college.latitude != null ? String(college.latitude) : ""),
+      longitude: college.long != null ? String(college.long) : (college.longitude != null ? String(college.longitude) : ""),
       TeacherToStudentRatio: college.TeacherToStudentRatio || "",
       rank: college.rank || "",
+      ranking: college.ranking || college.rank || "",
+      acceptanceRate: college.acceptanceRate != null ? String(college.acceptanceRate) : "",
       streamsOffered: Array.isArray(formData.streamsOffered) ? formData.streamsOffered : [],
       specialist: Array.isArray(college.specialist) ? college.specialist : [],
       tags: Array.isArray(college.tags) ? college.tags : [],
@@ -3127,12 +3492,13 @@ useEffect(() => {
               required 
               />
               <FormField 
-              label="Ranking"
-               name="ranking" 
-               type="number"
-                value={formData.ranking}
-                 onChange={handleInputChange} 
-                 required />
+  label="Ranking"
+  name="rank"  // ← Change from "ranking" to "rank"
+  type="number"
+  value={formData.rank}  // ← Change from formData.ranking to formData.rank
+  onChange={handleInputChange} 
+  required 
+/>
         <FormField
          label="Acceptance Rate" 
          name="acceptanceRate"
