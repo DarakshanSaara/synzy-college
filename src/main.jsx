@@ -9,7 +9,7 @@ import { AuthProvider } from "./context/AuthContext.jsx";
 ReactDOM.createRoot(document.getElementById('root')).render( 
   <React.StrictMode>
      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-    <BrowserRouter basename="/college">  
+    <BrowserRouter basename="/"> 
      <AuthProvider> 
       <App />
       </AuthProvider>
