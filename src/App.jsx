@@ -268,7 +268,7 @@ useEffect(() => {
          <Route 
            path="/" 
            element={
-             <SignUpPage 
+             <HomePage 
                onCompareToggle={handleCompareToggle}
                comparisonList={comparisonList}
                shortlist={shortlist}
